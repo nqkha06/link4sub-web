@@ -1,0 +1,40 @@
+# Web Next.js, deploy độc lập với stu-api.
+# API_URL: địa chỉ API mà server Next.js gọi tới, ví dụ domain công khai của API
+# (https://api.example.com) hoặc tên service nội bộ nếu web và API chung một
+# Docker network trên Dokploy. INTERNAL_API_SECRET phải trùng với stu-api.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+      args:
+        WEB_URL: ${WEB_URL:?Set WEB_URL}
+        API_URL: ${API_URL:?Set API_URL}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+        NEXT_PUBLIC_APP_ENV: ${APP_ENV:-production}
+        NEXT_PUBLIC_APP_RELEASE: ${APP_RELEASE:-}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      WEB_URL: ${WEB_URL:?Set WEB_URL}
+      API_URL: ${API_URL:?Set API_URL}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:?Set INTERNAL_API_SECRET}
+      AUTH_ACCESS_COOKIE_NAME: ${AUTH_ACCESS_COOKIE_NAME:-stu_access_token}
+      AUTH_REFRESH_COOKIE_NAME: ${AUTH_REFRESH_COOKIE_NAME:-stu_refresh_token}
+      AUTH_COOKIE_SAME_SITE: ${AUTH_COOKIE_SAME_SITE:-lax}
+      AUTH_COOKIE_SECURE: "true"
+      AUTH_COOKIE_PATH: ${AUTH_COOKIE_PATH:-/}
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
+      DEFAULT_VISITOR_COUNTRY: ${DEFAULT_VISITOR_COUNTRY:-VN}
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(r.status>=500)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

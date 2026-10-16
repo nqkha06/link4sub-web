@@ -1,0 +1,13 @@
+.DS_Store
+.git
+.github
+.next
+.turbo
+node_modules
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo
+var
+docs
+public/file-icons

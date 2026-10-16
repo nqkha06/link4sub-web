@@ -1,0 +1,50 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { describe, it } from "node:test";
+
+import {
+  getLinkAnimationClassName,
+  getLinkAnimationPreviewClassName,
+  getLinkAnimationStyle,
+  linkAnimationPresets,
+  normalizeLinkAnimationEffect,
+} from "./link-animation.ts";
+
+describe("Link Bio link animations", () => {
+  it("defines all supported presets", () => {
+    assert.deepEqual(linkAnimationPresets.map(({ effect }) => effect), [
+      "none",
+      "pulse",
+      "shake",
+      "bounce",
+      "glow",
+    ]);
+  });
+
+  it("treats missing and legacy values as no animation", () => {
+    assert.equal(normalizeLinkAnimationEffect(undefined), "none");
+    assert.equal(normalizeLinkAnimationEffect("legacy-effect"), "none");
+    assert.equal(getLinkAnimationClassName(undefined), "");
+  });
+
+  it("uses a stable CSS-only stagger based on content order", () => {
+    const style = getLinkAnimationStyle(3) as Record<string, string>;
+    assert.equal(style["--link-animation-delay"], "540ms");
+    assert.match(getLinkAnimationClassName("glow"), /link-bio-animation--glow/);
+    assert.match(getLinkAnimationPreviewClassName("glow"), /link-bio-animation--live-preview/);
+    const previewStyle = getLinkAnimationStyle(3, 90) as Record<string, string>;
+    assert.equal(previewStyle["--link-animation-delay"], "270ms");
+  });
+
+  it("keeps explicitly selected Link Bio animations enabled", () => {
+    const css = readFileSync(
+      new URL("../../../app/globals.css", import.meta.url),
+      "utf8",
+    );
+
+    assert.doesNotMatch(
+      css,
+      /prefers-reduced-motion:[\s\S]*?\.link-bio-animation[\s\S]*?animation:\s*none\s*!important/,
+    );
+  });
+});

@@ -1,0 +1,571 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./shadcn-tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --sidebar-width: 248px;
+  --sidebar-width-collapsed: 64px;
+  --header-height: 60px;
+  --muted: oklch(0.97 0 0);
+  --line: #e8ebf2;
+  --panel: #ffffff;
+  --ink: #171717;
+  --gold: #d4af37;
+  --green: #2f7d57;
+  --blue: #2e63a5;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.55 0.205 258);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.53 0.15 151);
+  --warning: oklch(0.56 0.14 72);
+  --info: oklch(0.55 0.16 255);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.55 0.205 258);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.55 0.205 258);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Shared, theme-independent typography scale. */
+  --type-marketing-hero-size: clamp(2.5rem, 5vw, 4rem);
+  --type-marketing-section-title-size: clamp(1.875rem, 3.5vw, 2.75rem);
+  --type-page-title-size: clamp(1.625rem, calc(1.5rem + 0.75vw), 2.125rem);
+  --type-section-title-size: clamp(1.375rem, calc(1.25rem + 0.6vw), 1.75rem);
+  --type-card-title-size: 1.0625rem;
+  --type-lead-size: clamp(1.0625rem, 1.4vw, 1.1875rem);
+  --type-body-size: 1rem;
+  --type-body-sm-size: 0.875rem;
+  --type-label-size: 0.875rem;
+  --type-caption-size: 0.8125rem;
+  --type-metric-size: clamp(1.75rem, 2.5vw, 2.125rem);
+}
+
+@media (min-width: 521px) and (max-width: 780px) {
+  :root {
+    --type-marketing-hero-size: clamp(2.75rem, 6vw, 3.25rem);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--background);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  /* outline: 2px solid var(--ring); */
+  outline-offset: 3px;
+}
+
+/* @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+} */
+
+.dashboard-sidebar-scroll {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.dashboard-sidebar-scroll:hover {
+  scrollbar-color: color-mix(in oklab, var(--sidebar-foreground) 24%, transparent) transparent;
+}
+
+.dashboard-sidebar-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dashboard-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-sidebar-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: transparent;
+}
+
+.dashboard-sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--sidebar-foreground) 24%, transparent);
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.65 0.18 258);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.72 0.16 151);
+  --warning: oklch(0.76 0.14 77);
+  --info: oklch(0.72 0.14 255);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.65 0.18 258);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.65 0.18 258);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer components {
+  .link-bio-animation {
+    --link-animation-delay: 0ms;
+    animation-delay: var(--link-animation-delay);
+    animation-duration: 5.4s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    transform-origin: center;
+  }
+
+  .link-bio-animation--pulse {
+    animation-name: link-bio-pulse;
+  }
+
+  .link-bio-animation--shake {
+    animation-name: link-bio-shake;
+  }
+
+  .link-bio-animation--bounce {
+    animation-name: link-bio-bounce;
+  }
+
+  .link-bio-animation--live-preview {
+    animation-duration: 2.8s;
+  }
+
+  .link-bio-animation--glow {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .link-bio-animation--glow::after {
+    position: absolute;
+    z-index: -1;
+    inset: -2px;
+    border-radius: inherit;
+    box-shadow: 0 0 24px color-mix(in oklab, var(--bio-accent, var(--primary)) 58%, transparent);
+    content: "";
+    pointer-events: none;
+    animation: link-bio-glow 5.4s ease-in-out var(--link-animation-delay) infinite;
+  }
+
+  .link-bio-animation--glow.link-bio-animation--live-preview::after {
+    animation-duration: 2.8s;
+  }
+
+  .link-animation-option-preview.link-bio-animation {
+    animation: none;
+  }
+
+  .link-animation-option-preview.link-bio-animation--glow::after {
+    animation: none;
+  }
+
+  .link-animation-option-preview--playing.link-bio-animation--pulse {
+    animation: link-bio-option-pulse 900ms ease-in-out 1;
+  }
+
+  .link-animation-option-preview--playing.link-bio-animation--shake {
+    animation: link-bio-option-shake 900ms ease-in-out 1;
+  }
+
+  .link-animation-option-preview--playing.link-bio-animation--bounce {
+    animation: link-bio-option-bounce 900ms ease-in-out 1;
+  }
+
+  .link-animation-option-preview--playing.link-bio-animation--glow::after {
+    animation: link-bio-option-glow 900ms ease-in-out 1;
+  }
+
+  @keyframes link-bio-pulse {
+    0%, 18%, 100% { transform: scale(1); }
+    5% { transform: scale(1.03); }
+    11% { transform: scale(1); }
+  }
+
+  @keyframes link-bio-shake {
+    0%, 18%, 100% { transform: translateX(0); }
+    3% { transform: translateX(-3px); }
+    6% { transform: translateX(3px); }
+    9% { transform: translateX(-2px); }
+    12% { transform: translateX(2px); }
+    15% { transform: translateX(0); }
+  }
+
+  @keyframes link-bio-bounce {
+    0%, 18%, 100% { transform: translateY(0); }
+    5% { transform: translateY(-5px); }
+    10% { transform: translateY(0); }
+    13% { transform: translateY(-2px); }
+    16% { transform: translateY(0); }
+  }
+
+  @keyframes link-bio-glow {
+    0%, 18%, 100% { opacity: 0; }
+    6% { opacity: 0.8; }
+    14% { opacity: 0; }
+  }
+
+  @keyframes link-bio-option-pulse {
+    0%, 100% { transform: scale(1); }
+    45% { transform: scale(1.08); }
+  }
+
+  @keyframes link-bio-option-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+  }
+
+  @keyframes link-bio-option-bounce {
+    0%, 100% { transform: translateY(0); }
+    38% { transform: translateY(-6px); }
+    68% { transform: translateY(0); }
+    82% { transform: translateY(-2px); }
+  }
+
+  @keyframes link-bio-option-glow {
+    0%, 100% { opacity: 0; }
+    48% { opacity: 0.95; }
+  }
+
+  /*
+   * Aura cho nút link-in-bio:
+   * - ::before: viền gradient 2px chạy vòng quanh nút (mask chỉ giữ phần viền).
+   * - ::after: quầng sáng bằng box-shadow nhiều màu (mờ dần tự nhiên, không phủ
+   *   lên nút), "thở" nhẹ theo tốc độ.
+   * Tốc độ và độ sáng dùng giá trị mặc định bên dưới.
+   */
+  .link-bio-aura {
+    --aura-speed: 4s;
+    --aura-glow-opacity: 0.6;
+    --aura-blur: 14px;
+    position: relative;
+  }
+
+  .link-bio-aura::before,
+  .link-bio-aura::after {
+    position: absolute;
+    content: "";
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .link-bio-aura::before {
+    inset: -2px;
+    padding: 2px;
+    background: conic-gradient(from var(--link-aura-angle), var(--aura-stops));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: link-bio-aura-spin var(--aura-speed) linear infinite;
+  }
+
+  .link-bio-aura::after {
+    inset: -1px;
+    box-shadow: var(--aura-shadow);
+    opacity: var(--aura-glow-opacity);
+    animation: link-bio-aura-breathe var(--aura-speed) ease-in-out infinite;
+  }
+
+  .link-bio-aura--gold {
+    --aura-stops: #8a6a12 0deg, #d4a017 60deg, #fff1b8 120deg, #c99a2e 180deg,
+      #7a5a10 240deg, #f5d77a 300deg, #8a6a12 360deg;
+    --aura-shadow: 0 0 var(--aura-blur) rgba(212, 160, 23, 0.75),
+      0 0 calc(var(--aura-blur) * 2) rgba(245, 215, 122, 0.45);
+  }
+
+  .link-bio-aura--rainbow {
+    --aura-stops: #ff5f6d 0deg, #ffc371 50deg, #f9f871 100deg, #56e39f 150deg,
+      #47c6ff 210deg, #8b7bff 270deg, #ff5fcf 320deg, #ff5f6d 360deg;
+    --aura-shadow: calc(var(--aura-blur) * -0.5) 0 var(--aura-blur) rgba(71, 198, 255, 0.7),
+      calc(var(--aura-blur) * 0.5) 0 var(--aura-blur) rgba(255, 95, 207, 0.7),
+      0 calc(var(--aura-blur) * -0.4) var(--aura-blur) rgba(249, 248, 113, 0.6),
+      0 calc(var(--aura-blur) * 0.4) var(--aura-blur) rgba(86, 227, 159, 0.6);
+  }
+
+  .link-bio-aura--holo {
+    --aura-stops: #a8f0d8 0deg, #f6f3b5 60deg, #f4b8ff 120deg, #b9c8ff 180deg,
+      #a8f0d8 240deg, #ffd1e8 300deg, #a8f0d8 360deg;
+    --aura-shadow: calc(var(--aura-blur) * -0.4) 0 var(--aura-blur) rgba(185, 200, 255, 0.75),
+      calc(var(--aura-blur) * 0.4) 0 var(--aura-blur) rgba(244, 184, 255, 0.75),
+      0 0 calc(var(--aura-blur) * 1.6) rgba(168, 240, 216, 0.5);
+  }
+
+  .link-bio-aura--mono {
+    --aura-stops: #0a0a0a 0deg, #6b6b6b 90deg, #f5f5f5 150deg, #0a0a0a 220deg,
+      #3a3a3a 300deg, #0a0a0a 360deg;
+    --aura-shadow: 0 calc(var(--aura-blur) * -0.3) var(--aura-blur) rgba(0, 0, 0, 0.55),
+      0 0 calc(var(--aura-blur) * 1.5) rgba(0, 0, 0, 0.25);
+  }
+
+  @keyframes link-bio-aura-breathe {
+    0%, 100% { opacity: calc(var(--aura-glow-opacity) * 0.7); }
+    50% { opacity: var(--aura-glow-opacity); }
+  }
+
+  @keyframes link-bio-aura-spin {
+    to { --link-aura-angle: 360deg; }
+  }
+
+  /*
+   * Tạm thời: aura luôn chạy, kể cả khi người xem bật "giảm chuyển động".
+   * Muốn tôn trọng lại thiết lập này thì thêm:
+   * @media (prefers-reduced-motion: reduce) {
+   *   .link-bio-aura::before, .link-bio-aura::after { animation: none; }
+   * }
+   */
+
+  .type-marketing-hero {
+    font-size: var(--type-marketing-hero-size);
+    font-weight: 600;
+    line-height: 1.06;
+    letter-spacing: -0.04em;
+  }
+
+  .type-marketing-section-title {
+    font-size: var(--type-marketing-section-title-size);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+  }
+
+  .type-page-title {
+    font-size: var(--type-page-title-size);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.018em;
+  }
+
+  .type-section-title {
+    font-size: var(--type-section-title-size);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.012em;
+  }
+
+  .type-card-title {
+    font-size: var(--type-card-title-size);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.006em;
+  }
+
+  .type-lead {
+    font-size: var(--type-lead-size);
+    font-weight: 400;
+    line-height: 1.65;
+    letter-spacing: 0;
+  }
+
+  .type-body {
+    font-size: var(--type-body-size);
+    font-weight: 400;
+    line-height: 1.65;
+    letter-spacing: 0;
+  }
+
+  .type-body-sm {
+    font-size: var(--type-body-sm-size);
+    font-weight: 400;
+    line-height: 1.55;
+    letter-spacing: 0;
+  }
+
+  .type-label {
+    font-size: var(--type-label-size);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  .type-caption {
+    font-size: var(--type-caption-size);
+    font-weight: 400;
+    line-height: 1.45;
+    letter-spacing: 0;
+  }
+
+  .type-metric {
+    font-size: var(--type-metric-size);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.018em;
+  }
+}
+
+@keyframes platform-logo-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.platform-logo-marquee {
+  animation: platform-logo-marquee 70s linear infinite !important;
+  will-change: transform;
+}
+
+.platform-logo-marquee:has(li:hover) {
+  animation-play-state: paused !important;
+}
+
+/* Theo yêu cầu: dù OS bật Reduce Motion vẫn chạy */
+@media (prefers-reduced-motion: reduce) {
+  .platform-logo-marquee {
+    animation: platform-logo-marquee 70s linear infinite !important;
+  }
+}
+
+/*
+ * Safari iOS tự phóng to trang khi focus vào ô nhập có cỡ chữ < 16px.
+ * Trên thiết bị iOS màn hình nhỏ, ép mọi ô nhập tối thiểu 16px để không bị zoom.
+ * Viết ngoài @layer nên luôn thắng các utility text-sm/text-xs của Tailwind.
+ */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 767px) {
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]),
+    textarea,
+    select {
+      font-size: max(16px, 1em);
+    }
+  }
+}
+
+/* Góc xoay của aura; khai báo @property để trình duyệt nội suy mượt trong keyframes. */
+@property --link-aura-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}

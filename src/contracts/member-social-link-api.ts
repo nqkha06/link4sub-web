@@ -1,0 +1,12 @@
+export const MEMBER_SOCIAL_LINK_API_LIMITS = {
+  destinationUrlMaxLength: 2_048,
+  titleMaxLength: 160,
+  subtitleMaxLength: 300,
+  customAliasMaxLength: 80,
+  actionsMinItems: 1,
+  actionsMaxItems: 20,
+  actionPlatformMaxLength: 80,
+  actionValueMaxLength: 80,
+  actionUrlMaxLength: 2_048,
+  appearanceMediaUrlMaxLength: 2_048,
+} as const;

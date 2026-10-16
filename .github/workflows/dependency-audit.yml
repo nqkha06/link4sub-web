@@ -1,0 +1,36 @@
+# Chặn merge khi dependency production có advisory mức high/critical (PL-02).
+# Advisory được chấp nhận tạm thời khai báo ở `auditConfig.ignoreGhsas` trong
+# pnpm-workspace.yaml, kèm lý do ở docs/security.md.
+name: Dependency audit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Advisory mới xuất hiện cả khi repo không đổi: quét lại mỗi sáng thứ Hai (UTC).
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # Dùng đúng phiên bản pnpm ghim ở `packageManager` trong package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Lockfile khớp với manifest
+        run: pnpm install --frozen-lockfile --lockfile-only
+
+      - name: Advisory của dependency production
+        run: pnpm audit --prod --audit-level=high
