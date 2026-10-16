@@ -1,7 +1,8 @@
 # Web Next.js, deploy độc lập với stu-api.
 # API_URL: địa chỉ API mà server Next.js gọi tới, ví dụ domain công khai của API
-# (https://api.example.com) hoặc tên service nội bộ nếu web và API chung một
-# Docker network trên Dokploy. INTERNAL_API_SECRET phải trùng với stu-api.
+# (https://api.example.com) hoặc địa chỉ nội bộ của service api qua
+# dokploy-network (http://<app-name-cua-stu-api>-api-1:4000).
+# INTERNAL_API_SECRET phải trùng với stu-api.
 services:
   web:
     build:
@@ -38,3 +39,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    networks: [default, dokploy-network]
+
+networks:
+  dokploy-network:
+    external: true
