@@ -28,7 +28,19 @@ Repo này là giao diện web của STU platform (Link4Sub 2.0); API ở repo st
 
 ## Test
 
-- `node --test`, file `*.test.ts` đặt cạnh code; thêm vào script `test` của `package.json`.
+- Dùng `node --test`; file `*.test.ts` đặt cạnh code và được script `pnpm test`
+  tự động tìm.
+- Không tự động tạo test cho mọi thay đổi nhỏ. Chỉ thêm test khi bảo vệ được một
+  hành vi quan trọng, nhánh nghiệp vụ phức tạp hoặc rủi ro regression cụ thể.
+- Trước khi tạo file/case mới, tìm coverage hiện có; ưu tiên mở rộng hoặc tham số
+  hóa test đang có và không lặp lại cùng một hành vi ở nhiều nơi.
+- Ưu tiên outcome quan sát được và contract ổn định; tránh khóa cứng chi tiết cài
+  đặt, class CSS, số lượng catalogue hay đọc source bằng regex nếu không phải
+  contract sản phẩm.
+- Test phải cô lập và deterministic: truyền clock/randomness khi cần, không phụ
+  thuộc thời gian, thứ tự chạy hoặc tài nguyên mạng bên ngoài.
+- Shared fixture/helper chỉ dùng khi làm test rõ hơn. Mỗi test mới phải nêu được
+  hành vi hoặc regression risk mà nó bảo vệ.
 
 ## UI
 
