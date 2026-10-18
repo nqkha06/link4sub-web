@@ -43,6 +43,7 @@ import {
   requestPasswordReset,
 } from "@/features/auth/api/auth.client";
 import { useSiteBrand } from "@/features/site-settings/components/site-brand-provider";
+import { useThemeMode } from "@/hooks/use-theme-mode";
 import { cn } from "@/lib/utils";
 import { useBusinessConfig } from "@/features/business-settings/use-business-config";
 
@@ -70,7 +71,7 @@ type GoogleIdentity = {
         parent: HTMLElement,
         options: {
           type: "standard";
-          theme: "outline";
+          theme: "outline" | "filled_black";
           size: "large";
           text: "signin_with" | "signup_with";
           shape: "rectangular";
@@ -237,6 +238,7 @@ export function AuthScreen({
   const locale = useLocale();
   const t = useTranslations("Auth");
   const brand = useSiteBrand();
+  const { mounted: themeMounted, theme } = useThemeMode();
 
   const businessConfig =
     useBusinessConfig();
@@ -374,6 +376,7 @@ export function AuthScreen({
       !googleEnabled ||
       !googleClientId ||
       !googleReady ||
+      !themeMounted ||
       !container ||
       !google
     ) {
@@ -433,7 +436,10 @@ export function AuthScreen({
       container,
       {
         type: "standard",
-        theme: "outline",
+        theme:
+          theme === "dark"
+            ? "filled_black"
+            : "outline",
         size: "large",
         text:
           mode === "register"
@@ -461,6 +467,8 @@ export function AuthScreen({
     referralCode,
     router,
     t,
+    theme,
+    themeMounted,
   ]);
 
   async function handleSubmit(
