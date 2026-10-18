@@ -31,6 +31,9 @@ services:
       DEFAULT_VISITOR_COUNTRY: ${DEFAULT_VISITOR_COUNTRY:-VN}
       TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
       CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
+      SITE_ICON_DIR: /app/var/site-icons
+    volumes:
+      - site-icons:/app/var/site-icons
     expose:
       - "3000"
     healthcheck:
@@ -44,3 +47,6 @@ services:
 networks:
   dokploy-network:
     external: true
+
+volumes:
+  site-icons:

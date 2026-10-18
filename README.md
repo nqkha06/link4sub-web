@@ -45,6 +45,14 @@ Dùng `compose.dokploy.yml` (service **Docker Compose**) hoặc tạo Applicatio
 `Dockerfile`. Biến bắt buộc: `WEB_URL`, `API_URL` (địa chỉ API mà server Next.js
 gọi tới) và `INTERNAL_API_SECRET` (trùng với stu-api).
 
+## Branding mặc định
+
+Logo và bộ favicon khởi tạo nằm trong `public/brand`. Cấu hình logo/favicon do
+admin tải lên luôn được ưu tiên; khi chưa có hoặc khi xóa bản tùy chỉnh, web tự
+quay về bộ asset mặc định đã được đóng gói cùng bản deploy. Compose Dokploy lưu
+bộ favicon tùy chỉnh trên named volume `site-icons`, nên bản admin không mất khi
+container được tạo lại.
+
 ## Kiểm tra trước khi merge
 
 ```bash

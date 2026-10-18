@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, type SyntheticEvent } from "react";
 
 import type { PublicSiteSettings } from "@/features/site-settings/types";
+import { DEFAULT_SITE_LOGO_URL } from "@/lib/branding/default-site-brand";
 import { cn } from "@/lib/utils";
 
 /**
@@ -75,23 +76,15 @@ export function LandingLogo({
         </>
       ) : (
         <>
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M9 12.5a3.5 3.5 0 0 0 5.28.38l3-3a3.5 3.5 0 0 0-4.95-4.95l-1.4 1.38"
-                stroke="currentColor"
-                strokeWidth="2.1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M15 11.5a3.5 3.5 0 0 0-5.28-.38l-3 3a3.5 3.5 0 0 0 4.95 4.95l1.38-1.38"
-                stroke="currentColor"
-                strokeWidth="2.1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <span className="relative block size-8 shrink-0 overflow-hidden rounded-lg">
+            <Image
+              src={DEFAULT_SITE_LOGO_URL}
+              alt=""
+              fill
+              sizes="32px"
+              unoptimized
+              className="object-contain"
+            />
           </span>
           <span className="text-[17px]">{settings.siteName}</span>
         </>

@@ -6,7 +6,7 @@ export type LocalSiteIconState = {
   configured: boolean;
   version: string | null;
   updatedAt: string | null;
-  faviconUrl: string | null;
+  faviconUrl: string;
 };
 
 async function readState(response: Response) {

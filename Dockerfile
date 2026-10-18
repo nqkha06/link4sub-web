@@ -70,6 +70,9 @@ COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
 
+RUN mkdir -p /app/var/site-icons \
+    && chown -R nextjs:nodejs /app/var
+
 USER nextjs
 
 EXPOSE 3000

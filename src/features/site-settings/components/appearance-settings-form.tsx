@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowDown,
   ArrowUp,
-  Building2,
   Contact,
   Globe2,
   ImageIcon,
@@ -73,6 +72,7 @@ import {
   applyApiValidationErrors,
   getApiErrorMessage,
 } from "@/lib/api-response";
+import { DEFAULT_SITE_LOGO_URL } from "@/lib/branding/default-site-brand";
 import type { AdminMedia } from "@/features/admin-media/types";
 import { getPublicLanguages } from "@/features/languages/api/languages.client";
 import type { PublicLanguagesResponse } from "@/features/languages/types";
@@ -399,8 +399,15 @@ export function AppearanceSettingsForm({
                           className="size-11 rounded-lg object-contain"
                         />
                       ) : (
-                        <span className="grid size-11 place-items-center rounded-lg bg-primary text-primary-foreground">
-                          <Building2 />
+                        <span className="relative block size-11 overflow-hidden rounded-lg">
+                          <Image
+                            src={DEFAULT_SITE_LOGO_URL}
+                            alt=""
+                            fill
+                            sizes="44px"
+                            unoptimized
+                            className="object-contain"
+                          />
                         </span>
                       )}
                       <div className="min-w-0">

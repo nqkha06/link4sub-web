@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import NextTopLoader from "nextjs-toploader";
 import { getPublicSiteSettings } from "@/features/site-settings/api/public-settings.server"
 import { getPublicLanguageDirection } from "@/features/languages/api/languages.server"
+import { DEFAULT_SITE_ICON_URLS } from "@/lib/branding/default-site-brand"
 import { LOCAL_SITE_ICON_FILES } from "@/lib/branding/local-site-icon-pipeline"
 import { getLocalSiteIconInfo, localSiteIconUrl } from "@/lib/branding/local-site-icons"
 
@@ -61,29 +62,41 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** Cùng bộ file local với manifest và các route icon cố định. */
 function siteIcons(version?: string): Metadata["icons"] {
-  if (!version) return undefined
+  const favicon32 = version
+    ? localSiteIconUrl(LOCAL_SITE_ICON_FILES.favicon32, version)
+    : DEFAULT_SITE_ICON_URLS.favicon32
+  const favicon48 = version
+    ? localSiteIconUrl(LOCAL_SITE_ICON_FILES.favicon48, version)
+    : DEFAULT_SITE_ICON_URLS.favicon48
+  const faviconIco = version
+    ? localSiteIconUrl(LOCAL_SITE_ICON_FILES.faviconIco, version)
+    : DEFAULT_SITE_ICON_URLS.faviconIco
+  const appleTouchIcon = version
+    ? localSiteIconUrl(LOCAL_SITE_ICON_FILES.appleTouchIcon, version)
+    : DEFAULT_SITE_ICON_URLS.appleTouchIcon
+
   return {
     icon: [
       {
-        url: localSiteIconUrl(LOCAL_SITE_ICON_FILES.favicon32, version),
+        url: favicon32,
         type: "image/png",
         sizes: "32x32",
       },
       {
-        url: localSiteIconUrl(LOCAL_SITE_ICON_FILES.favicon48, version),
+        url: favicon48,
         type: "image/png",
         sizes: "48x48",
       },
     ],
     shortcut: [
       {
-        url: localSiteIconUrl(LOCAL_SITE_ICON_FILES.faviconIco, version),
+        url: faviconIco,
         type: "image/x-icon",
       },
     ],
     apple: [
       {
-        url: localSiteIconUrl(LOCAL_SITE_ICON_FILES.appleTouchIcon, version),
+        url: appleTouchIcon,
         type: "image/png",
         sizes: "180x180",
       },

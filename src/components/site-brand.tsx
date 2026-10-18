@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { useSiteBrand } from "@/features/site-settings/components/site-brand-provider";
+import { DEFAULT_SITE_LOGO_URL } from "@/lib/branding/default-site-brand";
 import { cn } from "@/lib/utils";
 
 /** Tỉ lệ rộng/cao tối đa để coi logo là hình vuông. */
@@ -22,10 +23,6 @@ export function SiteBrandMark({
     settings.branding.logoIcon ??
     settings.branding.logoLight ??
     settings.branding.logoDark;
-  const fallback = (settings.siteShortName || settings.siteName)
-    .trim()
-    .charAt(0)
-    .toLocaleUpperCase();
 
   return (
     <span
@@ -35,18 +32,14 @@ export function SiteBrandMark({
       )}
       aria-hidden="true"
     >
-      {icon ? (
-        <Image
-          src={icon.downloadUrl}
-          alt=""
-          fill
-          sizes="40px"
-          unoptimized
-          className={cn("object-contain", imageClassName)}
-        />
-      ) : (
-        fallback
-      )}
+      <Image
+        src={icon?.downloadUrl ?? DEFAULT_SITE_LOGO_URL}
+        alt=""
+        fill
+        sizes="40px"
+        unoptimized
+        className={cn("object-contain", imageClassName)}
+      />
     </span>
   );
 }

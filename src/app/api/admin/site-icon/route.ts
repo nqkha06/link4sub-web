@@ -5,6 +5,7 @@ import type { AuthUser } from "@/features/auth/types";
 import { apiJsonError, apiJsonSuccess } from "@/lib/api-route-response";
 import { readApiData } from "@/lib/api-response";
 import { serverApiFetch } from "@/lib/auth/server-api";
+import { DEFAULT_SITE_ICON_URLS } from "@/lib/branding/default-site-brand";
 import {
   getLocalSiteIconInfo,
   InvalidLocalSiteIconError,
@@ -50,7 +51,7 @@ function iconState(
         configured: false,
         version: null,
         updatedAt: null,
-        faviconUrl: null,
+        faviconUrl: DEFAULT_SITE_ICON_URLS.faviconIco,
       };
 }
 

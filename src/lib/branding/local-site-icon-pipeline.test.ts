@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { describe, it } from "node:test";
 
 import sharp from "sharp";
@@ -62,5 +64,18 @@ describe("local Next.js site icon pipeline", () => {
       localSiteIconVersion(Buffer.concat([source, Buffer.from([0])])),
     );
     await assert.rejects(() => renderLocalSiteIcons(Buffer.from("not-an-image")));
+  });
+
+  it("keeps the committed default favicon set in sync with the default logo", async () => {
+    const brandDirectory = resolve(process.cwd(), "public/brand");
+    const source = await readFile(resolve(brandDirectory, "stu-logo.png"));
+    const rendered = await renderLocalSiteIcons(source);
+
+    for (const icon of rendered) {
+      assert.deepEqual(
+        await readFile(resolve(brandDirectory, icon.name)),
+        icon.body,
+      );
+    }
   });
 });
