@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth/refresh-session";
 import { getServerConfig } from "@/config/server";
 import { apiJsonError } from "@/lib/api-route-response";
+import { copyBackendResponseHeaders } from "@/lib/backend-response-headers";
 import { isTrustedBrowserRequest } from "@/lib/trusted-browser-request";
 
 export const runtime = "nodejs";
@@ -174,31 +175,16 @@ function forwardBackendResponse(
   requestMethod: string,
   additionalCookies: string[] = [],
 ) {
-  const headers = new Headers();
-  for (const name of [
-    "accept-ranges",
-    "cache-control",
-    "content-disposition",
-    "content-length",
-    "content-range",
-    "content-type",
-    "etag",
-    "last-modified",
+  const headers = copyBackendResponseHeaders(response.headers, [
     "location",
     "server-timing",
-    "x-content-type-options",
-  ]) {
-    const value = response.headers.get(name);
-    if (value) headers.set(name, value);
-  }
+  ]);
   for (const cookie of [
     ...additionalCookies,
     ...getSetCookieHeaders(response.headers),
   ]) {
     headers.append("Set-Cookie", cookie);
   }
-  if (!headers.has("cache-control")) headers.set("Cache-Control", "no-store");
-
   const hasNoBody =
     requestMethod === "HEAD" ||
     response.status === 204 ||

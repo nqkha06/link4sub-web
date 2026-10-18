@@ -1,16 +1,5 @@
 import { apiJsonError } from "@/lib/api-route-response";
-
-const FORWARDED_RESPONSE_HEADERS = [
-  "accept-ranges",
-  "cache-control",
-  "content-disposition",
-  "content-length",
-  "content-range",
-  "content-type",
-  "etag",
-  "last-modified",
-  "x-content-type-options",
-] as const;
+import { copyBackendResponseHeaders } from "@/lib/backend-response-headers";
 
 export async function proxyBackendBinary(
   url: string,
@@ -33,12 +22,7 @@ export async function proxyBackendBinary(
     );
   }
 
-  const headers = new Headers();
-  for (const name of FORWARDED_RESPONSE_HEADERS) {
-    const value = response.headers.get(name);
-    if (value) headers.set(name, value);
-  }
-  if (!headers.has("cache-control")) headers.set("Cache-Control", "no-store");
+  const headers = copyBackendResponseHeaders(response.headers);
 
   return new Response(response.body, {
     status: response.status,

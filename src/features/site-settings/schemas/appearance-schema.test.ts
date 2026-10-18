@@ -33,22 +33,8 @@ const validSettings = {
 } as const;
 
 describe("appearance settings schema", () => {
-  it("accepts a valid settings form", () => {
+  it("accepts valid default and translated settings", () => {
     assert.equal(appearanceSettingsSchema.safeParse(validSettings).success, true);
-  });
-
-  it("rejects insecure social URLs and duplicate platforms", () => {
-    const result = appearanceSettingsSchema.safeParse({
-      ...validSettings,
-      socialLinks: [
-        { ...validSettings.socialLinks[0], url: "http://github.com/example" },
-        { ...validSettings.socialLinks[0], url: "https://github.com/another" },
-      ],
-    });
-    assert.equal(result.success, false);
-  });
-
-  it("accepts translated fields and rejects duplicate locales", () => {
     const english = {
       locale: "en",
       siteName: "English name",
@@ -60,9 +46,54 @@ describe("appearance settings schema", () => {
       appearanceSettingsSchema.safeParse({ ...validSettings, translations: [english] }).success,
       true,
     );
-    assert.equal(
-      appearanceSettingsSchema.safeParse({ ...validSettings, translations: [english, english] }).success,
-      false,
-    );
+  });
+
+  it("reports each security and uniqueness rule independently", () => {
+    const english = {
+      locale: "en",
+      siteName: "English name",
+      siteShortName: "",
+      siteTagline: "",
+      siteDescription: "",
+    };
+    const cases = [
+      {
+        name: "insecure social URL",
+        value: {
+          ...validSettings,
+          socialLinks: [
+            { ...validSettings.socialLinks[0], url: "http://github.com/example" },
+          ],
+        },
+        message: "httpsUrl",
+      },
+      {
+        name: "duplicate social platform",
+        value: {
+          ...validSettings,
+          socialLinks: [
+            validSettings.socialLinks[0],
+            { ...validSettings.socialLinks[0], url: "https://github.com/another" },
+          ],
+        },
+        message: "duplicatePlatform",
+      },
+      {
+        name: "duplicate translation locale",
+        value: { ...validSettings, translations: [english, english] },
+        message: "duplicateLocale",
+      },
+    ];
+
+    for (const testCase of cases) {
+      const result = appearanceSettingsSchema.safeParse(testCase.value);
+      assert.equal(result.success, false, testCase.name);
+      if (!result.success) {
+        assert.ok(
+          result.error.issues.some((issue) => issue.message === testCase.message),
+          testCase.name,
+        );
+      }
+    }
   });
 });

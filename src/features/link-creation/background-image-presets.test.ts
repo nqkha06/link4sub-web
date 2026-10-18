@@ -5,11 +5,17 @@ import test from "node:test"
 
 import { LINK_BACKGROUND_IMAGE_PRESETS } from "./background-image-presets.ts"
 
-test("the background library contains 24 complete local wallpaper pairs", () => {
-  assert.equal(LINK_BACKGROUND_IMAGE_PRESETS.length, 24)
-  assert.equal(new Set(LINK_BACKGROUND_IMAGE_PRESETS.map((preset) => preset.id)).size, 24)
+test("every background preset has a unique id and a complete local asset pair", () => {
+  assert.ok(LINK_BACKGROUND_IMAGE_PRESETS.length > 0)
+  assert.equal(
+    new Set(LINK_BACKGROUND_IMAGE_PRESETS.map((preset) => preset.id)).size,
+    LINK_BACKGROUND_IMAGE_PRESETS.length,
+  )
 
   for (const preset of LINK_BACKGROUND_IMAGE_PRESETS) {
+    assert.ok(preset.name.trim())
+    assert.ok(preset.categories.length > 0)
+    assert.equal(preset.enabled, true)
     assert.match(preset.imageUrl, /^\/assets\/images\/stus\/.+-mobile\.png$/)
     assert.match(preset.desktopImageUrl, /^\/assets\/images\/stus\/.+-desktop\.png$/)
     assert.equal(

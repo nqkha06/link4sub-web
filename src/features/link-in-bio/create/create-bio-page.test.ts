@@ -12,28 +12,28 @@ import {
 import { bioBackgroundPresets } from "../backgrounds/background-presets.ts";
 
 describe("sanitizeBioSlugInput", () => {
-  it("lowercases and replaces unsupported characters", () => {
-    assert.equal(sanitizeBioSlugInput("Ngô Kha  Shop!", false), "ng-kha-shop-");
-    assert.equal(sanitizeBioSlugInput("--abc", false), "abc");
-  });
-
-  it("keeps case when aliases are case sensitive", () => {
-    assert.equal(sanitizeBioSlugInput("MyPage", true), "MyPage");
-  });
-
-  it("caps the length", () => {
-    assert.equal(sanitizeBioSlugInput("a".repeat(200), false).length, BIO_SLUG_MAX_LENGTH);
+  it("applies alias casing, character and length rules", () => {
+    const cases = [
+      ["Ngô Kha  Shop!", false, "ng-kha-shop-"],
+      ["--abc", false, "abc"],
+      ["MyPage", true, "MyPage"],
+      ["a".repeat(200), false, "a".repeat(BIO_SLUG_MAX_LENGTH)],
+    ] as const;
+    for (const [input, caseSensitive, expected] of cases) {
+      assert.equal(sanitizeBioSlugInput(input, caseSensitive), expected);
+    }
   });
 });
 
 describe("buildCreateBioPayload", () => {
-  it("creates an empty draft with trimmed basics", () => {
+  it("creates a deterministic empty draft with normalized basics", () => {
+    const selectedPreset = bioBackgroundPresets[1];
     const payload = buildCreateBioPayload({
       name: "  Kha  ",
       slug: "kha-",
       description: "  ",
       access: "published",
-    });
+    }, () => 1 / bioBackgroundPresets.length + 0.0001);
 
     assert.equal(payload.name, "Kha");
     assert.equal(payload.customSlug, "kha");
@@ -41,11 +41,15 @@ describe("buildCreateBioPayload", () => {
     assert.equal(payload.status, "draft");
     assert.deepEqual(payload.customLinks, []);
     assert.equal(payload.appearance.buttonStyle, "rounded");
-    assert.ok(payload.appearance.selectedBackgroundId);
+    assert.equal(payload.appearance.selectedBackgroundId, selectedPreset.id);
+    assert.equal(payload.appearance.backgroundColor, selectedPreset.theme.accentColor);
   });
 
   it("lets the API generate the slug when empty", () => {
-    const payload = buildCreateBioPayload({ name: "Kha", slug: "", description: "Hi", access: "draft" });
+    const payload = buildCreateBioPayload(
+      { name: "Kha", slug: "", description: "Hi", access: "draft" },
+      () => 0,
+    );
     assert.equal(payload.customSlug, undefined);
     assert.equal(payload.title, "Hi");
   });
@@ -57,12 +61,6 @@ describe("pickRandomBioBackgroundPreset", () => {
     assert.equal(pickRandomBioBackgroundPreset(() => 0.9999)?.id, bioBackgroundPresets.at(-1)?.id);
   });
 
-  it("is used for the new page background", () => {
-    const preset = bioBackgroundPresets[1];
-    const payload = buildCreateBioPayload({ name: "Kha", slug: "", description: "", access: "draft" }, () => 1 / bioBackgroundPresets.length + 0.0001);
-    assert.equal(payload.appearance.selectedBackgroundId, preset.id);
-    assert.equal(payload.appearance.backgroundColor, preset.theme.accentColor);
-  });
 });
 
 describe("createStarterBioContent", () => {
