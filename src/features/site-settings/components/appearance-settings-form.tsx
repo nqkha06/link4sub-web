@@ -72,7 +72,10 @@ import {
   applyApiValidationErrors,
   getApiErrorMessage,
 } from "@/lib/api-response";
-import { DEFAULT_SITE_LOGO_URL } from "@/lib/branding/default-site-brand";
+import {
+  DEFAULT_SITE_LOGO_URL,
+  fallbackToDefaultSiteLogo,
+} from "@/lib/branding/default-site-brand";
 import type { AdminMedia } from "@/features/admin-media/types";
 import { getPublicLanguages } from "@/features/languages/api/languages.client";
 import type { PublicLanguagesResponse } from "@/features/languages/types";
@@ -435,6 +438,7 @@ export function AppearanceSettingsForm({
                 description={t("branding.logoLightDescription")}
                 field="logoLightId"
                 file={media.logoLightId}
+                fallbackUrl={DEFAULT_SITE_LOGO_URL}
                 onChoose={setPickerField}
                 onRemove={(field) => removeMedia(field, form, setMedia)}
               />
@@ -443,6 +447,7 @@ export function AppearanceSettingsForm({
                 description={t("branding.logoDarkDescription")}
                 field="logoDarkId"
                 file={media.logoDarkId}
+                fallbackUrl={DEFAULT_SITE_LOGO_URL}
                 dark
                 onChoose={setPickerField}
                 onRemove={(field) => removeMedia(field, form, setMedia)}
@@ -452,6 +457,7 @@ export function AppearanceSettingsForm({
                 description={t("branding.logoIconDescription")}
                 field="logoIconId"
                 file={media.logoIconId}
+                fallbackUrl={DEFAULT_SITE_LOGO_URL}
                 onChoose={setPickerField}
                 onRemove={(field) => removeMedia(field, form, setMedia)}
               />
@@ -703,6 +709,7 @@ function MediaCard({
   description,
   field,
   file,
+  fallbackUrl,
   dark,
   wide,
   onChoose,
@@ -712,12 +719,14 @@ function MediaCard({
   description: string;
   field: MediaField;
   file: SiteMedia | null;
+  fallbackUrl?: string;
   dark?: boolean;
   wide?: boolean;
   onChoose: (field: MediaField) => void;
   onRemove: (field: MediaField) => void;
 }) {
   const t = useTranslations("Admin.siteSettings.branding");
+  const imageUrl = file?.downloadUrl ?? fallbackUrl;
   return (
     <Card>
       <CardHeader>
@@ -726,8 +735,16 @@ function MediaCard({
       </CardHeader>
       <CardContent>
         <div className={`grid place-items-center overflow-hidden rounded-xl border ${wide ? "aspect-[1200/630]" : "aspect-[3/1]"} ${dark ? "bg-slate-950" : "bg-muted/30"}`}>
-          {file ? (
-            <Image src={file.downloadUrl} alt={file.name} width={wide ? 1200 : 600} height={wide ? 630 : 200} unoptimized className="size-full object-contain p-4" />
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={file?.name ?? title}
+              width={wide ? 1200 : 600}
+              height={wide ? 630 : 200}
+              unoptimized
+              onError={fallbackUrl ? (event) => fallbackToDefaultSiteLogo(event.currentTarget) : undefined}
+              className="size-full object-contain p-4"
+            />
           ) : (
             <div className="text-center text-sm text-muted-foreground"><ImageIcon className="mx-auto mb-2" />{t("noImage")}</div>
           )}

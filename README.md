@@ -51,7 +51,8 @@ Logo và bộ favicon khởi tạo nằm trong `public/brand`. Cấu hình logo/
 admin tải lên luôn được ưu tiên; khi chưa có hoặc khi xóa bản tùy chỉnh, web tự
 quay về bộ asset mặc định đã được đóng gói cùng bản deploy. Compose Dokploy lưu
 bộ favicon tùy chỉnh trên named volume `site-icons`, nên bản admin không mất khi
-container được tạo lại.
+container được tạo lại. Ba slot logo nền sáng, logo nền tối và logo icon dùng
+fallback độc lập, nên admin có thể ghi đè từng slot riêng.
 
 ## Kiểm tra trước khi merge
 

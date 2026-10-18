@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useState, type SyntheticEvent } from "react";
 
 import type { PublicSiteSettings } from "@/features/site-settings/types";
-import { DEFAULT_SITE_LOGO_URL } from "@/lib/branding/default-site-brand";
+import {
+  DEFAULT_SITE_LOGO_URL,
+  fallbackToDefaultSiteLogo,
+} from "@/lib/branding/default-site-brand";
 import { cn } from "@/lib/utils";
 
 /**
@@ -56,6 +59,7 @@ export function LandingLogo({
             unoptimized
             sizes="160px"
             onLoad={detectShape}
+            onError={(event) => fallbackToDefaultSiteLogo(event.currentTarget)}
             className={cn("object-contain object-left", darkLogo && "dark:hidden")}
           />
           {darkLogo ? (
@@ -66,6 +70,7 @@ export function LandingLogo({
               unoptimized
               sizes="160px"
               onLoad={detectShape}
+              onError={(event) => fallbackToDefaultSiteLogo(event.currentTarget)}
               className="hidden object-contain object-left dark:block"
             />
           ) : null}
@@ -83,6 +88,7 @@ export function LandingLogo({
               fill
               sizes="32px"
               unoptimized
+              onError={(event) => fallbackToDefaultSiteLogo(event.currentTarget)}
               className="object-contain"
             />
           </span>

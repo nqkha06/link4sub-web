@@ -5,7 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { useSiteBrand } from "@/features/site-settings/components/site-brand-provider";
-import { DEFAULT_SITE_LOGO_URL } from "@/lib/branding/default-site-brand";
+import {
+  DEFAULT_SITE_LOGO_URL,
+  fallbackToDefaultSiteLogo,
+} from "@/lib/branding/default-site-brand";
 import { cn } from "@/lib/utils";
 
 /** Tỉ lệ rộng/cao tối đa để coi logo là hình vuông. */
@@ -38,6 +41,7 @@ export function SiteBrandMark({
         fill
         sizes="40px"
         unoptimized
+        onError={(event) => fallbackToDefaultSiteLogo(event.currentTarget)}
         className={cn("object-contain", imageClassName)}
       />
     </span>
@@ -92,6 +96,7 @@ export function SiteBrandDisplay({
               sizes="144px"
               unoptimized
               onLoad={detectSquare}
+              onError={(event) => fallbackToDefaultSiteLogo(event.currentTarget)}
               className={cn(
                 "object-contain",
                 !isSquare && "object-left",
@@ -107,6 +112,7 @@ export function SiteBrandDisplay({
               sizes="144px"
               unoptimized
               onLoad={detectSquare}
+              onError={(event) => fallbackToDefaultSiteLogo(event.currentTarget)}
               className={cn(
                 "object-contain",
                 !isSquare && "object-left",

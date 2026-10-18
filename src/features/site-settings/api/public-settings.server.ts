@@ -4,12 +4,13 @@ import { getLocale } from "next-intl/server";
 import { cache } from "react";
 
 import type { PublicSiteSettings } from "@/features/site-settings/types";
+import { withDefaultSiteLogos } from "@/features/site-settings/default-branding";
 import { getServerConfig } from "@/config/server";
 import { readApiData } from "@/lib/api-response";
 
 export const PUBLIC_SITE_SETTINGS_TAG = "public-site-settings";
 
-const fallback: PublicSiteSettings = {
+const fallback = withDefaultSiteLogos({
   siteName: "Website",
   siteShortName: null,
   siteDescription:
@@ -33,7 +34,7 @@ const fallback: PublicSiteSettings = {
   },
   showLanguageFlags: true,
   updatedAt: new Date(0).toISOString(),
-};
+});
 
 export const getPublicSiteSettings = cache(async () => {
   const backendApiUrl = getServerConfig().apiInternalUrl;
@@ -47,10 +48,10 @@ export const getPublicSiteSettings = cache(async () => {
     if (!response.ok) return fallback;
     const settings = await readApiData<PublicSiteSettings>(response);
     // API cũ chưa trả trường này thì dùng mặc định.
-    return {
+    return withDefaultSiteLogos({
       ...settings,
       showLanguageFlags: settings.showLanguageFlags ?? fallback.showLanguageFlags,
-    };
+    });
   } catch {
     return fallback;
   }
