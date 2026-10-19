@@ -561,6 +561,14 @@
       }
     }
   },
+  "LinkRecommendations": {
+    "title": "Rekomendasi tautan",
+    "label": "Tampilkan bagian “Anda mungkin juga suka”",
+    "description": "Setelah pengunjung menyelesaikan tautan Anda, sarankan tautan lain yang telah Anda buat.",
+    "hint": "Saat diaktifkan, beberapa tautan publik Anda yang lain dapat ditampilkan di bawah halaman tautan untuk meningkatkan kunjungan silang.",
+    "saved": "Pengaturan rekomendasi tautan telah disimpan.",
+    "saveFailed": "Tidak dapat menyimpan pengaturan rekomendasi tautan."
+  },
   "ChangePassword": {
     "title": "Ubah kata sandi",
     "description": "Konfirmasikan kata sandi saat ini dan gunakan kata sandi baru yang unik untuk melindungi akun Anda.",

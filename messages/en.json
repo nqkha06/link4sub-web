@@ -593,8 +593,15 @@
     "nextPage": "Next page",
     "createNew": "Create new link",
     "loadErrorTitle": "Could not load links",
+    "loadErrorEyebrow": "Something went wrong",
     "loadErrorFallback": "Could not load the link list.",
     "tryAgain": "Try again",
+    "unavailableEyebrow": "Link unavailable",
+    "unavailableTitle": "This link could not be found",
+    "unavailableDescription": "The link does not exist, has been deleted, or you do not have permission to access it.",
+    "unavailableHint": "Return to your list and choose another Social link available to the current account.",
+    "backToLinks": "Back to links",
+    "checkAgain": "Check again",
     "emptyTitle": "No links yet",
     "emptyDescription": "Create your first Social link to protect a destination with visitor actions.",
     "notFound": "No matching links found",
@@ -931,6 +938,14 @@
       "title": "Display preferences",
       "description": "Adjust the experience to work more comfortably."
     }
+  },
+  "LinkRecommendations": {
+    "title": "Link recommendations",
+    "label": "Show the “You may also like” section",
+    "description": "After visitors complete your link, suggest other links you have created.",
+    "hint": "When enabled, some of your other public links may appear below the link page to encourage cross-traffic.",
+    "saved": "Link recommendation settings saved.",
+    "saveFailed": "Could not save link recommendation settings."
   },
   "SimplePages": {
     "levels": {

@@ -26,13 +26,13 @@
     "nav": {
       "links": {
         "howItWorks": "Cách hoạt động",
-        "whyLink4Sub": "Vì sao chọn Link4Sub",
-        "creatorLoop": "Câu chuyện từ creator"
+        "whyLink4Sub": "Tính năng nổi bật",
+        "creatorLoop": "Trải nghiệm nhà sáng tạo"
       },
       "actions": {
         "dashboard": "Bảng điều khiển",
         "signIn": "Đăng nhập",
-        "signUpFree": "Đăng ký miễn phí"
+        "signUpFree": "Bắt đầu miễn phí"
       },
       "changeLanguage": "Đổi ngôn ngữ",
       "theme": {
@@ -54,111 +54,111 @@
       "titleLine1": "Biến khán giả",
       "titleLine2": "của bạn thành",
       "titleHighlight": "người theo dõi.",
-      "description": "Link4Sub giúp bạn biến nội dung giá trị thành động lực để người xem đăng ký, theo dõi hoặc tham gia cộng đồng trước khi tiếp tục đến nội dung họ đang tìm kiếm.",
-      "ctaPrimary": "Tạo Link4Sub",
-      "ctaSecondary": "Xem cách hoạt động",
+      "description": "Chia sẻ nội dung, khuyến khích tương tác và kết nối với khán giả qua hệ thống liên kết thông minh. Tất cả trên một nền tảng duy nhất.",
+      "ctaPrimary": "Bắt đầu miễn phí",
+      "ctaSecondary": "Khám phá cách hoạt động",
       "socialProof": {
-        "users": "Được <strong>500K+</strong> người dùng yêu thích",
-        "rating": "Đánh giá trung bình 4.9"
+        "users": "Được tin dùng bởi <strong>20.5K+</strong> nhà sáng tạo",
+        "rating": "Được đánh giá 4.9/5 từ cộng đồng"
       },
       "demo": {
         "samplePack": {
-          "eyebrow": "Nội dung dành cho creator",
-          "description": "Hoàn thành các bước bên dưới để mở khóa nội dung."
+          "eyebrow": "Nội dung độc quyền",
+          "description": "Hoàn thành các bước đơn giản để truy cập nội dung được chia sẻ."
         },
         "discordServer": {
-          "eyebrow": "Quyền truy cập cộng đồng",
+          "eyebrow": "Cộng đồng thành viên",
           "title": "Discord dành riêng cho thành viên",
-          "description": "Hoàn thành các bước để nhận lời mời tham gia cộng đồng."
+          "description": "Kết nối với cộng đồng và khám phá nội dung dành riêng cho thành viên."
         },
         "actions": {
           "youtube": "Đăng ký kênh YouTube",
           "discord": "Tham gia Discord",
           "x": "Theo dõi trên X"
         },
-        "progressLabel": "Tiến độ mở khóa",
-        "unlocked": "Đã mở khóa",
-        "progressCount": "{done}/{total} hoàn thành",
-        "unlockButton": "Mở khóa nội dung",
-        "previewAria": "Mở bản xem trước {title}",
-        "footerUnlocked": "Xong rồi — nội dung đã được mở khóa.",
-        "footerReady": "Mọi thứ đã sẵn sàng. Mở khóa thôi.",
-        "footerPending": "Hoàn thành các bước bên trên để tiếp tục."
+        "progressLabel": "Tiến độ hoàn thành",
+        "unlocked": "Đã sẵn sàng",
+        "progressCount": "Đã hoàn thành {done}/{total} bước",
+        "unlockButton": "Truy cập nội dung",
+        "previewAria": "Xem trước {title}",
+        "footerUnlocked": "Bạn đã hoàn thành các bước và có thể tiếp tục.",
+        "footerReady": "Nội dung đã sẵn sàng để truy cập.",
+        "footerPending": "Hoàn thành các bước trên để tiếp tục."
       }
     },
     "platforms": {
-      "caption": "Kết nối với các nền tảng khán giả của bạn đang dùng"
+      "caption": "Kết nối với những nền tảng khán giả của bạn yêu thích"
     },
     "why": {
-      "eyebrow": "Vì sao chọn Link4Sub",
-      "titleBeforeHighlight": "Tại sao nên dùng",
-      "titleHighlight": "Link4Sub?",
-      "description": "Một đường link bình thường chỉ đưa người xem đi nơi khác. Link4Sub giúp mỗi lượt truy cập tạo thêm giá trị trước khi họ tiếp tục.",
+      "eyebrow": "Giải pháp Link4Sub",
+      "titleBeforeHighlight": "Mọi công cụ để",
+      "titleHighlight": "phát triển cộng đồng.",
+      "description": "Từ chia sẻ nội dung đến xây dựng kết nối với khán giả, Link4Sub giúp bạn đơn giản hóa quy trình và tập trung vào điều quan trọng nhất.",
       "benefits": {
         "createLink": {
-          "title": "Tạo link trong vài giây",
-          "description": "Chọn nội dung đích, thêm các hành động cần hoàn thành và Link4Sub sẽ lo phần còn lại."
+          "title": "Tạo liên kết dễ dàng",
+          "description": "Biến nội dung thành liên kết tương tác chỉ trong vài bước. Không cần kiến thức kỹ thuật hay thiết lập phức tạp."
         },
         "clickToEngagement": {
-          "title": "Biến lượt click thành tương tác",
-          "description": "Thay vì chỉ chuyển hướng, mỗi lượt truy cập có thể tạo thêm subscribe, follow, join hoặc engagement."
+          "title": "Thúc đẩy tương tác tự nhiên",
+          "description": "Khuyến khích khán giả đăng ký, theo dõi hoặc tham gia cộng đồng ngay trong hành trình truy cập nội dung."
         },
         "chooseUnlock": {
-          "title": "Tự chọn cách mở khóa",
-          "description": "Bạn quyết định người xem cần làm gì trước khi tiếp tục, phù hợp với từng chiến dịch và mục tiêu tăng trưởng."
+          "title": "Linh hoạt theo mục tiêu",
+          "description": "Tùy chỉnh các bước tương tác và điều kiện truy cập để phù hợp với từng nội dung hoặc chiến dịch."
         },
         "shareAnywhere": {
-          "title": "Chia sẻ ở bất kỳ đâu",
-          "description": "Dùng Link4Sub trên YouTube, Discord, TikTok, bio, website hoặc bất kỳ nơi nào bạn đang có audience."
+          "title": "Chia sẻ trên mọi kênh",
+          "description": "Đặt liên kết trên mạng xã hội, website, trang cá nhân hoặc bất kỳ kênh phân phối nào của bạn."
         },
         "manageLinks": {
-          "title": "Quản lý mọi link tập trung",
-          "description": "Các link đã tạo được lưu lại để bạn dễ dàng tìm kiếm, quản lý và theo dõi hiệu quả khi cần."
+          "title": "Quản lý tập trung",
+          "description": "Tổ chức, tìm kiếm và theo dõi các liên kết trong một bảng điều khiển thống nhất."
         },
         "noSensitiveAccess": {
-          "title": "Không cần trao quyền nhạy cảm",
-          "description": "Link4Sub không cần mật khẩu mạng xã hội của bạn. Người dùng chỉ hoàn thành action rồi tiếp tục đến nội dung."
+          "title": "Đơn giản và an toàn",
+          "description": "Không cần chia sẻ mật khẩu mạng xã hội. Bạn thiết lập các bước tương tác mà không phải cung cấp thông tin đăng nhập nhạy cảm."
         }
       }
     },
     "creatorLoop": {
-      "eyebrow": "Câu chuyện từ creator",
-      "titleBeforeHighlight": "Mọi người nói gì về",
-      "titleHighlight": "Link4Sub?",
-      "description": "Từ creator, community owner đến những người chia sẻ tài nguyên — mỗi người dùng Link4Sub theo một cách khác nhau.",
+      "eyebrow": "Dành cho nhà sáng tạo",
+      "titleBeforeHighlight": "Được thiết kế để",
+      "titleHighlight": "đồng hành cùng bạn.",
+      "description": "Từ nhà sáng tạo nội dung đến người quản lý cộng đồng, khám phá những cách Link4Sub có thể hỗ trợ việc chia sẻ tài nguyên và kết nối khán giả.",
       "testimonials": {
         "t1": {
-          "quote": "Tạo link khá nhanh, giao diện dễ hiểu. Mình dùng chủ yếu cho tài nguyên tải xuống và không phải hướng dẫn người xem quá nhiều."
+          "quote": "Việc chia sẻ tài nguyên không chỉ dừng lại ở một lượt tải xuống. Đây còn là cơ hội giới thiệu kênh đến những người thực sự quan tâm đến nội dung."
         },
         "t2": {
-          "quote": "Điểm mình thích nhất là vẫn giữ workflow cũ. Chỉ cần thay link gốc bằng Link4Sub là xong."
+          "quote": "Các bước tham gia cộng đồng được sắp xếp rõ ràng, giúp thành viên mới khám phá những kênh chính thức trước khi truy cập tài nguyên."
         },
         "t3": {
-          "quote": "Mình dùng để mở khóa invite Discord. Flow khá tự nhiên và nhìn chuyên nghiệp hơn việc yêu cầu người dùng làm thủ công."
+          "quote": "Các bộ sample và preset miễn phí có thể trở thành điểm kết nối với người nghe, đồng thời giới thiệu những sản phẩm tiếp theo."
         },
         "t4": {
-          "quote": "Một link nhưng có thể gắn nhiều action khác nhau. Khá tiện khi muốn vừa tăng subscriber vừa kéo người dùng vào cộng đồng."
+          "quote": "Chọn nội dung, thiết lập các bước tương tác và chia sẻ liên kết. Một quy trình dễ hiểu, không cần cấu hình phức tạp."
         },
         "t5": {
-          "quote": "Phần tạo link không bị rườm rà. Chọn action, thêm destination rồi share. Đúng kiểu công cụ mở lên là dùng được."
+          "quote": "Quản lý các liên kết tài nguyên tại một nơi giúp việc tìm kiếm, cập nhật và theo dõi trở nên thuận tiện hơn."
         },
         "t6": {
-          "quote": "Mình thích cách Link4Sub biến file miễn phí thành một phần của chiến lược tăng audience thay vì chỉ cho tải xuống rồi thôi."
+          "quote": "Kết hợp nhiều bước tương tác trong một liên kết rất phù hợp khi phát triển nhiều kênh nội dung song song."
         },
         "t7": {
-          "quote": "Dùng cho các link bonus content khá hợp. Người xem hiểu họ cần làm gì trước khi mở khóa nên flow không bị khó chịu."
+          "quote": "Các bước truy cập được trình bày rõ ràng để người xem biết cần làm gì trước khi tiếp tục đến nội dung bổ sung."
         },
         "t8": {
-          "quote": "Quản lý link tập trung giúp mình đỡ phải lưu từng URL lung tung. Với nhiều campaign thì cái này khá đáng giá."
+          "quote": "Khi quản lý nhiều nội dung và chiến dịch, bảng điều khiển tập trung giúp việc theo dõi và điều chỉnh thuận tiện hơn."
         }
       }
     },
     "finalCta": {
-      "badge": "Tăng trưởng bắt đầu từ một đường link",
-      "titleLine1": "Sẵn sàng biến lượt truy cập",
-      "titleLine2": "thành",
-      "titleHighlight": "người theo dõi?",
-      "description": "Tham gia cùng hơn 100.000 nhà sáng tạo đang sử dụng Link4Sub để tiếp cận nhiều người hơn và phát triển cộng đồng của mình.",
+      "badge": "Bắt đầu với Link4Sub",
+      "titleLine1": "Nội dung của bạn xứng đáng",
+      "titleLine2": "được khám phá",
+      "titleHighlight": "nhiều hơn.",
+      "description": "Mỗi lượt truy cập đều mang đến cơ hội kết nối. Bắt đầu chia sẻ nội dung hiệu quả hơn và xây dựng cộng đồng theo cách của riêng bạn.",
       "cta": "Bắt đầu miễn phí"
     },
     "footer": {
@@ -173,115 +173,115 @@
         "reportLink": "Báo cáo liên kết",
         "payoutRates": "Tỷ lệ thanh toán"
       },
-      "rights": "© {year} {site}. Đã đăng ký bản quyền.",
-      "builtBy": "Thiết kế & phát triển với <heart></heart> bởi <author></author>"
+      "rights": "© {year} {site}. Bảo lưu mọi quyền.",
+      "builtBy": "Thiết kế & phát triển với ❤ bởi <author></author>"
     },
     "howItWorks": {
       "metadata": {
         "title": "Cách hoạt động — {siteName}",
-        "description": "Xem cách Link4Sub biến mọi link thành một hành động mở khóa — tạo link, chia sẻ ở bất cứ đâu và tăng trưởng khi người xem hoàn thành các bước."
+        "description": "Tìm hiểu cách tạo liên kết tương tác, chia sẻ nội dung và kết nối với khán giả qua Link4Sub chỉ trong ba bước."
       },
       "hero": {
         "eyebrow": "Cách hoạt động",
-        "titleLine1": "Biến mỗi link bạn chia sẻ",
-        "titleHighlight": "thành một kênh tăng trưởng.",
-        "description": "Thêm một bước mở khóa vào bất kỳ nội dung nào bạn chia sẻ. Người xem theo dõi, subscribe, tham gia hoặc đăng ký — và nội dung tự động mở khóa cho họ.",
-        "badge": "Ba bước. Chưa đầy một phút."
+        "titleLine1": "Một liên kết thông minh.",
+        "titleHighlight": "Nhiều cơ hội kết nối.",
+        "description": "Thiết lập các bước tương tác phù hợp với nội dung của bạn, chia sẻ liên kết và mang đến cho khán giả một hành trình truy cập rõ ràng.",
+        "badge": "Thiết lập đơn giản trong ba bước"
       },
       "process": {
-        "eyebrow": "Quy trình",
-        "title": "Ba bước. Chưa đầy một phút.",
+        "eyebrow": "Quy trình đơn giản",
+        "title": "Ba bước để bắt đầu.",
         "steps": {
           "create": {
-            "tag": "Tạo",
-            "title": "Dựng một link",
-            "description": "Dán một URL, tải lên file, hoặc viết một đoạn nội dung. Chọn các hành động người xem cần hoàn thành — theo dõi, subscribe, tham gia, thích — rồi xuất bản."
+            "tag": "01 · Tạo",
+            "title": "Thiết lập liên kết",
+            "description": "Thêm URL, tệp hoặc nội dung muốn chia sẻ. Chọn những bước tương tác phù hợp và xuất bản liên kết của bạn."
           },
           "share": {
-            "tag": "Chia sẻ",
-            "title": "Đặt nó ở bất cứ đâu",
-            "description": "Đặt link Link4Sub trong bio, bài đăng, mô tả video hoặc nhóm chat. Ai bấm vào cũng đến một trang mở khóa gọn gàng — không cần tài khoản."
+            "tag": "02 · Chia sẻ",
+            "title": "Tiếp cận khán giả",
+            "description": "Đặt liên kết trên mạng xã hội, website, mô tả video hoặc các kênh cộng đồng. Người xem có thể tiếp tục mà không cần tài khoản Link4Sub."
           },
           "grow": {
-            "tag": "Tăng trưởng",
-            "title": "Theo dõi nó hoạt động",
-            "description": "Khi người xem hoàn thành các bước, kênh của bạn tăng trưởng tự động. Dashboard cho bạn biết chính xác link nào chuyển đổi tốt và traffic đến từ đâu."
+            "tag": "03 · Theo dõi",
+            "title": "Đánh giá hiệu quả",
+            "description": "Theo dõi lượt truy cập và các chỉ số hoàn thành được hỗ trợ trong bảng điều khiển để điều chỉnh cách chia sẻ nội dung."
           }
         }
       },
       "personas": {
-        "eyebrow": "Ai đang dùng Link4Sub",
-        "title": "Ai chia sẻ một link và muốn nhận lại điều gì đó.",
+        "eyebrow": "Dành cho ai",
+        "title": "Phù hợp với cách bạn sáng tạo.",
         "items": {
           "youtuber": {
-            "title": "YouTuber",
-            "description": "Biến link trong mô tả video thành subscriber. Thả một link tài nguyên miễn phí, yêu cầu subscribe kênh và tham gia Discord để mở khóa."
+            "title": "Nhà sáng tạo YouTube",
+            "description": "Kết nối người xem với kênh và cộng đồng của bạn thông qua các tài nguyên hoặc nội dung bổ sung được chia sẻ."
           },
           "gamer": {
-            "title": "Người làm game & mod",
-            "description": "Phân phối script, mod và asset qua một link duy nhất. Yêu cầu tham gia Discord hoặc subscribe YouTube để cộng đồng lớn lên mỗi khi có người chia sẻ."
+            "title": "Nhà sáng tạo game và mod",
+            "description": "Chia sẻ bản mod, tài nguyên và nội dung cộng đồng qua một liên kết có các bước truy cập rõ ràng."
           },
           "newsletter": {
-            "title": "Người xây dựng newsletter",
-            "description": "Thu thập email như một phần của bước mở khóa. Ai muốn tải tài nguyên miễn phí sẽ vào danh sách của bạn — không cần thêm form đăng ký riêng."
+            "title": "Người xây dựng cộng đồng",
+            "description": "Dẫn khán giả đến những kênh cộng đồng và nội dung quan trọng trong một hành trình truy cập thống nhất."
           },
           "musician": {
-            "title": "Nhạc sĩ & podcaster",
-            "description": "Khóa track độc quyền sau lượt follow Spotify hoặc theo dõi Instagram. Người nghe thông thường trở thành fan trước khi nghe bản phát hành tiếp theo."
+            "title": "Nhà sản xuất âm nhạc",
+            "description": "Chia sẻ sample, preset và tài nguyên âm thanh, đồng thời giới thiệu các kênh sáng tạo của bạn."
           }
         }
       },
       "differentiators": {
-        "eyebrow": "Khác biệt",
-        "title": "Điều khiến Link4Sub khác biệt",
+        "eyebrow": "Điểm nổi bật",
+        "title": "Thiết kế để đơn giản hóa việc chia sẻ.",
         "items": {
           "noAccount": {
             "title": "Người xem không cần tài khoản",
-            "description": "Họ bấm link, hoàn thành hành động, nội dung mở khóa. Không có ma sát đăng ký ở phía họ nghĩa là traffic của bạn chuyển đổi nhiều hơn."
+            "description": "Khán giả chỉ cần thực hiện các bước được thiết lập để tiếp tục đến nội dung, không phải đăng ký Link4Sub."
           },
           "analytics": {
-            "title": "Phân tích thật, không phải số liệu ảo",
-            "description": "Xem tỷ lệ hoàn thành theo từng link, cùng lượt xem và lượt hoàn thành theo thời gian. Ra quyết định dựa trên dữ liệu, không phải đoán."
+            "title": "Theo dõi dựa trên dữ liệu",
+            "description": "Nắm bắt lượt truy cập và các chỉ số hoàn thành được hỗ trợ để hiểu hiệu quả của từng liên kết."
           },
           "free": {
-            "title": "Miễn phí cho các tính năng cơ bản",
-            "description": "Tạo bao nhiêu link tùy thích mà không cần thẻ thanh toán. Bắt đầu ngay, nâng cấp sau nếu cần thêm."
+            "title": "Bắt đầu miễn phí",
+            "description": "Khám phá các tính năng miễn phí hiện có và tạo liên kết đầu tiên mà không cần thiết lập phức tạp."
           },
           "updated": {
-            "title": "Luôn cập nhật theo nền tảng",
-            "description": "Các nền tảng được hỗ trợ đều được theo dõi liên tục. Khi một nền tảng thay đổi, chúng tôi cập nhật nhanh để link của bạn luôn hoạt động."
+            "title": "Tương thích theo từng nền tảng",
+            "description": "Các loại hành động được hỗ trợ phụ thuộc vào chính sách và khả năng tích hợp của từng nền tảng."
           }
         }
       },
       "faq": {
-        "eyebrow": "FAQ",
-        "title": "Còn thắc mắc?",
-        "highlightedTitle": "Chúng tôi có câu trả lời.",
-        "description": "Mọi điều bạn cần biết về việc tạo link, hoàn thành hành động và mở khóa nội dung với Link4Sub.",
+        "eyebrow": "Câu hỏi thường gặp",
+        "title": "Bắt đầu với Link4Sub",
+        "highlightedTitle": "dễ dàng hơn bạn nghĩ.",
+        "description": "Tìm hiểu cách tạo liên kết, chia sẻ nội dung và quản lý trải nghiệm truy cập trên Link4Sub.",
         "items": {
           "noAccount": {
-            "question": "Người xem có cần tài khoản Link4Sub để mở khóa nội dung không?",
-            "answer": "Không. Người xem chỉ cần hoàn thành các hành động được yêu cầu và tiếp tục — không cần đăng ký tài khoản."
+            "question": "Link4Sub hoạt động như thế nào?",
+            "answer": "Bạn tạo một liên kết, chọn những bước tương tác phù hợp rồi chia sẻ đến khán giả. Người xem thực hiện các bước được yêu cầu trước khi tiếp tục đến nội dung đích."
           },
           "verify": {
-            "question": "Link4Sub xác minh hành động đã hoàn thành như thế nào?",
-            "answer": "Link4Sub kiểm tra qua nền tảng tương ứng (YouTube, Discord, Telegram...) để xác nhận hành động thực sự diễn ra trước khi mở khóa nội dung."
+            "question": "Tôi có thể bắt đầu sử dụng Link4Sub miễn phí không?",
+            "answer": "Có. Bạn có thể bắt đầu với các tính năng miễn phí hiện được cung cấp trên Link4Sub. Những tính năng hoặc quyền lợi khác có thể phụ thuộc vào chính sách dịch vụ."
           },
           "content": {
-            "question": "Tôi có thể khóa những loại nội dung nào sau một link?",
-            "answer": "URL, file tải lên, hoặc một đoạn văn bản đã lưu — bất kỳ đích đến nào bạn muốn người xem hoàn thành hành động trước khi tiếp cận."
+            "question": "Link4Sub phù hợp với những ai?",
+            "answer": "Link4Sub dành cho nhà sáng tạo nội dung, YouTuber, streamer, người quản lý cộng đồng và bất kỳ ai muốn chia sẻ tài nguyên số đồng thời kết nối với khán giả."
           },
           "spam": {
-            "question": "Khán giả của tôi có bị làm phiền không?",
-            "answer": "Không. Link4Sub chỉ yêu cầu đúng những hành động bạn chọn khi tạo link, không gửi thông báo hay email thay mặt bạn."
+            "question": "Tôi có thể tùy chỉnh trải nghiệm truy cập không?",
+            "answer": "Có. Bạn có thể chọn các bước tương tác và điều kiện truy cập phù hợp với mục tiêu của từng nội dung hoặc chiến dịch."
           },
           "platformChange": {
-            "question": "Nếu một nền tảng thay đổi cách hoạt động thì sao?",
-            "answer": "Đội ngũ Link4Sub theo dõi các nền tảng được hỗ trợ liên tục và cập nhật ngay khi cần, để link của bạn tiếp tục hoạt động ổn định."
+            "question": "Người xem có cần đăng ký tài khoản Link4Sub không?",
+            "answer": "Không. Người xem có thể hoàn thành các bước được yêu cầu và tiếp tục đến nội dung mà không cần tạo tài khoản Link4Sub."
           },
           "dropoff": {
-            "question": "Tôi có thể xem ai đã bấm vào nhưng chưa hoàn thành các bước không?",
-            "answer": "Có. Dashboard hiển thị lượt xem và lượt hoàn thành cho từng link, giúp bạn thấy rõ điểm rơi trong luồng mở khóa."
+            "question": "Tôi có thể theo dõi hiệu quả liên kết không?",
+            "answer": "Có. Bảng điều khiển cung cấp lượt truy cập cùng các chỉ số hoạt động được hỗ trợ, giúp bạn đánh giá hiệu quả chia sẻ và điều chỉnh cách tiếp cận khán giả."
           }
         }
       }
@@ -593,8 +593,15 @@
     "nextPage": "Trang sau",
     "createNew": "Tạo liên kết mới",
     "loadErrorTitle": "Không tải được liên kết",
+    "loadErrorEyebrow": "Đã có lỗi xảy ra",
     "loadErrorFallback": "Không tải được danh sách link.",
     "tryAgain": "Thử lại",
+    "unavailableEyebrow": "Liên kết không khả dụng",
+    "unavailableTitle": "Không tìm thấy liên kết này",
+    "unavailableDescription": "Liên kết không tồn tại, đã bị xóa hoặc bạn không có quyền truy cập.",
+    "unavailableHint": "Quay lại danh sách để chọn một Social Link khác thuộc tài khoản hiện tại.",
+    "backToLinks": "Quay lại danh sách",
+    "checkAgain": "Kiểm tra lại",
     "emptyTitle": "Chưa có liên kết nào",
     "emptyDescription": "Tạo Social Link đầu tiên và chọn nội dung bạn muốn chia sẻ.",
     "notFound": "Không tìm thấy link phù hợp",
@@ -931,6 +938,14 @@
       "title": "Tuỳ chọn hiển thị",
       "description": "Điều chỉnh trải nghiệm để làm việc thoải mái hơn."
     }
+  },
+  "LinkRecommendations": {
+    "title": "Gợi ý link",
+    "label": "Hiển thị mục “Bạn có thể thích”",
+    "description": "Sau khi người xem hoàn thành vượt link, hệ thống sẽ gợi ý thêm các liên kết khác do bạn tạo.",
+    "hint": "Khi bật, một số liên kết công khai khác của bạn có thể được hiển thị bên dưới trang vượt link để tăng lượt xem chéo giữa các liên kết.",
+    "saved": "Đã lưu cài đặt gợi ý link.",
+    "saveFailed": "Không thể lưu cài đặt gợi ý link."
   },
   "SimplePages": {
     "levels": {

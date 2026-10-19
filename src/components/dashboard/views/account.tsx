@@ -62,6 +62,8 @@ import {
 import { useAuthUser } from "@/features/auth/components/auth-user-provider";
 import { useMemberCurrency } from "@/features/currencies/components/member-currency-provider";
 import { MemberPaymentMethodsManager } from "@/features/payment-methods/components/member-payment-methods-page";
+import { updateLinkRecommendationsPreference } from "@/features/link-recommendations/api/link-recommendations.client";
+import type { LinkRecommendationsPreference } from "@/features/link-recommendations/types";
 import {
   useSiteBrand,
 } from "@/features/site-settings/components/site-brand-provider";
@@ -76,8 +78,13 @@ type PasswordForm = {
 const inputClassName =
   "h-11 rounded-lg border-border bg-background shadow-none sm:h-10";
 
-export function AccountView() {
+export function AccountView({
+  initialLinkRecommendations,
+}: {
+  initialLinkRecommendations: LinkRecommendationsPreference;
+}) {
   const t = useTranslations("Account");
+  const linkRecommendationsT = useTranslations("LinkRecommendations");
   const avatarMaxBytes = useBusinessConfig().uploads.coverImageMaxBytes;
   const avatarMaxMb = Math.round(avatarMaxBytes / 1024 / 1024);
   const passwordT = useTranslations("ChangePassword");
@@ -112,12 +119,12 @@ export function AccountView() {
   const [passwordError, setPasswordError] = useState("");
 
   const [linkRecommendationsEnabled, setLinkRecommendationsEnabled] =
-    useState(true);
+    useState(initialLinkRecommendations.enabled);
 
   const [
     savedLinkRecommendationsEnabled,
     setSavedLinkRecommendationsEnabled,
-  ] = useState(true);
+  ] = useState(initialLinkRecommendations.enabled);
 
   const [savingLinkRecommendations, setSavingLinkRecommendations] =
     useState(false);
@@ -186,7 +193,11 @@ export function AccountView() {
     { id: "personal-information", icon: User, label: t("navigation.personal") },
     { id: "payment-method", icon: CreditCard, label: t("navigation.payment") },
     { id: "currency", icon: CircleDollarSign, label: t("navigation.currency") },
-    { id: "link-recommendations", icon: Lightbulb, label: "Gợi ý link" },
+    {
+      id: "link-recommendations",
+      icon: Lightbulb,
+      label: linkRecommendationsT("title"),
+    },
     { id: "change-password", icon: KeyRound, label: passwordT("title") },
   ];
 
@@ -596,88 +607,85 @@ export function AccountView() {
             </p>
           </SettingsCard>
           <SettingsCard
-  id="link-recommendations"
-  icon={Lightbulb}
-  title="Gợi ý link"
-  footer={
-    <CardActions>
-      <Button
-        type="button"
-        className="h-9"
-        disabled={
-          savingLinkRecommendations ||
-          linkRecommendationsEnabled === savedLinkRecommendationsEnabled
-        }
-        onClick={async () => {
-          setSavingLinkRecommendations(true);
+            id="link-recommendations"
+            icon={Lightbulb}
+            title={linkRecommendationsT("title")}
+            footer={
+              <CardActions>
+                <Button
+                  type="button"
+                  className="h-9"
+                  disabled={
+                    savingLinkRecommendations ||
+                    linkRecommendationsEnabled ===
+                      savedLinkRecommendationsEnabled
+                  }
+                  onClick={async () => {
+                    setSavingLinkRecommendations(true);
 
-          try {
-            // TODO: lưu setting vào API
-            // await updateAccountPreferences({
-            //   linkRecommendationsEnabled,
-            // });
+                    try {
+                      const updated =
+                        await updateLinkRecommendationsPreference(
+                          linkRecommendationsEnabled,
+                        );
 
-            setSavedLinkRecommendationsEnabled(
-              linkRecommendationsEnabled,
-            );
+                      setLinkRecommendationsEnabled(updated.enabled);
+                      setSavedLinkRecommendationsEnabled(updated.enabled);
+                      toast.success(linkRecommendationsT("saved"));
+                    } catch (error) {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : linkRecommendationsT("saveFailed"),
+                      );
+                    } finally {
+                      setSavingLinkRecommendations(false);
+                    }
+                  }}
+                >
+                  {savingLinkRecommendations ? (
+                    <LoaderCircle className="animate-spin" />
+                  ) : (
+                    <Save />
+                  )}
 
-            toast.success("Đã lưu cài đặt gợi ý link.");
-          } catch (error) {
-            toast.error(
-              error instanceof Error
-                ? error.message
-                : "Không thể lưu cài đặt gợi ý link.",
-            );
-          } finally {
-            setSavingLinkRecommendations(false);
-          }
-        }}
-      >
-        {savingLinkRecommendations ? (
-          <LoaderCircle className="animate-spin" />
-        ) : (
-          <Save />
-        )}
+                  {t("saveChanges")}
+                </Button>
+              </CardActions>
+            }
+          >
+            <div className="flex items-start justify-between gap-6">
+              <div className="min-w-0">
+                <Label
+                  htmlFor="link-recommendations-enabled"
+                  className="text-sm font-medium text-foreground"
+                >
+                  {linkRecommendationsT("label")}
+                </Label>
 
-        {t("saveChanges")}
-      </Button>
-    </CardActions>
-  }
->
-  <div className="flex items-start justify-between gap-6">
-    <div className="min-w-0">
-      <Label
-        htmlFor="link-recommendations-enabled"
-        className="text-sm font-medium text-foreground"
-      >
-        Hiển thị mục “Bạn có thể thích”
-      </Label>
+                <p className="mt-1.5 max-w-xl text-sm leading-5 text-muted-foreground">
+                  {linkRecommendationsT("description")}
+                </p>
+              </div>
 
-      <p className="mt-1.5 max-w-xl text-sm leading-5 text-muted-foreground">
-        Sau khi người xem hoàn thành vượt link, hệ thống sẽ gợi ý thêm các
-        liên kết khác do bạn tạo.
-      </p>
-    </div>
+              <Switch
+                id="link-recommendations-enabled"
+                checked={linkRecommendationsEnabled}
+                onCheckedChange={setLinkRecommendationsEnabled}
+                className="mt-0.5 shrink-0"
+              />
+            </div>
 
-    <Switch
-      id="link-recommendations-enabled"
-      checked={linkRecommendationsEnabled}
-      onCheckedChange={setLinkRecommendationsEnabled}
-      className="mt-0.5 shrink-0"
-    />
-  </div>
+            <div className="mt-5 rounded-lg border bg-muted/20 px-4 py-3">
+              <div className="flex gap-3">
+                <Lightbulb className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
 
-  <div className="mt-5 rounded-lg border bg-muted/20 px-4 py-3">
-    <div className="flex gap-3">
-      <Lightbulb className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-
-      <p className="text-xs leading-5 text-muted-foreground">
-        Khi bật, một số liên kết công khai khác của bạn có thể được hiển thị
-        bên dưới trang vượt link để tăng lượt xem chéo giữa các liên kết.
-      </p>
-    </div>
-  </div>
-</SettingsCard>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  {linkRecommendationsT("hint")}
+                </p>
+              </div>
+            </div>
+          </SettingsCard>
           <form onSubmit={handlePasswordSubmit}>
             <SettingsCard
               id="change-password"

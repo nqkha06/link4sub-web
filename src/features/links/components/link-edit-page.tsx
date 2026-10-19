@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CircleAlert, ExternalLink, LoaderCircle,ChevronLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, CircleAlert, FileQuestion, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PageContainer } from "@/components/dashboard/ui";
 import {
   Breadcrumb,
@@ -16,10 +15,17 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import SocialLinksGenerator from "@/features/link-creation/components/link-creator";
 import { getLinks, type LinkDto } from "@/lib/api-client";
+import { ApiRequestError } from "@/lib/api-response";
+
+type LinkEditFailure = {
+  kind: "not-found" | "load";
+  message: string;
+};
 
 function getCachedLink(linkId: string) {
   try {
@@ -42,35 +48,54 @@ function cacheLink(link: LinkDto) {
 }
 
 export function LinkEditPage({ linkId }: { linkId: string }) {
-  const t = useTranslations("LinkCard");
   const linksT = useTranslations("Links");
   const commonT = useTranslations("Common");
   const dashboardT = useTranslations("Dashboard.nav");
   const [link, setLink] = useState<LinkDto>();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [failure, setFailure] = useState<LinkEditFailure>();
 
   const loadLink = useCallback(async () => {
     const cachedLink = getCachedLink(linkId);
 
     try {
       setLoading(true);
-      setError("");
+      setFailure(undefined);
       const links = await getLinks();
-      const currentLink = links.find((item) => item.id === linkId) ?? cachedLink;
+      const currentLink = links.find((item) => item.id === linkId);
 
       if (!currentLink) {
-        throw new Error(linksT("notFound"));
+        setLink(undefined);
+        setFailure({
+          kind: "not-found",
+          message: linksT("unavailableDescription"),
+        });
+        return;
       }
 
       setLink(currentLink);
       cacheLink(currentLink);
     } catch (loadError) {
-      if (cachedLink) {
+      const unavailable =
+        loadError instanceof ApiRequestError &&
+        (loadError.status === 403 || loadError.status === 404);
+
+      if (unavailable) {
+        setLink(undefined);
+        setFailure({
+          kind: "not-found",
+          message: linksT("unavailableDescription"),
+        });
+      } else if (cachedLink) {
         setLink(cachedLink);
-        setError("");
+        setFailure(undefined);
       } else {
-        setError(loadError instanceof Error ? loadError.message : linksT("loadErrorFallback"));
+        setFailure({
+          kind: "load",
+          message: loadError instanceof Error
+            ? loadError.message
+            : linksT("loadErrorFallback"),
+        });
       }
     } finally {
       setLoading(false);
@@ -83,10 +108,11 @@ export function LinkEditPage({ linkId }: { linkId: string }) {
 
   if (loading) return <LinkEditLoading />;
 
-  if (error || !link) {
+  if (failure || !link) {
     return (
       <LinkEditError
-        message={error || linksT("notFound")}
+        kind={failure?.kind ?? "not-found"}
+        message={failure?.message ?? linksT("unavailableDescription")}
         onRetry={() => void loadLink()}
       />
     );
@@ -198,25 +224,86 @@ function LinkEditLoading() {
   );
 }
 
-function LinkEditError({ message, onRetry }: { message: string; onRetry: () => void }) {
+function LinkEditError({
+  kind,
+  message,
+  onRetry,
+}: {
+  kind: LinkEditFailure["kind"];
+  message: string;
+  onRetry: () => void;
+}) {
   const t = useTranslations("Links");
+  const isNotFound = kind === "not-found";
 
   return (
-    <PageContainer size="wide">
-      <Button asChild variant="ghost" size="icon" className="size-11 sm:size-9">
-        <Link href="/member/links" aria-label="Social links"><ArrowLeft /></Link>
-      </Button>
-      <Alert variant="destructive">
-        <CircleAlert />
-        <AlertTitle>{t("loadErrorTitle")}</AlertTitle>
-        <AlertDescription>
-          <p>{message}</p>
-          <Button variant="outline" className="mt-3 bg-background" onClick={onRetry}>
-            <LoaderCircle />
-            {t("tryAgain")}
-          </Button>
-        </AlertDescription>
-      </Alert>
+    <PageContainer
+      size="wide"
+      className="flex min-h-[calc(100dvh-12rem)] items-center justify-center py-8 sm:py-12"
+    >
+      <Card
+        role="alert"
+        aria-live="polite"
+        className="relative w-full max-w-xl overflow-hidden border-border/80 py-0 shadow-sm"
+      >
+        <div
+          className={isNotFound ? "h-1 bg-primary" : "h-1 bg-destructive"}
+          aria-hidden="true"
+        />
+        <CardContent className="p-6 sm:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div
+              className={
+                isNotFound
+                  ? "grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15"
+                  : "grid size-12 place-items-center rounded-2xl bg-destructive/10 text-destructive ring-1 ring-destructive/15"
+              }
+              aria-hidden="true"
+            >
+              {isNotFound ? (
+                <FileQuestion className="size-6" />
+              ) : (
+                <CircleAlert className="size-6" />
+              )}
+            </div>
+
+            {isNotFound ? (
+              <span className="rounded-full border border-border bg-muted/50 px-3 py-1 font-mono text-xs font-semibold text-muted-foreground">
+                404
+              </span>
+            ) : null}
+          </div>
+
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+            {isNotFound ? t("unavailableEyebrow") : t("loadErrorEyebrow")}
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {isNotFound ? t("unavailableTitle") : t("loadErrorTitle")}
+          </h1>
+          <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
+            {message}
+          </p>
+
+          {isNotFound ? (
+            <p className="mt-6 rounded-xl border border-border/70 bg-muted/35 p-4 text-sm leading-6 text-muted-foreground">
+              {t("unavailableHint")}
+            </p>
+          ) : null}
+
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+            <Button asChild className="sm:min-w-40">
+              <Link href="/member/links">
+                <ArrowLeft />
+                {t("backToLinks")}
+              </Link>
+            </Button>
+            <Button variant="outline" className="sm:min-w-36" onClick={onRetry}>
+              <RefreshCw />
+              {isNotFound ? t("checkAgain") : t("tryAgain")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </PageContainer>
   );
 }

@@ -2247,13 +2247,13 @@ export default function SocialLinksGenerator({
                           {t("imageCountShort", { count: filteredBackgroundImages.length })}
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-90 overflow-y-auto pr-2">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:max-h-90 md:grid-cols-4 md:overflow-y-auto md:pr-2 lg:grid-cols-5">
                           <button
                             type="button"
                             onClick={clearBackground}
                             aria-pressed={!selectedBackgroundId}
                             className={`relative grid aspect-square w-full place-items-center rounded-lg border border-dashed border-border bg-muted/30 text-muted-foreground transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${!selectedBackgroundId
-                              ? "ring-2 ring-primary"
+                              ? "ring-[3px] ring-primary"
                               : "hover:scale-105"
                               }`}
                           >
@@ -2268,7 +2268,7 @@ export default function SocialLinksGenerator({
                               onClick={() => selectBackgroundImage(bg)}
                               title={bg.name}
                               className={`relative aspect-square w-full overflow-hidden rounded-lg transition-transform transform will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selectedBackgroundId === bg.id
-                                ? "ring-2 ring-primary scale-100"
+                                ? "scale-100 ring-[3px] ring-primary"
                                 : "hover:scale-105"
                                 }`}
                             >
@@ -2316,13 +2316,13 @@ export default function SocialLinksGenerator({
                           {t("videoCountShort", { count: filteredBackgroundVideos.length })}
                         </div>
 
-                        <div className="grid max-h-90 grid-cols-1 gap-3 overflow-y-auto pr-2 sm:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:max-h-90 md:overflow-y-auto md:pr-2">
                           <button
                             type="button"
                             onClick={clearBackground}
                             aria-pressed={!selectedBackgroundId}
                             className={`relative grid aspect-video place-items-center rounded-lg border border-dashed border-border bg-muted/30 text-muted-foreground transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${!selectedBackgroundId
-                              ? "ring-2 ring-primary"
+                              ? "ring-[3px] ring-primary"
                               : "hover:scale-[1.02]"
                               }`}
                           >
@@ -2338,7 +2338,7 @@ export default function SocialLinksGenerator({
                               onClick={() => selectBackgroundVideo(video)}
                               title={video.name}
                               className={`group relative aspect-video overflow-hidden rounded-lg text-left transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selectedBackgroundId === video.id
-                                ? "ring-2 ring-primary"
+                                ? "ring-[3px] ring-primary"
                                 : "hover:scale-[1.02]"
                                 }`}
                             >
@@ -2377,7 +2377,7 @@ export default function SocialLinksGenerator({
                             {t("backgroundFileHint")}
                           </div>
                         ) : (
-                          <div className="grid max-h-90 grid-cols-2 gap-3 overflow-y-auto pr-2 sm:grid-cols-3">
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:max-h-90 md:overflow-y-auto md:pr-2">
                             {backgroundFileMedia.map((file) => {
                               const fileUrl = getFilePreviewUrl(file)
                               const isVideo = isVideoFile(file)
@@ -2389,7 +2389,7 @@ export default function SocialLinksGenerator({
                                   type="button"
                                   onClick={() => selectBackgroundFile(file)}
                                   title={file.name}
-                                  className={`group overflow-hidden rounded-lg border bg-muted/20 text-left transition-colors hover:bg-muted/35 ${selected ? "border-primary ring-2 ring-primary/15" : "border-border hover:border-foreground/20"}`}
+                                  className={`group overflow-hidden rounded-lg border bg-muted/20 text-left transition-colors hover:bg-muted/35 ${selected ? "border-primary ring-[3px] ring-primary" : "border-border hover:border-foreground/20"}`}
                                 >
                                   <div className="relative aspect-square bg-muted">
                                     {isVideo ? (
