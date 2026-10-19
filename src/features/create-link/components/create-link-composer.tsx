@@ -49,6 +49,7 @@ import { linkPath, type LinkSettings } from "@/features/link-settings/types"
 import { actionCategories, type ActionCategory } from "@/features/link-creation/catalog"
 import { LINK_BACKGROUND_IMAGE_PRESETS } from "@/features/link-creation/background-image-presets"
 import { formatSnippetSize, getYouTubeEmbedUrl } from "@/features/link-creation/lib/media"
+import { generateUuid } from "@/lib/id"
 import { cn } from "@/lib/utils"
 
 import { saveAnonymousDraft } from "../pending-draft"
@@ -64,9 +65,7 @@ import {
 import type { AnonymousLinkDraft } from "../types"
 
 function makeActionId() {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `action-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  return generateUuid()
 }
 
 function SectionTriggerLabel({

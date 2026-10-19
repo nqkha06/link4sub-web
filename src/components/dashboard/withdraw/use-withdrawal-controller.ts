@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useMemberCurrency } from "@/features/currencies/components/member-currency-provider";
+import { generateUuid } from "@/lib/id";
 
 import { withdrawalDataSource } from "./api-data-source";
 import type {
@@ -154,7 +155,7 @@ export function useWithdrawalController() {
   const requestConfirmation = () => {
     if (!formValid) return;
     if (!idempotencyKeyRef.current) {
-      idempotencyKeyRef.current = crypto.randomUUID();
+      idempotencyKeyRef.current = generateUuid();
     }
     setSubmitError("");
     setConfirmationOpen(true);

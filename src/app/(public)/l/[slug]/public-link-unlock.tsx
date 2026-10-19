@@ -37,6 +37,7 @@ import {
   completePublicLinkVisit,
   type LinkDto,
 } from "@/lib/api-client";
+import { generateUuid } from "@/lib/id";
 import { cn } from "@/lib/utils";
 import { socialPlatforms } from "@/features/create-link/social-catalog";
 import { getMonetizationActionIcon } from "@/lib/monetization-action-icons";
@@ -87,10 +88,7 @@ function getOrCreateDeviceId(): string {
   try {
     const existing = window.localStorage.getItem(DEVICE_ID_STORAGE_KEY);
     if (existing) return existing;
-    const generated =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const generated = generateUuid();
     window.localStorage.setItem(DEVICE_ID_STORAGE_KEY, generated);
     return generated;
   } catch {

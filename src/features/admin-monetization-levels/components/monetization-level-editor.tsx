@@ -36,6 +36,7 @@ import { defaultRouteTargeting, normalizeRouteTargeting } from "@/contracts";
 import { RouteTargetingEditor } from "./route-targeting-editor";
 import type { MonetizationActionIconKey } from "@/contracts";
 import { monetizationActionIconOptions } from "@/lib/monetization-action-icons";
+import { generateUuid } from "@/lib/id";
 
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Badge } from "@/components/ui/badge";
@@ -4886,13 +4887,13 @@ function splitActionCounts(actionCount: number, requestedPageCount: number) {
 }
 
 function nextRouteId() {
-  return `route-${globalThis.crypto?.randomUUID?.().slice(0, 8) ?? Date.now()}`;
+  return `route-${generateUuid().slice(0, 8)}`;
 }
 
 function nextAdId() {
-  return `ad-${globalThis.crypto?.randomUUID?.().slice(0, 8) ?? Date.now()}`;
+  return `ad-${generateUuid().slice(0, 8)}`;
 }
 
 function nextSmartlinkId() {
-  return `sl-${globalThis.crypto?.randomUUID?.().slice(0, 8) ?? Date.now()}`;
+  return `sl-${generateUuid().slice(0, 8)}`;
 }

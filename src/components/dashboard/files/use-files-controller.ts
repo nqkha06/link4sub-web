@@ -20,6 +20,7 @@ import {
   updateFile,
   uploadFile,
 } from "@/lib/api-client";
+import { generateUuid } from "@/lib/id";
 import { useBusinessConfig } from "@/features/business-settings/use-business-config";
 
 import { FILE_CREATED_EVENT } from "./events";
@@ -333,7 +334,7 @@ export function useFilesController() {
 
   const addFiles = (nextFiles: File[]) => {
     const items = nextFiles.map((file, index): UploadQueueItem => ({
-      id: `${crypto.randomUUID()}-${index}`,
+      id: `${generateUuid()}-${index}`,
       file,
       status:
         file.size > fileSizeLimit || file.size === 0

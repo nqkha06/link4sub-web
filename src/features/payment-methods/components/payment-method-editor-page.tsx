@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { generateUuid } from "@/lib/id";
 import { cn } from "@/lib/utils";
 import { getAdminLanguages } from "@/features/languages/api/languages.client";
 import type { Language } from "@/features/languages/types";
@@ -85,7 +86,7 @@ function createEmptyForm(languages: Language[]): FormState {
 
 function newField(languages: Language[]): EditableField {
   return {
-    id: crypto.randomUUID(),
+    id: generateUuid(),
     key: "",
     type: "text",
     required: true,
@@ -122,12 +123,12 @@ function methodToForm(
     ),
     fields:
       base?.fields.map((field) => ({
-        id: crypto.randomUUID(),
+        id: generateUuid(),
         key: field.key,
         type: field.type,
         required: field.required,
         options: (field.options ?? []).map((option) => ({
-          id: crypto.randomUUID(),
+          id: generateUuid(),
           value: option.value,
           label: option.label,
         })),
@@ -350,11 +351,11 @@ export function PaymentMethodEditorPage({
               ...current.fields,
               {
                 ...field,
-                id: crypto.randomUUID(),
+                id: generateUuid(),
                 key: field.key ? `${field.key}_copy` : "",
                 options: field.options.map((option) => ({
                   ...option,
-                  id: crypto.randomUUID(),
+                  id: generateUuid(),
                 })),
               },
             ],
@@ -1110,7 +1111,7 @@ function SelectOptionsEditor({
               options: [
                 ...field.options,
                 {
-                  id: crypto.randomUUID(),
+                  id: generateUuid(),
                   value: "",
                   label: "",
                 },
