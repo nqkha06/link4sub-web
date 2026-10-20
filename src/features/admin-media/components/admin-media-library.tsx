@@ -69,6 +69,7 @@ import type {
   AdminMediaQuery,
 } from "@/features/admin-media/types";
 import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type Permissions = {
   upload: boolean;
@@ -585,6 +586,7 @@ function MediaCard({
 }) {
   const t = useTranslations("Admin.media");
   const tc = useTranslations("Admin.common");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
 
   return (
@@ -636,10 +638,13 @@ function MediaCard({
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              void navigator.clipboard.writeText(
+              void copyToClipboard(
                 new URL(file.url, window.location.origin).toString(),
+              ).then((copied) =>
+                copied
+                  ? toast.success(t("card.urlCopied"))
+                  : toast.error(tCommon("copyFailed")),
               );
-              toast.success(t("card.urlCopied"));
             }}
           >
             <Copy /> {t("card.copyUrl")}

@@ -23,6 +23,7 @@ import { Textarea } from "@/components/member/fields/textarea";
 import type { WithdrawalController } from "./use-withdrawal-controller";
 import { formatDateTime } from "./use-withdrawal-controller";
 import { WithdrawalStatusBadge } from "./withdrawal-history";
+import { copyToClipboard } from "@/lib/clipboard";
 
 function TransactionAmounts({ requested, fee, net, formatCurrency }: { requested: number; fee: number; net: number; formatCurrency: (value: number) => string }) {
   const t = useTranslations("Withdraw");
@@ -102,7 +103,8 @@ export function WithdrawalDetailSheet({ controller }: { controller: WithdrawalCo
   const t = useTranslations("Withdraw");
   const transaction = controller.detailTransaction;
   const { formatCurrency } = controller;
-  const copyId = async () => { if (!transaction) return; await navigator.clipboard.writeText(transaction.id); toast.success(t("messages.copiedId")); };
+  const tCommon = useTranslations("Common");
+  const copyId = async () => { if (!transaction) return; if (await copyToClipboard(transaction.id)) toast.success(t("messages.copiedId")); else toast.error(tCommon("copyFailed")); };
   if (!transaction) return null;
   return (
     <Sheet open onOpenChange={(open) => { if (!open) controller.setDetailTransaction(undefined); }}>

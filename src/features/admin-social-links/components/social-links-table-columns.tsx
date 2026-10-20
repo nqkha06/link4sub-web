@@ -38,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { AdminSocialLink } from "@/features/admin-social-links/types"
+import { copyToClipboard } from "@/lib/clipboard"
 
 export type SocialLinkRowAction = {
   row: Row<AdminSocialLink>
@@ -453,6 +454,7 @@ function formatMoney(value: string, locale: string) {
 
 function CopySocialLinkButton({ publicUrl }: { publicUrl: string }) {
   const tc = useTranslations("Admin.common")
+  const tCommon = useTranslations("Common")
   const [copied, setCopied] = React.useState(false)
 
   React.useEffect(() => {
@@ -468,12 +470,14 @@ function CopySocialLinkButton({ publicUrl }: { publicUrl: string }) {
       title={copied ? tc("copied") : tc("copy")}
       className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
       onClick={() => {
-        void navigator.clipboard
-          .writeText(publicUrl)
-          .then(() => {
-            setCopied(true)
-            toast.success(tc("copied"))
-          })
+        void copyToClipboard(publicUrl).then((ok) => {
+          if (!ok) {
+            toast.error(tCommon("copyFailed"))
+            return
+          }
+          setCopied(true)
+          toast.success(tc("copied"))
+        })
       }}
     >
       {copied ? (

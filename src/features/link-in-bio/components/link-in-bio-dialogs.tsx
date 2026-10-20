@@ -33,6 +33,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/member/fields/select"
 import type { BioPageDto } from "@/lib/api-client"
 import { getBioCtr, getVisibleBioLinks } from "./types"
+import { copyToClipboard } from "@/lib/clipboard"
 
 type QrErrorCorrection = "L" | "M" | "Q" | "H"
 
@@ -42,12 +43,8 @@ function absolutePublicUrl(page: BioPageDto) {
 }
 
 export async function copyBioUrl(page: BioPageDto, messages: { copied: string; failed: string }) {
-  try {
-    await navigator.clipboard.writeText(absolutePublicUrl(page))
-    toast.success(messages.copied)
-  } catch {
-    toast.error(messages.failed)
-  }
+  if (await copyToClipboard(absolutePublicUrl(page))) toast.success(messages.copied)
+  else toast.error(messages.failed)
 }
 
 export function LinkInBioQrDialog({ page, open, onOpenChange }: { page: BioPageDto; open: boolean; onOpenChange: (open: boolean) => void }) {

@@ -62,6 +62,7 @@ import type {
   SupportTicketFilter,
 } from "./use-support-controller";
 import { useFormatSupportDate } from "./use-support-controller";
+import { copyToClipboard } from "@/lib/clipboard";
 
 /* -------------------------------------------------------------------------- */
 /*                                   Status                                   */
@@ -586,12 +587,8 @@ export function SupportRequestDetail({
   };
 
   const copyReference = async () => {
-    try {
-      await navigator.clipboard.writeText(request.reference);
-      toast.success(t("detail.copied"));
-    } catch {
-      toast.error(t("detail.copyFailed"));
-    }
+    if (await copyToClipboard(request.reference)) toast.success(t("detail.copied"));
+    else toast.error(t("detail.copyFailed"));
   };
 
   return (

@@ -37,6 +37,7 @@ import {
 } from "../api/emails.client";
 import type { EmailCategory, EmailSender } from "../types";
 import { EmailEmptyState, EmailStatusBadge, useFormatEmailDate } from "./email-ui";
+import { copyToClipboard } from "@/lib/clipboard";
 
 export function EmailSendersTab() {
   const t = useTranslations("Admin.emails");
@@ -194,8 +195,9 @@ function SenderDetailsDialog({ sender, onOpenChange }: { sender: EmailSender | n
 
 function DnsRecords({ sender }: { sender: EmailSender }) {
   const t = useTranslations("Admin.emails");
+  const tCommon = useTranslations("Common");
   const records = sender.dnsRecords || [];
-  return <div className="space-y-4"><div className="flex flex-wrap gap-2"><EmailStatusBadge status={sender.status} label={t(`senders.statusLabels.${sender.status}`)} />{sender.isDefault ? <EmailStatusBadge status="verified" label={t("senders.defaultSender")} /> : null}</div>{sender.verificationError ? <Alert variant="destructive"><AlertTitle>{t("senders.verifyFailed")}</AlertTitle><AlertDescription>{sender.verificationError}</AlertDescription></Alert> : null}{records.length ? <div className="space-y-2">{records.map((record, index) => <div key={`${record.name}-${index}`} className="grid gap-2 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[72px_minmax(0,1fr)_minmax(0,1.4fr)_36px]"><span className="font-mono text-xs font-semibold">{record.type}</span><code className="break-all text-xs">{record.name}</code><code className="break-all text-xs text-muted-foreground">{record.value}</code><Button variant="ghost" size="icon-sm" aria-label={t("senders.copyDns")} onClick={() => void navigator.clipboard.writeText(`${record.name}\t${record.value}`).then(() => toast.success(t("senders.copiedDns")))}><Clipboard /></Button></div>)}</div> : <EmailEmptyState title={t("senders.noDnsTitle")} description={t("senders.noDnsDescription")} warning />}{[...(sender.warnings || []), ...sender.recommendations].map((warning) => <p key={warning} className="text-xs text-warning">• {warning}</p>)}</div>;
+  return <div className="space-y-4"><div className="flex flex-wrap gap-2"><EmailStatusBadge status={sender.status} label={t(`senders.statusLabels.${sender.status}`)} />{sender.isDefault ? <EmailStatusBadge status="verified" label={t("senders.defaultSender")} /> : null}</div>{sender.verificationError ? <Alert variant="destructive"><AlertTitle>{t("senders.verifyFailed")}</AlertTitle><AlertDescription>{sender.verificationError}</AlertDescription></Alert> : null}{records.length ? <div className="space-y-2">{records.map((record, index) => <div key={`${record.name}-${index}`} className="grid gap-2 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[72px_minmax(0,1fr)_minmax(0,1.4fr)_36px]"><span className="font-mono text-xs font-semibold">{record.type}</span><code className="break-all text-xs">{record.name}</code><code className="break-all text-xs text-muted-foreground">{record.value}</code><Button variant="ghost" size="icon-sm" aria-label={t("senders.copyDns")} onClick={() => void copyToClipboard(`${record.name}\t${record.value}`).then((copied) => copied ? toast.success(t("senders.copiedDns")) : toast.error(tCommon("copyFailed")))}><Clipboard /></Button></div>)}</div> : <EmailEmptyState title={t("senders.noDnsTitle")} description={t("senders.noDnsDescription")} warning />}{[...(sender.warnings || []), ...sender.recommendations].map((warning) => <p key={warning} className="text-xs text-warning">• {warning}</p>)}</div>;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-2"><Label>{label}</Label>{children}</div>; }

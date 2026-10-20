@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type HeaderVariant = "default" | "linear" | "bio";
 
@@ -87,12 +88,9 @@ export function PublicSharePanel({
 
   const copyLink = async () => {
     if (!pageUrl) return;
-    try {
-      await navigator.clipboard.writeText(pageUrl);
+    if (await copyToClipboard(pageUrl)) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      // Clipboard API can be unavailable — silently ignore.
     }
   };
 

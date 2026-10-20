@@ -67,6 +67,7 @@ import type { WithdrawalController } from "./use-withdrawal-controller";
 import {
   formatDateTime,
 } from "./use-withdrawal-controller";
+import { copyToClipboard } from "@/lib/clipboard";
 
 /* -------------------------------------------------------------------------- */
 /*                                    Types                                   */
@@ -162,13 +163,8 @@ async function copyTransactionId(
   id: string,
   successMessage: string,
 ) {
-  try {
-    await navigator.clipboard.writeText(id);
-
-    toast.success(successMessage);
-  } catch {
-    toast.error("Không thể sao chép mã giao dịch");
-  }
+  if (await copyToClipboard(id)) toast.success(successMessage);
+  else toast.error("Không thể sao chép mã giao dịch");
 }
 
 /* -------------------------------------------------------------------------- */

@@ -33,6 +33,7 @@ import { useMemberCurrency } from "@/features/currencies/components/member-curre
 import type { ReferralsDashboard } from "@/features/referrals/types";
 import { useSiteBrand } from "@/features/site-settings/components/site-brand-provider";
 import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/clipboard";
 
 export function ReferralsView({ data }: { data: ReferralsDashboard }) {
   const t = useTranslations("SimplePages.referrals");
@@ -54,12 +55,8 @@ export function ReferralsView({ data }: { data: ReferralsDashboard }) {
       : "—";
 
   const copy = async (value: string, message: string) => {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(message);
-    } catch {
-      toast.error(t("copyFailed"));
-    }
+    if (await copyToClipboard(value)) toast.success(message);
+    else toast.error(t("copyFailed"));
   };
 
   const shareTargets = [

@@ -1,5 +1,7 @@
 {
   "Common": {
+    "copied": "Disalin",
+    "copyFailed": "Tidak dapat menyalin. Silakan coba lagi.",
     "language": "Bahasa",
     "vietnamese": "Tiếng Việt",
     "search": "Cari",

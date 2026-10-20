@@ -57,6 +57,7 @@ import {
 } from "../api/system-logs.client";
 import type { SystemLogsQuery } from "../query/system-logs-search-params";
 import type { SystemLog, SystemLogDetail, SystemLogSettings, SystemLogsResponse, SystemLogStats } from "../types";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type Props = {
   result: SystemLogsResponse;
@@ -254,7 +255,7 @@ function SettingsDialog({ open, onOpenChange, initial, onDone }: { open: boolean
 
 function DaysInput({ value, onChange }: { value: number; onChange: (value: number) => void }) { const t = useTranslations("Admin.systemLogs.settingsDialog"); return <div className="flex items-center gap-2"><Input className="w-24" type="number" min={1} max={3650} value={value} onChange={(e) => onChange(Number(e.target.value))} /><span className="text-sm text-muted-foreground">{t("days")}</span></div>; }
 function Detail({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) { return <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p><div className={`mt-1 break-all text-sm ${mono ? "font-mono text-xs" : ""}`}>{value}</div></div>; }
-function JsonBlock({ title, value, plain }: { title: string; value: unknown; plain?: boolean }) { const t = useTranslations("Admin.systemLogs.detail"); const text = plain ? String(value) : JSON.stringify(value, null, 2); return <section><div className="mb-2 flex items-center justify-between"><Label>{title}</Label><Button size="sm" variant="ghost" onClick={() => navigator.clipboard.writeText(text).then(() => toast.success(t("copied")))}><Clipboard /> {t("copy")}</Button></div><pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-lg border bg-muted/30 p-4 font-mono text-xs leading-5">{text}</pre></section>; }
+function JsonBlock({ title, value, plain }: { title: string; value: unknown; plain?: boolean }) { const t = useTranslations("Admin.systemLogs.detail"); const tCommon = useTranslations("Common"); const text = plain ? String(value) : JSON.stringify(value, null, 2); return <section><div className="mb-2 flex items-center justify-between"><Label>{title}</Label><Button size="sm" variant="ghost" onClick={() => void copyToClipboard(text).then((copied) => copied ? toast.success(t("copied")) : toast.error(tCommon("copyFailed")))}><Clipboard /> {t("copy")}</Button></div><pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-lg border bg-muted/30 p-4 font-mono text-xs leading-5">{text}</pre></section>; }
 function Actor({ log }: { log: SystemLog }) { const t = useTranslations("Admin.systemLogs.actor"); const actor = log.admin || log.user; return actor ? <div className="max-w-52"><p className="truncate text-sm font-medium">{actor.name}</p><p className="truncate text-xs text-muted-foreground">{log.admin ? t("admin") : t("user")} #{actor.id} · {actor.email}</p></div> : <span className="text-muted-foreground">—</span>; }
 function LevelBadge({ level }: { level: SystemLog["level"] }) { const styles = { info: "border-blue-500/30 text-blue-700 dark:text-blue-400", warn: "border-amber-500/30 text-amber-700 dark:text-amber-400", error: "border-red-500/30 text-red-700 dark:text-red-400", debug: "border-violet-500/30 text-violet-700 dark:text-violet-400" }; return <Badge variant="outline" className={styles[level]}>{level}</Badge>; }
 function useFormatters() {

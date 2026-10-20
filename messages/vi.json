@@ -1,5 +1,7 @@
 {
   "Common": {
+    "copied": "Đã sao chép",
+    "copyFailed": "Không thể sao chép. Vui lòng thử lại.",
     "language": "Ngôn ngữ",
     "vietnamese": "Tiếng Việt",
     "search": "Tìm kiếm",

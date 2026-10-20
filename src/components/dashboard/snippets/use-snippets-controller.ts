@@ -14,6 +14,7 @@ import {
 } from "@/lib/api-client";
 
 import { apiSnippetSort, isValidSnippetSort, type SnippetSortOption } from "./types";
+import { copyToClipboard } from "@/lib/clipboard";
 
 export function useSnippetsController() {
   const t = useTranslations("Snippets.toasts");
@@ -149,12 +150,8 @@ export function useSnippetsController() {
   }
 
   async function copyContent(snippet: SnippetDto) {
-    try {
-      await navigator.clipboard.writeText(snippet.content);
-      toast.success(t("copied"));
-    } catch {
-      toast.error(t("copyFailed"));
-    }
+    if (await copyToClipboard(snippet.content)) toast.success(t("copied"));
+    else toast.error(t("copyFailed"));
   }
 
   return {

@@ -51,6 +51,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMemberCurrency } from "@/features/currencies/components/member-currency-provider";
 import { deleteLink, updateLinkStatus, type LinkDto } from "@/lib/api-client";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type LinkCardProps = {
     link: LinkDto;
@@ -157,12 +158,12 @@ export function LinkCard({ link, onChanged }: LinkCardProps) {
     }, [redirectUrl, qrSize, qrMargin, qrErrorCorrection, qrForeground, qrBackground]);
 
     const copyRedirectUrl = () => {
-        void navigator.clipboard.writeText(redirectUrl).then(() => toast.success(t("copied")));
+        void copyToClipboard(redirectUrl).then((copied) => copied ? toast.success(t("copied")) : toast.error(commonT("copyFailed")));
     };
 
     const copyDestinationUrl = () => {
         if (!link.destinationUrl) return;
-        void navigator.clipboard.writeText(link.destinationUrl).then(() => toast.success(t("copied")));
+        void copyToClipboard(link.destinationUrl).then((copied) => copied ? toast.success(t("copied")) : toast.error(commonT("copyFailed")));
     };
 
     const handleDownloadQr = () => {

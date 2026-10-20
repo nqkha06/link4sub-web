@@ -30,6 +30,7 @@ import {
   type MemberApiKeyStatus,
 } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
+import { copyToClipboard } from "@/lib/clipboard"
 
 const subscribeToBrowserOrigin = () => () => undefined
 
@@ -278,6 +279,7 @@ function CredentialField({
 
 export function MemberApiPage() {
   const t = useTranslations("MemberApi")
+  const tCommon = useTranslations("Common")
   const locale = useLocale()
   const samplePayload = buildSamplePayload(t("sample.title"))
   const sampleResponse = buildSampleResponse(t("sample.title"))
@@ -356,8 +358,8 @@ export function MemberApiPage() {
   }
 
   const copyText = async (value: string, message = t("toasts.copied")) => {
-    await navigator.clipboard.writeText(value)
-    toast.success(message)
+    if (await copyToClipboard(value)) toast.success(message)
+    else toast.error(tCommon("copyFailed"))
   }
 
   // Có key đầy đủ thì điền thẳng vào ví dụ để copy là chạy được.

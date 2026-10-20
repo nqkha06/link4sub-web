@@ -1,4 +1,5 @@
 import type { PageStatus } from "@/features/admin-pages/types";
+import { copyToClipboard } from "../../lib/clipboard.ts";
 
 export function publicPagePath(slug: string) {
   const normalized = slug.trim().toLowerCase();
@@ -24,20 +25,6 @@ export async function copyPublicPageUrl(slug: string) {
   const url = absolutePublicPageUrl(slug);
   if (!url) throw new Error("Public page URL is unavailable");
 
-  try {
-    await navigator.clipboard.writeText(url);
-    return url;
-  } catch {
-    const textarea = document.createElement("textarea");
-    textarea.value = url;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.select();
-    const copied = document.execCommand("copy");
-    textarea.remove();
-    if (!copied) throw new Error("Unable to copy public page URL");
-    return url;
-  }
+  if (!(await copyToClipboard(url))) throw new Error("Unable to copy public page URL");
+  return url;
 }

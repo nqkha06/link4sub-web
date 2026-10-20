@@ -37,6 +37,7 @@ import { useDataTable } from "@/hooks/use-data-table";
 import { AdminBioPagesSummary } from "./admin-bio-pages-summary";
 import { getAdminBioPagesTableColumns } from "./admin-bio-pages-table-columns";
 import { BioPageDetailSheet } from "./bio-page-detail-sheet";
+import { copyToClipboard } from "@/lib/clipboard";
 
 export function AdminBioPagesTable({ data, pageCount, summary }: AdminBioPagesTableData) {
   const t = useTranslations("Admin.bioPages");
@@ -73,10 +74,9 @@ export function AdminBioPagesTable({ data, pageCount, summary }: AdminBioPagesTa
 
   const copyLink = React.useCallback(
     (page: AdminBioPageListItem) => {
-      void navigator.clipboard
-        .writeText(page.publicUrl)
-        .then(() => toast.success(t("bulk.linkCopied")))
-        .catch(() => toast.error(t("bulk.copyFailed")));
+      void copyToClipboard(page.publicUrl).then((copied) =>
+        copied ? toast.success(t("bulk.linkCopied")) : toast.error(t("bulk.copyFailed")),
+      );
     },
     [t],
   );

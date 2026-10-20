@@ -10,6 +10,7 @@ import {
   BIO_MUTED_SURFACE_CLASS,
 } from "../theme-classes";
 import { BIO_BARE_BLOCK_INSET_CLASS } from "../bio-spacing";
+import { copyToClipboard } from "@/lib/clipboard";
 
 const dividerSpacing = { sm: "py-1", md: "py-3", lg: "py-5" } as const;
 const dividerStyle = { solid: "border-solid", dashed: "border-dashed", dotted: "border-dotted" } as const;
@@ -48,11 +49,10 @@ export function BankDetailsRenderer({ block }: { block: BioBankDetailsBlockDto }
 
   async function copyAccountNumber() {
     if (!block.accountNumber) return;
-    try {
-      await navigator.clipboard.writeText(block.accountNumber);
+    if (await copyToClipboard(block.accountNumber)) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
-    } catch {
+    } else {
       toast.error("Không thể sao chép số tài khoản.");
     }
   }

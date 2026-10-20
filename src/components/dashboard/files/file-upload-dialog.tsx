@@ -5,9 +5,15 @@ import { FileUp, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useSiteBrand } from "@/features/site-settings/components/site-brand-provider";
 
 import { FileUploadItem } from "./file-upload-item";
 import { formatBytes } from "./file-utils";
@@ -26,7 +32,6 @@ type FileUploadDialogProps = {
 
 export function FileUploadDialog({ open, queue, onOpenChange, onFilesSelected, onRetry, onCancel, onRemove, fileSizeLimit }: FileUploadDialogProps) {
   const t = useTranslations("Files.uploadDialog");
-  const brand = useSiteBrand();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const hasActiveUpload = queue.some(
@@ -46,12 +51,12 @@ export function FileUploadDialog({ open, queue, onOpenChange, onFilesSelected, o
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-xl">
-        <DialogHeader className="border-b border-border px-5 py-5 pr-12 sm:px-6"><DialogTitle>{t("title")}</DialogTitle>
-
-        </DialogHeader>
-        <div className="p-5 sm:p-6">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-xl">
+        <ResponsiveDialogHeader className="border-b border-border sm:px-6 sm:py-5">
+          <ResponsiveDialogTitle>{t("title")}</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <ResponsiveDialogBody className="p-5 sm:p-6">
           <div
             role="button"
             tabIndex={0}
@@ -67,12 +72,12 @@ export function FileUploadDialog({ open, queue, onOpenChange, onFilesSelected, o
             <div><FileUp className="mx-auto size-6 text-primary" /><p className="mt-3 text-sm font-medium text-foreground">{t("dropzoneTitle")}</p><p id="supported-formats" className="mt-1.5 text-xs leading-5 text-muted-foreground">{t("dropzoneHint", { size: formatBytes(fileSizeLimit) })}</p></div>
           </div>
           <input ref={inputRef} type="file" multiple className="sr-only" onChange={(event) => { if (event.target.files?.length) onFilesSelected(Array.from(event.target.files)); event.target.value = ""; }} />
-        </div>
+        </ResponsiveDialogBody>
 
         {queue.length ? <div className="border-t border-border"><div className="flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground"><span>{t("queue")}</span><span>{t("queueCount", { count: queue.length })}</span></div><ScrollArea className="max-h-64 border-t border-border"><div>{queue.map((item) => <FileUploadItem key={item.id} item={item} onRetry={onRetry} onCancel={onCancel} onRemove={onRemove} />)}</div></ScrollArea></div> : null}
 
-        <DialogFooter className="border-t border-border px-5 py-4 sm:px-6"><Button variant="outline" onClick={() => onOpenChange(false)}>{hasActiveUpload ? t("closeBackground") : t("close")}</Button><Button onClick={chooseFiles}><Upload />{t("chooseMore")}</Button></DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <ResponsiveDialogFooter className="sm:px-6"><Button variant="outline" onClick={() => onOpenChange(false)}>{hasActiveUpload ? t("closeBackground") : t("close")}</Button><Button onClick={chooseFiles}><Upload />{t("chooseMore")}</Button></ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

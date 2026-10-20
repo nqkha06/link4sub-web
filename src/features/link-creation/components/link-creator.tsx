@@ -125,6 +125,7 @@ import {
   SiYoutube,
 } from "@icons-pack/react-simple-icons";
 import { cn } from "@/lib/utils"
+import { copyToClipboard } from "@/lib/clipboard"
 
 
 type SocialActionItem = {
@@ -1537,11 +1538,10 @@ export default function SocialLinksGenerator({
   const handleCopyPublicUrl = async () => {
     if (!createdPublicUrl) return
 
-    try {
-      await navigator.clipboard.writeText(createdPublicUrl)
+    if (await copyToClipboard(createdPublicUrl)) {
       setPublicUrlCopied(true)
       toast.success(t("copiedPublicUrl"))
-    } catch {
+    } else {
       toast.error(t("copyPublicUrlFailed"))
     }
   }

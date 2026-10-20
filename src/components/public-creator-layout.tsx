@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { ShowHeader } from "@/components/show-header";
 import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type PublicCreatorLayoutProps = {
   background?: ReactNode;
@@ -58,53 +59,6 @@ type PublicCreatorLayoutProps = {
   themeVars?: CSSProperties;
 };
 
-async function copyTextToClipboard(
-  value: string,
-): Promise<void> {
-  if (
-    window.isSecureContext &&
-    navigator.clipboard?.writeText
-  ) {
-    await navigator.clipboard.writeText(value);
-    return;
-  }
-
-  const textarea =
-    document.createElement("textarea");
-
-  textarea.value = value;
-  textarea.setAttribute("readonly", "");
-  textarea.setAttribute(
-    "aria-hidden",
-    "true",
-  );
-
-  Object.assign(textarea.style, {
-    position: "fixed",
-    top: "0",
-    left: "0",
-    width: "1px",
-    height: "1px",
-    padding: "0",
-    border: "0",
-    opacity: "0",
-    pointerEvents: "none",
-  });
-
-  document.body.appendChild(textarea);
-
-  textarea.focus();
-  textarea.select();
-
-  const copied = document.execCommand("copy");
-
-  document.body.removeChild(textarea);
-
-  if (!copied) {
-    throw new Error("Copy command failed");
-  }
-}
-
 export function PublicCreatorLayout({
   background,
   topAction,
@@ -148,13 +102,10 @@ export function PublicCreatorLayout({
         }
       }
 
-      try {
-        await copyTextToClipboard(url);
+      if (await copyToClipboard(url)) {
         toast.success("Đã sao chép link");
-      } catch {
-        toast.error(
-          "Không thể sao chép link",
-        );
+      } else {
+        toast.error("Không thể sao chép link");
       }
     }, []);
 
