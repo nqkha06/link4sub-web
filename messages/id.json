@@ -3091,7 +3091,29 @@
           "activate": "Aktifkan",
           "clearSelection": "Batalkan pilihan"
         },
-        "filterByOwner": "Filter menurut pemilik ini"
+        "filterByOwner": "Filter menurut pemilik ini",
+        "quickFilters": {
+          "titlePlaceholder": "Judul atau alias...",
+          "titleAria": "Cari berdasarkan judul atau alias",
+          "ownerPlaceholder": "Pemilik: nama atau email...",
+          "ownerAria": "Cari berdasarkan nama atau email pemilik",
+          "clearInput": "Hapus isian",
+          "status": "Status",
+          "allStatuses": "Semua status",
+          "source": "Sumber",
+          "allSources": "Semua sumber",
+          "destinationType": "Jenis tujuan",
+          "allDestinationTypes": "Semua jenis tujuan",
+          "destinationTypes": {
+            "url": "URL",
+            "file": "File",
+            "snippet": "Snippet"
+          },
+          "scope": "Cakupan",
+          "scopeAll": "Semua (termasuk sampah)",
+          "multiple": "Beberapa nilai",
+          "clear": "Hapus filter cepat"
+        }
       },
       "stats": {
         "trigger": "Statistik",

@@ -4006,7 +4006,29 @@
           "activate": "Activate",
           "clearSelection": "Clear selection"
         },
-        "filterByOwner": "Filter by this owner"
+        "filterByOwner": "Filter by this owner",
+        "quickFilters": {
+          "titlePlaceholder": "Title or alias...",
+          "titleAria": "Search by title or alias",
+          "ownerPlaceholder": "Owner: name or email...",
+          "ownerAria": "Search by owner name or email",
+          "clearInput": "Clear input",
+          "status": "Status",
+          "allStatuses": "All statuses",
+          "source": "Source",
+          "allSources": "All sources",
+          "destinationType": "Destination type",
+          "allDestinationTypes": "All destination types",
+          "destinationTypes": {
+            "url": "URL",
+            "file": "File",
+            "snippet": "Snippet"
+          },
+          "scope": "Scope",
+          "scopeAll": "All (including trash)",
+          "multiple": "Multiple values",
+          "clear": "Clear quick filters"
+        }
       },
       "stats": {
         "trigger": "Statistics",

@@ -4014,7 +4014,29 @@
           "activate": "Kích hoạt",
           "clearSelection": "Bỏ chọn"
         },
-        "filterByOwner": "Lọc theo chủ sở hữu này"
+        "filterByOwner": "Lọc theo chủ sở hữu này",
+        "quickFilters": {
+          "titlePlaceholder": "Tiêu đề hoặc alias...",
+          "titleAria": "Tìm theo tiêu đề hoặc alias",
+          "ownerPlaceholder": "Chủ sở hữu: tên hoặc email...",
+          "ownerAria": "Tìm theo tên hoặc email chủ sở hữu",
+          "clearInput": "Xóa nội dung đã nhập",
+          "status": "Trạng thái",
+          "allStatuses": "Mọi trạng thái",
+          "source": "Nguồn",
+          "allSources": "Mọi nguồn",
+          "destinationType": "Loại đích",
+          "allDestinationTypes": "Mọi loại đích",
+          "destinationTypes": {
+            "url": "URL",
+            "file": "Tệp",
+            "snippet": "Snippet"
+          },
+          "scope": "Phạm vi",
+          "scopeAll": "Tất cả (kể cả thùng rác)",
+          "multiple": "Nhiều giá trị",
+          "clear": "Xóa bộ lọc nhanh"
+        }
       },
       "stats": {
         "trigger": "Thống kê",

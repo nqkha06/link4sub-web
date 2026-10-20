@@ -28,6 +28,7 @@ import { DeleteSocialLinksDialog } from "@/features/admin-social-links/component
 import { RestoreSocialLinksDialog } from "@/features/admin-social-links/components/restore-social-links-dialog"
 import { SocialLinkEditorDialog } from "@/features/admin-social-links/components/social-link-editor-dialog"
 import { SocialLinkDetailsSheet } from "@/features/admin-social-links/components/social-link-details-sheet"
+import { SocialLinksQuickFilters } from "@/features/admin-social-links/components/social-links-quick-filters"
 import {
   getSocialLinksTableColumns,
   type SocialLinkRowAction,
@@ -141,6 +142,7 @@ export function SocialLinksTable({
           />
         }
       >
+        <SocialLinksQuickFilters className="p-1" />
         <DataTableAdvancedToolbar table={table}>
           <DataTableFilterList
             table={table}
