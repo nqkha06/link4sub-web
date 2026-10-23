@@ -18,10 +18,16 @@ export function resolveBioDesign(page: Pick<BioPageDto, "design" | "hasDesign" |
   assets: BioDesignAssets;
 } {
   const valid = Boolean(page.design && typeof page.design === "object" && page.design.profile);
+  const design = valid ? page.design : DEFAULT_BIO_DESIGN;
   return {
-    design: valid ? page.design : DEFAULT_BIO_DESIGN,
+    design,
     hasDesign: valid && page.hasDesign === true,
-    assets: page.designAssets ?? {},
+    // Asset template được web đóng gói trong /public. Luôn ưu tiên đường dẫn
+    // tương đối từ assetId để không phụ thuộc ASSET_URL tuyệt đối của API
+    // (đặc biệt khi môi trường test chỉ được route qua HTTP).
+    assets: valid
+      ? withBuiltinDesignAssets(design, page.designAssets ?? {})
+      : page.designAssets ?? {},
   };
 }
 
@@ -193,9 +199,8 @@ export function getTiltTransform(x: number, y: number, width: number, height: nu
 
 
 /**
- * URL của asset dựng sẵn (template) theo design, đè lên `assets`. API đã làm
- * việc này khi trả trang; hàm dùng cho khung xem trước của trình chỉnh sửa
- * (dữ liệu chưa lưu).
+ * URL của asset dựng sẵn (template) theo design, đè lên `assets`. Dùng cho cả
+ * trang public và khung xem trước để asset luôn theo cùng origin của stu-web.
  */
 export function withBuiltinDesignAssets(design: BioDesign, assets: BioDesignAssets): BioDesignAssets {
   const pick = (id: string | null, current: string | undefined) => resolveBioBuiltinAssetUrl(id) ?? current;
