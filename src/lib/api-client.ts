@@ -216,6 +216,11 @@ export type BioSocialLinkDto = {
 };
 
 export type BioCustomLinkDto = {
+  kind?: "link" | "download";
+  fileId?: string | null;
+  description?: string;
+  buttonText?: string;
+  downloadFile?: { name: string; mimeType: string; size: number };
   id: string;
   title: string;
   url: string;

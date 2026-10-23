@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   ResponsiveDialog,
@@ -30,7 +31,7 @@ const pickerSections: {
   types: ContentBlockPickerType[];
   tone: string;
 }[] = [
-  { key: "basic", label: "Cơ bản", types: ["link", "text", "social", "divider"], tone: "bg-primary/12 text-primary" },
+  { key: "basic", label: "Cơ bản", types: ["link", "text", "social", "divider", "download"], tone: "bg-primary/12 text-primary" },
   { key: "media", label: "Hình ảnh & Video", types: ["gallery", "embed"], tone: "bg-violet-500/12 text-violet-500 dark:text-violet-400" },
   { key: "business", label: "Kinh doanh", types: ["bank-details"], tone: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400" },
 ];
@@ -68,6 +69,7 @@ export function ContentBlockPickerDialog({
   onEditExisting?: (type: ContentBlockPickerType) => void;
 }) {
   const [query, setQuery] = useState("");
+  const downloadT = useTranslations("BioDownload");
   const normalizedQuery = normalizeContentBlockSearch(query);
 
   const sections = [...pickerSections, fallbackSection]
@@ -75,6 +77,7 @@ export function ContentBlockPickerDialog({
       ...section,
       items: section.types
         .map((type) => enabledContentBlocks.find((definition) => definition.type === type))
+        .map((definition) => definition?.type === "download" ? { ...definition, title: downloadT("blockTitle"), description: downloadT("blockDescription") } : definition)
         .filter((definition): definition is ContentBlockDefinition => Boolean(definition) && matchesQuery(definition!, normalizedQuery)),
     }))
     .filter((section) => section.items.length > 0);
@@ -124,10 +127,10 @@ export function ContentBlockPickerDialog({
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-foreground">{definition.title}</span>
+                              <span className="text-sm font-semibold text-foreground">{definition.type === "download" ? downloadT("blockTitle") : definition.title}</span>
                               {definition.isNew && !added ? <span className="text-xs font-semibold text-primary">Mới</span> : null}
                             </span>
-                            <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{definition.description}</span>
+                            <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{definition.type === "download" ? downloadT("blockDescription") : definition.description}</span>
                           </span>
                           {added ? (
                             <span className="shrink-0 text-right text-xs font-medium text-muted-foreground">Đã thêm · Chỉnh sửa</span>

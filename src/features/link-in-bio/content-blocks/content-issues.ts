@@ -1,74 +1,81 @@
-import { isUnfilledSocialUrl } from "./social-url-templates.ts";
+import {
+  BIO_VALIDATION_MESSAGES, isValidBioUrl, validateBioContent,
+  type BioContentValidationInput, type BioValidationCode,
+} from "../../../contracts/bio-content-validation.ts";
 
-/**
- * Các ô nội dung chưa điền xong / sai. Những mục này bị bỏ qua khi lưu, nên
- * editor đánh dấu ngay tại ô để người dùng biết cần sửa gì.
- */
 export type ContentIssue = {
-  /** Khối chứa ô lỗi (contentOrderKey: "social:socials", "link:<id>"…). */
   blockKey: string;
-  /** id của ô nhập cần sửa (để focus). */
   fieldId: string;
-  /** Tên ngắn của mục (Facebook, "Website của tôi"…). */
   label: string;
   message: string;
+  kind: "unfilled" | "invalid";
+  section?: "details" | "content" | "appearance";
+  code?: BioValidationCode;
+  limit?: number;
 };
-
-type Social = { id: string; platform: string; url: string };
-type Link = { id: string; title: string; url: string };
-type Widget = { id: string; title: string; url: string };
-
-export function isValidContentUrl(value: string) {
-  try {
-    const url = new URL(value.trim());
-    return (url.protocol === "https:" || url.protocol === "http:") && Boolean(url.hostname);
-  } catch {
-    return false;
-  }
+export const isValidContentUrl = isValidBioUrl;
+type IssueInput = BioContentValidationInput;
+type Binding = Pick<ContentIssue, "blockKey" | "fieldId" | "label" | "section">;
+function bindings(input: IssueInput): Record<string, Binding> {
+  const result: Record<string, Binding> = {};
+  const bind = (path: string, blockKey: string, fieldId: string, label: string, section: Binding["section"] = "content") => {
+    result[path] = { blockKey, fieldId, label, section };
+  };
+  for (const field of ["name", "title", "customSlug"]) bind(field, "details", `bio-${field}`, field, "details");
+  bind("content", "content", "bio-content-issues", "content");
+  input.socialLinks.forEach((item, i) => {
+    bind(`socialLinks.${i}.url`, "social:socials", `content-social-url-${item.id}`, item.platform);
+    bind(`socialLinks.${i}.platform`, "social:socials", `content-social-url-${item.id}`, item.platform);
+  });
+  input.customLinks.forEach((item, i) => {
+    for (const field of ["url", "title", "fileId", "description", "buttonText"]) bind(`customLinks.${i}.${field}`, `link:${item.id}`, `content-link-${field}-${item.id}`, item.title || "Liên kết");
+  });
+  input.widgets.forEach((item, i) => {
+    for (const field of ["url", "title", "description"]) bind(`widgets.${i}.${field}`, `widget:${item.id}`, `content-widget-${field}-${item.id}`, item.title || "Nội dung nhúng");
+  });
+  input.bankDetails?.forEach((item, i) => {
+    for (const [field, prefix] of Object.entries({ title: "title", bankName: "name", accountName: "account-name", accountNumber: "account-number", branch: "branch", note: "note" })) {
+      bind(`bankDetails.${i}.${field}`, `bank-details:${item.id}`, `bank-${prefix}-${item.id}`, item.title || "Ngân hàng");
+    }
+  });
+  input.textBlocks?.forEach((item, i) => bind(`textBlocks.${i}.content`, `text:${item.id}`, `text-content-${item.id}`, "Văn bản"));
+  input.dividers?.forEach((item, i) => bind(`dividers.${i}.label`, `divider:${item.id}`, `divider-label-${item.id}`, "Dấu phân cách"));
+  input.galleries?.forEach((item, i) => {
+    bind(`galleries.${i}.title`, `gallery:${item.id}`, `gallery-title-${item.id}`, item.title || "Bộ sưu tập");
+    item.images.forEach((_, n) => {
+      for (const field of ["linkUrl", "alt", "caption"]) bind(`galleries.${i}.images.${n}.${field}`, `gallery:${item.id}`, `gallery-title-${item.id}`, item.title || "Bộ sưu tập");
+    });
+  });
+  return result;
 }
 
-function isBlankUrl(value: string) {
-  const trimmed = value.trim();
-  return !trimmed || trimmed === "https://" || trimmed === "http://";
+export function findContentIssues(input: IssueInput): ContentIssue[] {
+  const fields = bindings(input);
+  return validateBioContent(input).map((issue) => ({
+    ...fields[issue.path], ...issue,
+    message: BIO_VALIDATION_MESSAGES[issue.code],
+    kind: issue.code === "required" ? "unfilled" : "invalid",
+  }));
 }
 
-export function findContentIssues(input: { socialLinks: Social[]; customLinks: Link[]; widgets: Widget[] }): ContentIssue[] {
-  const issues: ContentIssue[] = [];
-  for (const social of input.socialLinks) {
-    const fieldId = `content-social-url-${social.id}`;
-    if (isUnfilledSocialUrl(social.url)) {
-      issues.push({ blockKey: "social:socials", fieldId, label: social.platform, message: `Thêm tên tài khoản ${social.platform} vào cuối link.` });
-    } else if (!isValidContentUrl(social.url)) {
-      issues.push({ blockKey: "social:socials", fieldId, label: social.platform, message: "Link không hợp lệ, cần bắt đầu bằng https://" });
-    }
-  }
-  for (const link of input.customLinks) {
-    const blockKey = `link:${link.id}`;
-    const label = link.title.trim() || "Liên kết";
-    if (!link.title.trim()) {
-      issues.push({ blockKey, fieldId: `content-link-title-${link.id}`, label, message: "Nhập tiêu đề cho liên kết." });
-    }
-    if (isBlankUrl(link.url)) {
-      issues.push({ blockKey, fieldId: `content-link-url-${link.id}`, label, message: "Nhập URL cho liên kết." });
-    } else if (!isValidContentUrl(link.url)) {
-      issues.push({ blockKey, fieldId: `content-link-url-${link.id}`, label, message: "URL không hợp lệ, cần bắt đầu bằng https://" });
-    }
-  }
-  for (const widget of input.widgets) {
-    const blockKey = `widget:${widget.id}`;
-    const label = widget.title.trim() || "Nội dung nhúng";
-    if (isBlankUrl(widget.url)) {
-      issues.push({ blockKey, fieldId: `content-widget-url-${widget.id}`, label, message: "Nhập URL nội dung nhúng." });
-    } else if (!isValidContentUrl(widget.url)) {
-      issues.push({ blockKey, fieldId: `content-widget-url-${widget.id}`, label, message: "URL không hợp lệ, cần bắt đầu bằng https://" });
-    }
-  }
-  return issues;
-}
-
-/** Tên các mục có lỗi, không trùng, tối đa `max` tên (vd. "Facebook, Instagram và 2 mục khác"). */
 export function summarizeIssueLabels(issues: ContentIssue[], max = 3) {
   const labels = [...new Set(issues.map((issue) => issue.label))];
   if (labels.length <= max) return labels.join(", ");
   return `${labels.slice(0, max).join(", ")} và ${labels.length - max} mục khác`;
+}
+
+/** Payload order must match editor order; nothing is silently filtered on save. */
+export function issuesFromServerDetails(details: Record<string, string[]> | undefined, payload: IssueInput): { issues: ContentIssue[]; other: string[] } {
+  const fields = bindings(payload);
+  const issues: ContentIssue[] = [];
+  const other: string[] = [];
+  for (const [path, messages] of Object.entries(details ?? {})) {
+    const message = messages[0] ?? "Invalid value.";
+    const field = fields[path] ?? (path.startsWith("design.") ? { blockKey: "design", fieldId: "bio-design-issues", label: "Design", section: "appearance" as const } : undefined);
+    if (!field) { other.push(message); continue; }
+    const code = (Object.keys(BIO_VALIDATION_MESSAGES) as BioValidationCode[]).find((key) => BIO_VALIDATION_MESSAGES[key] === message)
+      ?? (/must be a URL/i.test(message) ? "url" : undefined);
+    issues.push({ ...field, message, code, kind: code === "required" ? "unfilled" : "invalid" });
+  }
+  return { issues, other };
 }

@@ -7,6 +7,7 @@ export async function proxyBackendBinary(
   signal?: AbortSignal,
   /** Header Range của trình duyệt: chuyển tiếp để nhạc/video phát được ngay (206). */
   range?: string | null,
+  redirect: RequestRedirect = "follow",
 ) {
   let response: Response;
   try {
@@ -14,6 +15,7 @@ export async function proxyBackendBinary(
       cache: "no-store",
       headers: range ? { accept, range } : { accept },
       signal,
+      redirect,
     });
   } catch {
     return apiJsonError(
@@ -24,7 +26,7 @@ export async function proxyBackendBinary(
     );
   }
 
-  const headers = copyBackendResponseHeaders(response.headers);
+  const headers = copyBackendResponseHeaders(response.headers, redirect === "manual" ? ["location"] : []);
 
   return new Response(response.body, {
     status: response.status,

@@ -46,6 +46,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/member/fields/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { generateId } from "@/lib/id";
+import { isValidBioUrl } from "@/contracts";
 import { useBusinessConfig } from "@/features/business-settings/use-business-config";
 import {
   getFilePreviewUrl,
@@ -64,12 +65,7 @@ function formatBytes(bytes: number) {
 }
 
 function isHttpUrl(value: string) {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
+  return isValidBioUrl(value);
 }
 
 function toGalleryImage(file: ManagedFileDto, dimensions: { width?: number; height?: number }): BioGalleryImageDto {

@@ -6,5 +6,6 @@ export * from "./withdrawals";
 export * from "./route-targeting";
 export * from "./api-response";
 export * from "./bio-design";
+export * from "./bio-content-validation";
 export * from "./countries";
 export * from "./link-background-effects";

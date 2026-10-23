@@ -1,7 +1,6 @@
 /**
- * URL mẫu cho từng nền tảng mạng xã hội: điền sẵn phần đầu để người dùng chỉ
- * cần gõ thêm tên tài khoản. URL còn đúng y mẫu (chưa gõ gì thêm) coi như
- * chưa điền và bị bỏ qua khi lưu.
+ * URL mẫu cho từng nền tảng mạng xã hội: điền sẵn để người dùng gõ thêm tên
+ * tài khoản. URL mẫu là link hợp lệ nên được lưu như bình thường.
  */
 export const SOCIAL_URL_TEMPLATES: Record<string, string> = {
   Instagram: "https://instagram.com/",
@@ -24,7 +23,7 @@ export function socialUrlTemplate(platform: string) {
   return SOCIAL_URL_TEMPLATES[platform] ?? "";
 }
 
-/** URL rỗng hoặc chỉ là URL mẫu của một nền tảng (chưa có tên tài khoản). */
+/** URL rỗng hoặc đúng y URL mẫu của một nền tảng (dùng khi đổi nền tảng). */
 export function isUnfilledSocialUrl(url: string) {
   const value = url.trim();
   return !value || Object.values(SOCIAL_URL_TEMPLATES).includes(value);

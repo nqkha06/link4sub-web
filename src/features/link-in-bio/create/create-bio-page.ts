@@ -47,8 +47,8 @@ export const STARTER_SOCIAL_PLATFORMS = ["Facebook", "Instagram", "TikTok", "You
 
 /**
  * Các khối gợi ý bật sẵn khi mở editor lần đầu cho trang mới. Mạng xã hội điền
- * sẵn URL mẫu (vd. https://tiktok.com/@); khối nào người dùng không điền thêm sẽ
- * bị bỏ qua khi lưu (buildBioPayload lọc URL mẫu / URL không hợp lệ).
+ * sẵn URL mẫu hợp lệ (vd. https://tiktok.com/@). Liên kết để trống URL sẽ bị bỏ
+ * qua khi lưu (buildBioPayload lọc URL không hợp lệ).
  */
 export function createStarterBioContent(createId: (prefix: string) => string): StarterBioContent {
   const socialLinks = STARTER_SOCIAL_PLATFORMS.map((platform) => ({

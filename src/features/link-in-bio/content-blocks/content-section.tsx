@@ -2,6 +2,7 @@
 
 import {
   ChevronDown,
+  FileDown,
   Eye,
   EyeOff,
   GripVertical,
@@ -19,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useImperativeHandle, useState, type Ref } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   AlertDialog,
@@ -43,6 +45,7 @@ import { bioWidgetPlatformOptions } from "@/components/bio-widget-embed";
 import { BankDetailsBlockEditor } from "./bank-details-block-editor";
 import { DividerBlockEditor } from "./divider-block-editor";
 import { TextBlockEditor } from "./text-block-editor";
+import { DownloadCardEditor } from "./download-card-editor";
 import {
   contentOrderKey,
   createGalleryBlock,
@@ -131,11 +134,14 @@ export function ContentSection({
   onTextBlocksChange: (textBlocks: BioTextBlockDto[]) => void;
   onHiddenLinksChange: (ids: string[]) => void;
   onContentOrderChange: (order: BioContentOrderItemDto[]) => void;
-  /** Ô chưa điền xong / sai (chỉ truyền sau khi người dùng bấm lưu). */
+  /** Ô bắt buộc còn trống / nhập sai (chỉ truyền sau khi người dùng bấm lưu). */
   issues?: ContentIssue[];
   ref?: Ref<ContentSectionHandle>;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const validationT = useTranslations("BioValidation");
+  const downloadT = useTranslations("BioDownload");
+  const deleteT = useTranslations("BioContentDelete");
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   useImperativeHandle(ref, () => ({
     revealIssue: (issue) => {
@@ -171,6 +177,13 @@ export function ContentSection({
   }
 
   function addBlock(type: ContentBlockPickerType) {
+    if (type === "download") {
+      const id = `download-${generateId({ length: 10 })}`;
+      onCustomLinksChange([...customLinks, { id, kind: "download", title: "", url: "", fileId: null, description: "", buttonText: "" }]);
+      appendOrder({ type: "link", id });
+      focusBlockField(`content-link-fileId-${id}`);
+      return;
+    }
     if (type === "link") {
       const id = `link-${generateId({ length: 10 })}`;
       onCustomLinksChange([...customLinks, { id, title: "", url: "", animationEffect: "none" }]);
@@ -299,6 +312,7 @@ export function ContentSection({
   function blockMeta(item: BioContentOrderItemDto) {
     if (item.type === "link") {
       const link = customLinks.find((entry) => entry.id === item.id);
+      if (link?.kind === "download") return { icon: FileDown, title: link.title || downloadT("blockTitle"), summary: link.downloadFile?.name || downloadT("noFile"), visible: !hiddenLinks.includes(item.id) };
       return { icon: Link2, title: link?.title || "Liên kết chưa đặt tên", summary: link?.url || "Chưa có URL", visible: !hiddenLinks.includes(item.id) };
     }
     if (item.type === "gallery") {
@@ -348,7 +362,7 @@ export function ContentSection({
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={linkIconUrl} alt="" className="size-full object-cover" />
                         ) : <Icon className="size-4" />}</span>
-                        <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-foreground">{meta.title}</span>{issues.some((issue) => issue.blockKey === key) ? <span className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-medium text-destructive"><span className="size-1.5 shrink-0 rounded-full bg-destructive" aria-hidden />Chưa điền xong</span> : <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{meta.summary}</span>}</span>
+                        <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-foreground">{meta.title}</span>{issues.some((issue) => issue.blockKey === key) ? <span className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-medium text-destructive"><span className="size-1.5 shrink-0 rounded-full bg-destructive" aria-hidden />{validationT("review")}</span> : <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{meta.summary}</span>}</span>
                       </button>
                       <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} onClick={() => toggleVisibility(item, !meta.visible)} aria-label={meta.visible ? `Ẩn ${meta.title}` : `Hiện ${meta.title}`} className="text-muted-foreground">{meta.visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}</Button>
                       <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} onClick={() => setPendingDelete(item)} aria-label={`Xóa ${meta.title}`} className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="size-4" /></Button>
@@ -358,6 +372,7 @@ export function ContentSection({
                       <div className="border-t border-border bg-muted/10 p-3 sm:p-4">
                         {item.type === "link" ? (() => {
                           const link = customLinks.find((entry) => entry.id === item.id);
+                          if (link?.kind === "download") return <DownloadCardEditor block={link} onChange={(patch) => updateLink(link.id, patch)} disabled={disabled} issues={issues.filter((issue) => issue.blockKey === key)} />;
                           return link ? (
                             <div className="space-y-3">
                               <div className="grid gap-3 sm:grid-cols-2">
@@ -419,13 +434,13 @@ export function ContentSection({
                           return block ? <DividerBlockEditor block={block} onChange={updateDivider} disabled={disabled} /> : null;
                         })() : item.type === "bank-details" ? (() => {
                           const block = bankDetails.find((entry) => entry.id === item.id);
-                          return block ? <BankDetailsBlockEditor block={block} onChange={updateBankDetails} disabled={disabled} /> : null;
+                          return block ? <BankDetailsBlockEditor block={block} onChange={updateBankDetails} disabled={disabled} errors={Object.fromEntries(issues.filter((issue) => issue.blockKey === key).map((issue) => [issue.fieldId, issue.message]))} /> : null;
                         })() : item.type === "text" ? (() => {
                           const block = textBlocks.find((entry) => entry.id === item.id);
                           return block ? <TextBlockEditor block={block} onChange={updateTextBlock} disabled={disabled} /> : null;
                         })() : item.type === "social" ? (
                           <div className="space-y-3">
-                            {socialLinks.map((social) => <div key={social.id} className="grid gap-2 sm:grid-cols-[150px_minmax(0,1fr)_36px] sm:items-start"><div className="grid gap-2"><Label>Nền tảng</Label><Select disabled={disabled} value={social.platform} onValueChange={(platform) => onSocialLinksChange(socialLinks.map((entry) => entry.id === social.id ? { ...entry, platform, url: socialUrlForPlatformChange(entry.url, platform) } : entry))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{socialPlatforms.map((platform) => <SelectItem key={platform} value={platform}><SocialIcon platform={platform} className="size-4 shrink-0" />{platform}</SelectItem>)}</SelectContent></Select></div><div className="grid gap-2"><Label htmlFor={`content-social-url-${social.id}`}>URL hồ sơ <span className="text-destructive">*</span></Label><Input disabled={disabled} id={`content-social-url-${social.id}`} {...invalidProps(`content-social-url-${social.id}`)} value={social.url} onChange={(event) => onSocialLinksChange(socialLinks.map((entry) => entry.id === social.id ? { ...entry, url: event.target.value } : entry))} placeholder={socialUrlTemplate(social.platform) ? `${socialUrlTemplate(social.platform)}ten-cua-ban` : "https://..."} /><FieldIssue id={`content-social-url-${social.id}`} issue={issueOf(`content-social-url-${social.id}`)} /></div><Button disabled={disabled} type="button" variant="ghost" size="icon" className="sm:mt-[1.375rem]" aria-label={`Xóa ${social.platform}`} onClick={() => removeSocial(social.id)}><Trash2 /></Button></div>)}
+                            {socialLinks.map((social) => <div key={social.id} className="grid gap-2 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_auto] sm:items-start"><div className="grid gap-2"><Label>Nền tảng</Label><Select disabled={disabled} value={social.platform} onValueChange={(platform) => onSocialLinksChange(socialLinks.map((entry) => entry.id === social.id ? { ...entry, platform, url: socialUrlForPlatformChange(entry.url, platform) } : entry))}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{socialPlatforms.map((platform) => <SelectItem key={platform} value={platform}><SocialIcon platform={platform} className="size-4 shrink-0" />{platform}</SelectItem>)}</SelectContent></Select></div><div className="grid gap-2"><Label htmlFor={`content-social-url-${social.id}`}>URL hồ sơ <span className="text-destructive">*</span></Label><Input disabled={disabled} id={`content-social-url-${social.id}`} {...invalidProps(`content-social-url-${social.id}`)} value={social.url} onChange={(event) => onSocialLinksChange(socialLinks.map((entry) => entry.id === social.id ? { ...entry, url: event.target.value } : entry))} placeholder={socialUrlTemplate(social.platform) ? `${socialUrlTemplate(social.platform)}ten-cua-ban` : "https://..."} /><FieldIssue id={`content-social-url-${social.id}`} issue={issueOf(`content-social-url-${social.id}`)} /></div><Button disabled={disabled} type="button" variant="ghost" size="icon" className="sm:mt-[1.375rem]" aria-label={`Xóa ${social.platform}`} onClick={() => removeSocial(social.id)}><Trash2 /></Button></div>)}
                             <Button disabled={disabled} type="button" variant="outline" className="w-full border-dashed" onClick={() => { const id = `social-${generateId({ length: 10 })}`; onSocialLinksChange([...socialLinks, { id, platform: "Instagram", url: socialUrlTemplate("Instagram"), enabled: true }]); focusBlockField(`content-social-url-${id}`); }}><Plus />Thêm mạng xã hội</Button>
                           </div>
                         ) : (() => {
@@ -452,7 +467,8 @@ export function ContentSection({
                               </div>
                               <div className="grid gap-2">
                                 <Label htmlFor={`content-widget-title-${widget.id}`}>Tiêu đề</Label>
-                                <Input disabled={disabled} id={`content-widget-title-${widget.id}`} value={widget.title} onChange={(event) => updateWidget(widget.id, { title: event.target.value })} placeholder="Không bắt buộc" />
+                                <Input disabled={disabled} id={`content-widget-title-${widget.id}`} maxLength={120} {...invalidProps(`content-widget-title-${widget.id}`)} value={widget.title} onChange={(event) => updateWidget(widget.id, { title: event.target.value })} placeholder="Không bắt buộc" />
+                                <FieldIssue id={`content-widget-title-${widget.id}`} issue={issueOf(`content-widget-title-${widget.id}`)} />
                               </div>
                               <div className="grid gap-2">
                                 <Label htmlFor={`content-widget-url-${widget.id}`}>URL <span className="text-destructive">*</span></Label>
@@ -494,10 +510,13 @@ export function ContentSection({
 
       <AlertDialog open={Boolean(pendingDelete)} onOpenChange={(open) => !open && setPendingDelete(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Xóa khối nội dung này?</AlertDialogTitle>
-          <AlertDialogDescription>Bạn có chắc muốn xóa khối nội dung này?</AlertDialogDescription>
+          <AlertDialogHeader><AlertDialogTitle>{deleteT("title")}</AlertDialogTitle>
+          <AlertDialogDescription>{deleteT("description")}</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogCancel>Hủy</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => pendingDelete && deleteBlock(pendingDelete)}>Xóa khối</AlertDialogAction></AlertDialogFooter>
+          <AlertDialogFooter className="flex-row max-sm:[&>button]:flex-1">
+            <AlertDialogCancel className="min-h-11">{deleteT("cancel")}</AlertDialogCancel>
+            <AlertDialogAction className="min-h-11" variant="destructive" onClick={() => pendingDelete && deleteBlock(pendingDelete)}>{deleteT("confirm")}</AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>

@@ -29,13 +29,13 @@ import {
   createBioPage,
   updateBioPage,
   type BioBankDetailsBlockDto,
+  type BioCustomLinkDto,
   type BioPageDto,
   type BioContentOrderItemDto,
   type BioDividerBlockDto,
   type BioGalleryBlockDto,
   type BioTextBlockDto,
   type CreateBioPagePayload,
-  type LinkAnimationEffect,
   getFilePreviewUrl,
   uploadFile,
 } from "@/lib/api-client"
@@ -50,7 +50,6 @@ import {
   getBioBackgroundPresetById,
   getBioBackgroundPresetByImage,
 } from "../backgrounds/background-presets"
-import { hasCompleteBankDetails } from "../content-blocks/simple-content-types"
 import { cn } from "@/lib/utils"
 import {
   GALLERY_ACCEPTED_MIME_TYPES,
@@ -64,8 +63,8 @@ import { useTranslations } from "next-intl"
 import { createStarterBioContent } from "../create/create-bio-page"
 import { DEFAULT_BIO_DESIGN, getBioMusicTracks, type BioDesign } from "@/contracts"
 import { addMusicTrack, titleFromFileName } from "../design/music-tracks"
-import { isUnfilledSocialUrl } from "../content-blocks/social-url-templates"
-import { findContentIssues, summarizeIssueLabels } from "../content-blocks/content-issues"
+import { findContentIssues, issuesFromServerDetails, type ContentIssue } from "../content-blocks/content-issues"
+import { ApiRequestError } from "@/lib/api-response"
 import type { ContentSectionHandle } from "../content-blocks/content-section"
 import { BioDesignStudio } from "../design/bio-design-studio"
 import { normalizeDesignColors } from "../design/normalize-design-colors"
@@ -90,14 +89,7 @@ interface SocialLink {
   enabled?: boolean
 }
 
-interface CustomLink {
-  id: string
-  title: string
-  url: string
-  animationEffect?: LinkAnimationEffect
-  iconFileId?: string
-  iconUrl?: string
-}
+type CustomLink = BioCustomLinkDto
 
 interface ProfileDetails {
   name: string
@@ -317,6 +309,10 @@ function LinkInBioGeneratorForm({
   // Chỉ đánh dấu ô lỗi sau khi người dùng đã bấm lưu (không làm phiền lúc đang gõ).
   const [showContentIssues, setShowContentIssues] = useState(false)
   const contentSectionRef = useRef<ContentSectionHandle>(null)
+  // Lỗi validate API trả về, gắn vào từng ô; tự ẩn khi người dùng sửa giá trị ô đó.
+  const [serverIssues, setServerIssues] = useState<Array<ContentIssue & { snapshot: string }>>([])
+  const [errorSnapshot, setErrorSnapshot] = useState("")
+  const validationT = useTranslations("BioValidation")
   const [savedBio, setSavedBio] = useState<BioPageDto | null>(null)
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
   const [designAssetPicker, setDesignAssetPicker] = useState<"image" | "video" | "music" | "cursor" | null>(null)
@@ -371,39 +367,33 @@ function LinkInBioGeneratorForm({
     setProfileDetails((current) => ({ ...current, [field]: value }))
   }
 
-  const isValidUrl = (value: string) => {
-    try {
-      new URL(value)
-      return true
-    } catch {
-      return false
-    }
-  }
-
   const buildBioPayload = (statusOverride: "published" | "draft" = status): CreateBioPagePayload => ({
     name: profileDetails.name.trim(),
     title: profileDetails.title || undefined,
     customSlug: customSlug || undefined,
     status: statusOverride,
-    socialLinks: socialLinks.filter((link) => link.platform && !isUnfilledSocialUrl(link.url) && isValidUrl(link.url)),
+    socialLinks: socialLinks.map((link) => ({ ...link, url: link.url.trim() })),
     // iconUrl chỉ để xem trước; API chỉ nhận iconFileId và tự trả lại iconUrl.
     customLinks: customLinks
-      .filter((link) => link.title.trim() && isValidUrl(link.url))
       .map((link) => ({
         id: link.id,
-        title: link.title,
-        url: link.url,
+        kind: link.kind,
+        fileId: link.kind === "download" ? link.fileId : undefined,
+        description: link.description?.trim() || undefined,
+        buttonText: link.buttonText?.trim() || undefined,
+        title: link.title.trim(),
+        url: link.kind === "download" ? "" : link.url.trim(),
         animationEffect: link.animationEffect,
         ...(link.iconFileId ? { iconFileId: String(link.iconFileId) } : {}),
       })),
-    widgets: widgets.filter((widget) => isValidUrl(widget.url)).map((widget) => ({ ...widget, title: widget.title.trim() })),
+    widgets: widgets.map((widget) => ({ ...widget, title: widget.title.trim(), url: widget.url.trim() })),
     galleries: galleries.map((gallery) => ({
       ...gallery,
       title: gallery.title?.trim() || undefined,
       images: gallery.images.map((image, sortOrder) => ({
         ...image,
         sortOrder,
-        linkUrl: image.linkUrl && isValidUrl(image.linkUrl) ? image.linkUrl : undefined,
+        linkUrl: image.linkUrl?.trim() || undefined,
       })),
     })),
     dividers: dividers.map((block) => ({
@@ -434,66 +424,76 @@ function LinkInBioGeneratorForm({
     design: normalizeDesignColors(bioDesign),
   })
 
-  /*
-   * Thay đổi chưa lưu: so payload hiện tại với payload của bản đã lưu (lấy ở lần
-   * render đầu và sau mỗi lần lưu thành công).
-   */
-  const currentPayloadJson = JSON.stringify(buildBioPayload())
-  const [savedPayloadJson, setSavedPayloadJson] = useState<string | null>(null)
-  if (savedPayloadJson === null) setSavedPayloadJson(currentPayloadJson)
-  const hasUnsavedChanges = savedPayloadJson !== null && currentPayloadJson !== savedPayloadJson
+  // Compare raw editor state: invalid input and whitespace edits are changes too.
+  const editorSnapshot = (nextStatus = status) => JSON.stringify({ profileDetails, customSlug, status: nextStatus, socialLinks, customLinks, widgets, galleries, dividers, bankDetails, textBlocks, contentOrder, hiddenLinks, appearanceSettings, bioDesign })
+  const currentEditorJson = editorSnapshot()
+  const [savedEditorJson, setSavedEditorJson] = useState(currentEditorJson)
+  const hasUnsavedChanges = currentEditorJson !== savedEditorJson
+  const localizeIssue = (issue: ContentIssue) => ({ ...issue, message: issue.code ? validationT(issue.code, { limit: issue.limit ?? 0 }) : issue.message })
+  const clientIssues = findContentIssues(buildBioPayload()).map(localizeIssue)
+  const visibleContentIssues = showContentIssues
+    ? [
+        ...clientIssues,
+        ...serverIssues.filter((issue) => issue.snapshot === currentEditorJson && !clientIssues.some((client) => client.fieldId === issue.fieldId)).map(localizeIssue),
+      ]
+    : []
+  const displayedSaveError = errorSnapshot === currentEditorJson ? saveError : ""
+  const showSaveBar = !initialBio || hasUnsavedChanges || isSaving || visibleContentIssues.length > 0 || Boolean(displayedSaveError)
+  const revealIssue = (issue: ContentIssue) => {
+    setSectionOpen(issue.section ?? "content", true)
+    window.setTimeout(() => {
+      if (issue.section === "details" || issue.section === "appearance" || issue.fieldId === "bio-content-issues") {
+        const field = document.getElementById(issue.fieldId)
+        field?.scrollIntoView({ behavior: "smooth", block: "center" })
+        field?.focus({ preventScroll: true })
+      } else contentSectionRef.current?.revealIssue(issue)
+    }, 150)
+  }
+  const detailIssue = (field: string) => visibleContentIssues.find((issue) => issue.fieldId === `bio-${field}`)
 
   const handleSaveBio = async (saveMode: "draft" | "published" | "current" = "current") => {
     if (isSaving) return
 
     const nextStatus = saveMode === "current" ? status : saveMode
+    if (saveMode !== "current") setStatus(nextStatus)
     const payload = buildBioPayload(nextStatus)
-    if (!payload.name) {
-      setSaveError("Tên trang là bắt buộc.")
-      return
-    }
-    const contentIssues = findContentIssues({ socialLinks, customLinks, widgets })
-    const hasPublishableContent = !(payload.socialLinks.length === 0 && payload.customLinks.length === 0 && payload.widgets.length === 0 && payload.galleries.every((gallery) => gallery.images.length === 0) && payload.dividers.length === 0 && payload.bankDetails.length === 0 && payload.textBlocks.length === 0)
-    if (nextStatus === "published" && !hasPublishableContent) {
+    const submittedSnapshot = editorSnapshot(nextStatus)
+    const contentIssues = findContentIssues(payload).map(localizeIssue)
+    if (contentIssues.length) {
       setSaveError("")
       setShowContentIssues(true)
-      setSectionOpen("content", true)
-      const firstIssue = contentIssues[0]
-      if (firstIssue) contentSectionRef.current?.revealIssue(firstIssue)
-      toast.error(firstIssue ? "Điền xong ít nhất một mục để xuất bản" : "Trang chưa có nội dung để xuất bản", {
-        description: firstIssue
-          ? `Chưa điền xong: ${summarizeIssueLabels(contentIssues)}. Các ô cần sửa đã được đánh dấu đỏ.`
-          : "Thêm một liên kết, mạng xã hội hoặc khối nội dung bất kỳ.",
-        action: { label: "Lưu nháp", onClick: () => void handleSaveBio("draft") },
-      })
-      return
-    }
-    if (nextStatus === "published" && payload.bankDetails.some((block) => block.enabled && !hasCompleteBankDetails(block))) {
-      setSaveError("Hãy nhập tên ngân hàng, chủ tài khoản và số tài khoản trước khi xuất bản.")
+      revealIssue(contentIssues[0])
       return
     }
 
     setIsSaving(true)
     onSavingChange?.(true)
     setSaveError("")
+    setServerIssues([])
     try {
       const bioPage = initialBio
         ? await updateBioPage(initialBio.id, payload)
         : await createBioPage(payload)
       setSavedBio(bioPage)
-      setSavedPayloadJson(JSON.stringify(buildBioPayload()))
+      setSavedEditorJson(submittedSnapshot)
+      setShowContentIssues(false)
       onSaved?.(bioPage)
-      if (contentIssues.length) {
-        // Lưu được nhưng có mục chưa điền: báo rõ mục nào bị bỏ qua và đánh dấu tại chỗ.
-        setShowContentIssues(true)
-        toast.success("Đã lưu trang Link-in-bio", {
-          description: `Bỏ qua mục chưa điền xong: ${summarizeIssueLabels(contentIssues)}.`,
-        })
-      } else {
-        toast.success("Đã lưu trang Link-in-bio")
-      }
+      toast.success("Đã lưu trang Link-in-bio")
     } catch (error) {
+      const details = error instanceof ApiRequestError ? error.details : undefined
+      if (details) {
+        const { issues, other } = issuesFromServerDetails(details, payload)
+        setServerIssues(issues.map((issue) => ({ ...issue, snapshot: submittedSnapshot })))
+        if (issues.length) {
+          setShowContentIssues(true)
+          revealIssue(issues[0])
+        }
+        setSaveError(other.length ? `Không lưu được: ${other.join("; ")}` : "")
+        setErrorSnapshot(submittedSnapshot)
+        return
+      }
       setSaveError(error instanceof Error ? error.message : "Không lưu được trang Link-in-bio.")
+      setErrorSnapshot(submittedSnapshot)
       toast.error(error instanceof Error ? error.message : "Không lưu được trang Link-in-bio.")
     } finally {
       setIsSaving(false)
@@ -545,14 +545,14 @@ function LinkInBioGeneratorForm({
   }
 
   return (
-    <form id="link-in-bio-editor-form" className="space-y-5" onSubmit={(event) => {
+    <form id="link-in-bio-editor-form" noValidate className={cn("space-y-5", showSaveBar && "pb-48 sm:pb-0")} onSubmit={(event) => {
       event.preventDefault()
       const submitter = event.nativeEvent.submitter as HTMLButtonElement | null
       const saveMode = submitter?.value === "draft" || submitter?.value === "published" ? submitter.value : "current"
       void handleSaveBio(saveMode)
     }}>
-      {saveError ? <div role="alert" className="rounded-lg border border-destructive/25 bg-destructive/5 px-4 py-3 text-sm text-destructive">{saveError}</div> : null}
-      {savedBio ? (
+      {displayedSaveError ? <div id="bio-save-error" tabIndex={-1} role="alert" className="rounded-lg border border-destructive/25 bg-destructive/5 px-4 py-3 text-sm text-destructive">{displayedSaveError}</div> : null}
+      {savedBio && !hasUnsavedChanges ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
           <span className="flex items-center gap-2 font-medium text-foreground"><CircleCheck className="size-4 text-primary" />Đã lưu trang Link-in-bio.</span>
           <a href={savedBio.publicUrl} target="_blank" rel="noreferrer" className="font-medium text-primary underline-offset-4 hover:underline">Mở {linkPath(linkSettings, "bio", savedBio.slug)}</a>
@@ -612,11 +612,13 @@ function LinkInBioGeneratorForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel required>Tên trang</FieldLabel>
-                <Input value={profileDetails.name} onChange={(event) => updateProfileDetails("name", event.target.value)} placeholder="Tên của bạn hoặc thương hiệu" />
+                <Input id="bio-name" aria-label={validationT("name")} maxLength={120} aria-invalid={Boolean(detailIssue("name"))} aria-describedby={detailIssue("name") ? "bio-name-issue" : undefined} value={profileDetails.name} onChange={(event) => updateProfileDetails("name", event.target.value)} placeholder="Tên của bạn hoặc thương hiệu" />
+                {detailIssue("name") ? <p id="bio-name-issue" className="mt-1 text-xs text-destructive">{detailIssue("name")?.message}</p> : null}
               </div>
               <div>
                 <FieldLabel>Mô tả ngắn</FieldLabel>
-                <Input value={profileDetails.title} onChange={(event) => updateProfileDetails("title", event.target.value)} placeholder="Creator, designer, streamer..." />
+                <Input id="bio-title" aria-label={validationT("title")} maxLength={160} aria-invalid={Boolean(detailIssue("title"))} value={profileDetails.title} onChange={(event) => updateProfileDetails("title", event.target.value)} placeholder="Creator, designer, streamer..." />
+                {detailIssue("title") ? <p className="mt-1 text-xs text-destructive">{detailIssue("title")?.message}</p> : null}
               </div>
             </div>
             <div>
@@ -625,6 +627,9 @@ function LinkInBioGeneratorForm({
                 <span className="inline-flex h-full shrink-0 items-center border-r border-border bg-muted/35 px-3 text-muted-foreground">{linkPath(linkSettings, "bio", "")}</span>
                 {/* Trang đã tạo thì không cho đổi đường dẫn (tránh làm hỏng link đã chia sẻ). */}
                 <input
+                  id="bio-customSlug"
+                  aria-label={validationT("customSlug")}
+                  maxLength={80}
                   value={customSlug}
                   readOnly={Boolean(initialBio)}
                   aria-readonly={Boolean(initialBio) || undefined}
@@ -641,6 +646,17 @@ function LinkInBioGeneratorForm({
           </EditorSection>
 
           <EditorSection title="Nội dung" icon={Layers3} count={normalizedOrder.length} open={expandedSections.content} onOpenChange={(open) => setSectionOpen("content", open)}>
+            {visibleContentIssues.length ? (
+              <div id="bio-content-issues" tabIndex={-1} className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                <p role="alert" className="font-medium text-destructive">{validationT("issueCount", { count: visibleContentIssues.length })}</p>
+                {visibleContentIssues.slice(0, 5).map((issue, index) => (
+                  <button key={`${issue.fieldId}-${index}`} type="button" onClick={() => revealIssue(issue)} className="block min-h-9 text-left text-sm text-foreground underline-offset-4 hover:underline">
+                    {issue.section === "details" ? validationT(issue.fieldId.replace("bio-", "") as "name" | "title" | "customSlug") : issue.label}: {issue.message}
+                  </button>
+                ))}
+                {status === "published" ? <p className="text-xs text-muted-foreground">{validationT("draftHint")}</p> : null}
+              </div>
+            ) : null}
             <ContentSection
               customLinks={customLinks}
               socialLinks={socialLinks}
@@ -662,7 +678,7 @@ function LinkInBioGeneratorForm({
               onHiddenLinksChange={setHiddenLinks}
               onContentOrderChange={setContentOrder}
               ref={contentSectionRef}
-              issues={showContentIssues ? findContentIssues({ socialLinks, customLinks, widgets }) : undefined}
+              issues={visibleContentIssues.filter((issue) => issue.section === "content")}
             />
           </EditorSection>
 
@@ -672,6 +688,7 @@ function LinkInBioGeneratorForm({
             open={expandedSections.appearance}
             onOpenChange={(open) => setSectionOpen("appearance", open)}
           >
+            <div id="bio-design-issues" tabIndex={-1} />
             <BioDesignStudio
               previewName={profileDetails.name}
               onTemplateApplied={() => setPreviewKey((key) => key + 1)}
@@ -715,9 +732,9 @@ function LinkInBioGeneratorForm({
                 <Button
                   type="submit"
                   name="saveMode"
-                  value={initialBio ? "current" : "published"}
+                  value="current"
                   size="sm"
-                  disabled={isSaving}
+                  disabled={isSaving || (Boolean(initialBio) && !hasUnsavedChanges)}
                   className="h-9 rounded-lg px-4 font-medium shadow-none"
                 >
                   {isSaving ? "Đang lưu…" : "Lưu thay đổi"}
@@ -817,25 +834,23 @@ function LinkInBioGeneratorForm({
           setDesignAssetPicker(null)
         }}
       />
-      {/* Điện thoại: thanh "thay đổi chưa lưu" kiểu guns.lol, trượt lên khi có thay đổi. */}
-      <div
-        aria-hidden={!hasUnsavedChanges}
-        className={cn(
-          "fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+1.75rem)] z-40 transition-all duration-300 sm:hidden",
-          hasUnsavedChanges || isSaving ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[150%] opacity-0",
-        )}
-      >
-        <div role="status" className="flex items-center gap-3 rounded-2xl border border-border/70 bg-popover/75 p-3 pl-4 text-popover-foreground shadow-2xl backdrop-blur-xl backdrop-saturate-150">
-          <p className="min-w-0 flex-1 truncate text-sm font-semibold">{isSaving ? "Đang lưu…" : "Bạn có thay đổi chưa lưu!"}</p>
-          <Button type="button" variant="ghost" size="sm" className="h-9 shrink-0 px-3" disabled={isSaving} tabIndex={hasUnsavedChanges ? 0 : -1} onClick={onReset}>
-            Đặt lại
-          </Button>
-          <Button type="submit" name="saveMode" value={initialBio ? "current" : "published"} size="sm" className="h-9 shrink-0 rounded-lg px-4 font-medium shadow-none" disabled={isSaving} tabIndex={hasUnsavedChanges ? 0 : -1}>
-            {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
-            Lưu thay đổi
-          </Button>
+      {showSaveBar ? (
+        <div className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-lg sm:hidden">
+          <div role="status" aria-live="polite" className="mb-2 text-xs font-medium">
+            {isSaving ? validationT("saving") : visibleContentIssues.length ? validationT("issueCount", { count: visibleContentIssues.length }) : displayedSaveError ? validationT("saveFailed") : validationT("unsaved")}
+          </div>
+          <div className="flex gap-2">
+            {visibleContentIssues.length || displayedSaveError ? <Button type="button" variant="outline" className="min-h-11 flex-1" onClick={() => {
+              if (visibleContentIssues.length) revealIssue(visibleContentIssues[0])
+              else { const alert = document.getElementById("bio-save-error"); alert?.scrollIntoView({ behavior: "smooth", block: "center" }); alert?.focus({ preventScroll: true }) }
+            }}>{validationT("review")}</Button> : <Button type="button" variant="outline" className="min-h-11 flex-1" disabled={isSaving} onClick={onReset}>{validationT("reset")}</Button>}
+            <Button type="submit" name="saveMode" value="current" className="min-h-11 flex-1" disabled={isSaving || (Boolean(initialBio) && !hasUnsavedChanges)}>
+              {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}{validationT("save")}
+            </Button>
+          </div>
+          {visibleContentIssues.length > 0 && status === "published" ? <Button type="submit" name="saveMode" value="draft" variant="ghost" className="mt-1 min-h-11 w-full" disabled={isSaving}>{validationT("saveDraft")}</Button> : null}
         </div>
-      </div>
+      ) : null}
     </form>
   )
 }

@@ -1,4 +1,39 @@
 {
+  "BioContentDelete": {
+    "title": "Hapus blok konten?",
+    "description": "Blok konten ini akan dihapus dari halaman. Tindakan ini tidak dapat dibatalkan.",
+    "cancel": "Batal", "confirm": "Hapus blok"
+  },
+  "BioLinkEffects": {
+    "advanced": "Lanjutan", "icon": "Ikon", "field": "Efek",
+    "hint": "Buat tautan Anda lebih menonjol.", "title": "Pilih efek",
+    "description": "Pilih efek dan lihat pratinjaunya sebelum menerapkan.",
+    "preview": "Pratinjau", "previewLink": "Tautan Anda", "cancel": "Batal", "apply": "Terapkan",
+    "items": {
+      "none": "Tidak ada", "pulse": "Denyut", "shake": "Goyang", "bounce": "Pantulan", "glow": "Cahaya",
+      "aura-gold": "Aura emas", "aura-rainbow": "Aura pelangi", "aura-holo": "Hologram", "aura-mono": "Aura hitam"
+    }
+  },
+  "BioDownload": {
+    "blockTitle": "Kartu unduhan", "blockDescription": "Bagikan file untuk diunduh pengunjung",
+    "file": "File", "chooseFile": "Pilih atau unggah file", "changeFile": "Ganti file", "removeFile": "Hapus file",
+    "noFile": "Belum memilih file", "unavailable": "File ini sedang tidak tersedia",
+    "title": "Judul", "description": "Deskripsi (opsional)", "buttonText": "Teks tombol unduh",
+    "download": "Unduh", "publicHint": "File ini akan dibagikan secara publik saat halaman yang memuat kartu ini diterbitkan."
+  },
+  "BioValidation": {
+    "fileRequired": "Pilih file sebelum menerbitkan.",
+    "saveFailed": "Perubahan belum dapat disimpan",
+    "required": "Harap isi kolom ini.",
+    "url": "Masukkan URL valid yang diawali http:// atau https://.",
+    "tooLong": "Kolom ini melebihi {limit} karakter.",
+    "contentRequired": "Tambahkan setidaknya satu blok konten sebelum menerbitkan.",
+    "name": "Nama halaman", "title": "Deskripsi singkat", "customSlug": "Slug publik",
+    "issueCount": "{count} item perlu diperiksa", "review": "Periksa kesalahan",
+    "draftHint": "Draf yang belum lengkap dapat disimpan. URL yang diisi harus tetap valid.",
+    "unsaved": "Perubahan belum disimpan", "saving": "Menyimpan…", "save": "Simpan perubahan",
+    "saveDraft": "Ubah menjadi draf dan simpan", "reset": "Atur ulang"
+  },
   "Uploads": {
     "timeout": "Unggahan tidak merespons. Periksa koneksi dan coba lagi. Jika sedang diselesaikan, periksa Media Manager sebelum mengunggah ulang.",
     "network": "Tidak dapat terhubung ke server unggahan. Periksa koneksi dan coba lagi.",

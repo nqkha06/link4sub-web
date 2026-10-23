@@ -26,6 +26,7 @@ import { SiDiscord } from "@icons-pack/react-simple-icons";
 
 import { BioWidgetEmbed } from "@/components/bio-widget-embed";
 import { SocialIcon } from "@/features/link-in-bio/social-icon";
+import { DownloadCardRenderer } from "@/features/link-in-bio/content-blocks/download-card-renderer";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { BioDesign } from "@/contracts";
 import { getBioBackgroundPresetById } from "@/features/link-in-bio/backgrounds/background-presets";
@@ -768,6 +769,7 @@ export function PublicBioView({
 
     const link = bioPage.customLinks.find((entry) => entry.id === item.id);
     if (!link || bioPage.hiddenLinks.includes(link.id)) return null;
+    if (link.kind === "download") return <DownloadCardRenderer key={key} block={link} slug={bioPage.slug} preview={preview} onDownload={trackClick} />;
     return <LinkButton key={key} link={link} index={contentIndex} onClick={trackClick} />;
   });
 

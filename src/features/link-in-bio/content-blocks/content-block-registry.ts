@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Images,
+  FileDown,
   Landmark,
   Link2,
   Share2,
@@ -13,6 +14,7 @@ export type ContentBlockCategory = "links" | "content" | "media" | "business" | 
 
 export type ContentBlockPickerType =
   | "link"
+  | "download"
   | "gallery"
   | "social"
   | "divider"
@@ -42,6 +44,10 @@ export const contentBlockCategoryLabels: Record<ContentBlockCategory, string> = 
 };
 
 export const contentBlockRegistry: ContentBlockDefinition[] = [
+  {
+    type: "download", title: "Thẻ tải xuống", description: "Chia sẻ file từ thư viện để người xem tải về",
+    category: "content", icon: FileDown, keywords: ["download", "file", "tai xuong", "tải xuống", "pdf", "zip"], isNew: true, enabled: true,
+  },
   {
     type: "link",
     title: "Liên kết",
