@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/responsive-dialog"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
+import { uploadErrorMessage } from "@/lib/upload-request"
 import { actionCategories, platformCategories } from "../catalog"
 import { LINK_BACKGROUND_IMAGE_PRESETS } from "../background-image-presets"
 import {
@@ -735,6 +736,7 @@ export default function SocialLinksGenerator({
   draftValues?: LinkCreatorDraftValues
 } = {}) {
   const t = useTranslations("CreateLink")
+  const uploadT = useTranslations("Uploads")
   const ti = useTranslations("Admin.monetizationActionIcons")
   const businessConfig = useBusinessConfig()
   const backgroundImages = LINK_BACKGROUND_IMAGE_PRESETS
@@ -1244,7 +1246,7 @@ export default function SocialLinksGenerator({
       setIsCoverImageDialogOpen(false)
       window.dispatchEvent(new CustomEvent(FILE_CREATED_EVENT, { detail: uploaded }))
     } catch (error) {
-      setCoverFileError(error instanceof Error ? error.message : t("uploadCoverFailed"))
+      setCoverFileError(uploadErrorMessage(error, uploadT, t("uploadCoverFailed")))
     } finally {
       setCoverImageUploading(false)
     }
@@ -1292,18 +1294,18 @@ export default function SocialLinksGenerator({
           },
         })
         uploadedFiles.push(uploaded)
+        setAvailableFiles((current) => [uploaded, ...current])
         completedBytes += file.size
         window.dispatchEvent(new CustomEvent(FILE_CREATED_EVENT, { detail: uploaded }))
       }
 
       const selectedUpload = uploadedFiles[0]
-      setAvailableFiles((current) => [...uploadedFiles, ...current])
       setSelectedFile(selectedUpload.id)
       setSelectedFileName(selectedUpload.name)
       setIsFileDialogOpen(false)
       setFileError("")
     } catch (error) {
-      setFileError(error instanceof Error ? error.message : t("uploadFileFailed"))
+      setFileError(uploadErrorMessage(error, uploadT, t("uploadFileFailed")))
     } finally {
       setFileUploading(false)
     }

@@ -10,6 +10,7 @@ import {
   DEFAULT_BIO_BACKGROUND_PRESET_ID,
   getBioBackgroundPresetById,
 } from "../backgrounds/background-presets.ts";
+import { socialUrlTemplate } from "../content-blocks/social-url-templates.ts";
 
 export type BioAccess = "draft" | "published";
 
@@ -45,14 +46,15 @@ export type StarterBioContent = {
 export const STARTER_SOCIAL_PLATFORMS = ["Facebook", "Instagram", "TikTok", "YouTube"] as const;
 
 /**
- * Các khối gợi ý bật sẵn khi mở editor lần đầu cho trang mới. URL để trống:
- * khối nào người dùng không điền sẽ bị bỏ qua khi lưu (buildBioPayload lọc URL không hợp lệ).
+ * Các khối gợi ý bật sẵn khi mở editor lần đầu cho trang mới. Mạng xã hội điền
+ * sẵn URL mẫu (vd. https://tiktok.com/@); khối nào người dùng không điền thêm sẽ
+ * bị bỏ qua khi lưu (buildBioPayload lọc URL mẫu / URL không hợp lệ).
  */
 export function createStarterBioContent(createId: (prefix: string) => string): StarterBioContent {
   const socialLinks = STARTER_SOCIAL_PLATFORMS.map((platform) => ({
     id: createId("social"),
     platform,
-    url: "",
+    url: socialUrlTemplate(platform),
     enabled: true,
   }));
   const customLinks: BioCustomLinkDto[] = [

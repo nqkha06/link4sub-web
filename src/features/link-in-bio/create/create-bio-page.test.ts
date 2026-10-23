@@ -68,7 +68,8 @@ describe("createStarterBioContent", () => {
     let counter = 0;
     const starter = createStarterBioContent((prefix) => `${prefix}-${++counter}`);
     assert.deepEqual(starter.socialLinks.map((s) => s.platform), [...STARTER_SOCIAL_PLATFORMS]);
-    assert.ok(starter.socialLinks.every((s) => s.url === "" && s.enabled));
+    assert.ok(starter.socialLinks.every((s) => s.url.startsWith("https://") && s.enabled));
+    assert.equal(starter.socialLinks.find((s) => s.platform === "TikTok")?.url, "https://tiktok.com/@");
     assert.equal(starter.customLinks.length, 1);
     assert.deepEqual(starter.contentOrder, [
       { type: "social", id: "socials" },

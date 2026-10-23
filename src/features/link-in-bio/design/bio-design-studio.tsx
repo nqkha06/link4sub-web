@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Check, History, Loader2, Redo2, RotateCcw, Undo2 } from "lucide-react"
+import { Blend, Check, ChevronLeft, ChevronRight, Clapperboard, History, ImageIcon, Loader2, MousePointer2, PaintBucket, Pencil, Plus, Redo2, RotateCcw, Undo2, X } from "lucide-react"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 
@@ -13,19 +13,30 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   DEFAULT_BIO_DESIGN,
+  bioCursorTrailTypes,
   isBioBuiltinAssetId,
+  type BioCursorTrailType,
   type BioDesign,
   type BioHorizontalAlign,
 } from "@/contracts"
 import { BIO_DESIGN_TEMPLATES, type BioDesignTemplate } from "./bio-design-templates"
 import { cn } from "@/lib/utils"
 
+import { AudioManagerField, type UploadedAudio } from "./audio-manager-dialog"
 import { BackgroundEffectPicker } from "./background-effect-picker"
 import { ColorPickerInput } from "./color-picker-field"
 import { FontFamilyPicker } from "./font-family-picker"
+import { MediaAssetTile } from "./media-asset-tile"
 import { UsernameEffectPicker } from "./username-effect-picker"
 
 type DesignSection = keyof Pick<BioDesign, "profile" | "background" | "appearance" | "effects" | "audio">
+
+const BACKGROUND_TYPE_TABS = [
+  { type: "color", icon: PaintBucket },
+  { type: "gradient", icon: Blend },
+  { type: "image", icon: ImageIcon },
+  { type: "video", icon: Clapperboard },
+] as const satisfies ReadonlyArray<{ type: BioDesign["background"]["type"]; icon: unknown }>
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -90,6 +101,21 @@ function Panel({ title, description, children }: { title: string; description?: 
 }
 
 
+const TEMPLATES_PER_PAGE = 6
+
+/** Số trang hiển thị: 1 … 4 5 6 … 19 (luôn có trang đầu/cuối và 1 trang mỗi bên trang hiện tại). */
+function getPageItems(current: number, total: number): Array<number | "…"> {
+  if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1)
+  const pages = new Set([1, total, current - 1, current, current + 1].filter((page) => page >= 1 && page <= total))
+  const sorted = [...pages].sort((a, b) => a - b)
+  const items: Array<number | "…"> = []
+  sorted.forEach((page, index) => {
+    if (index > 0 && page - sorted[index - 1] > 1) items.push("…")
+    items.push(page)
+  })
+  return items
+}
+
 const DESIGN_SECTIONS: DesignSection[] = ["profile", "background", "appearance", "effects", "audio"]
 const TEMPLATE_STEPS = ["background", "colors", "effects", "media"] as const
 const TEMPLATE_STEP_MS = 380
@@ -117,9 +143,15 @@ function preloadVideo(url: string | null) {
 export function BioDesignStudio({
   value,
   onChange,
-  backgroundLibrary,
   onPickBackgroundAsset,
   onPickMusicAsset,
+  musicTrackUrls,
+  onUploadMusic,
+  onMusicTrackUploaded,
+  onPickCursorAsset,
+  cursorPreviewUrl,
+  backgroundPreviewUrls,
+  cursorProcessing = false,
   previewName = "",
   onTemplateApplied,
 }: {
@@ -128,9 +160,20 @@ export function BioDesignStudio({
   onTemplateApplied?: () => void
   value: BioDesign
   onChange: (value: BioDesign) => void
-  backgroundLibrary?: React.ReactNode
   onPickBackgroundAsset?: (kind: "image" | "video") => void
   onPickMusicAsset?: () => void
+  /** URL nghe thử của các bài nhạc (theo assetId). */
+  musicTrackUrls?: Record<string, string | undefined>
+  onUploadMusic?: (file: File, onProgress: (value: number) => void) => Promise<UploadedAudio>
+  onMusicTrackUploaded?: (assetId: string, url: string | undefined) => void
+  /** Mở thư viện ảnh để chọn ảnh con trỏ. */
+  onPickCursorAsset?: () => void
+  /** URL ảnh con trỏ đang dùng (để xem trước trong panel Con trỏ). */
+  cursorPreviewUrl?: string
+  /** URL ảnh / video nền đang dùng (xem trước trong Background Source). */
+  backgroundPreviewUrls?: { image?: string; video?: string }
+  /** Đang thu nhỏ / tải ảnh con trỏ. */
+  cursorProcessing?: boolean
 }) {
   const t = useTranslations("BioStudio")
   const historyRef = useRef<BioDesign[]>([value])
@@ -158,6 +201,23 @@ export function BioDesignStudio({
   }
   /* ------------------------------------------------------------ Template */
   const [activeTab, setActiveTab] = useState<string>("profile")
+  /** Phân trang tab Templates: chỉ render (và tải ảnh) TEMPLATES_PER_PAGE mẫu mỗi lần. */
+  const [templatePage, setTemplatePage] = useState(1)
+  const templatePageCount = Math.max(1, Math.ceil(BIO_DESIGN_TEMPLATES.length / TEMPLATES_PER_PAGE))
+  const currentTemplatePage = Math.min(templatePage, templatePageCount)
+  const visibleTemplates = BIO_DESIGN_TEMPLATES.slice((currentTemplatePage - 1) * TEMPLATES_PER_PAGE, currentTemplatePage * TEMPLATES_PER_PAGE)
+  const templateGridRef = useRef<HTMLDivElement>(null)
+  const goToTemplatePage = (page: number) => {
+    const next = Math.min(templatePageCount, Math.max(1, page))
+    if (next === currentTemplatePage) return
+    setTemplatePage(next)
+    // Sau khi trang mới render: cuộn lên đầu danh sách mẫu (nhất là trên điện thoại, nút
+    // phân trang nằm cuối danh sách). scroll-margin của lưới chừa chỗ cho header dính.
+    requestAnimationFrame(() => {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      templateGridRef.current?.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" })
+    })
+  }
   /** Các tab có thiết lập vừa được template thay đổi (chấm nhỏ trên tab, mất khi mở tab). */
   const [changedTabs, setChangedTabs] = useState<DesignSection[]>([])
   const [applying, setApplying] = useState<{ id: string; step: number } | null>(null)
@@ -252,14 +312,47 @@ export function BioDesignStudio({
 
         <TabsContent value="background" className="space-y-4">
           {sectionHeader("background", t("backgroundDescription"))}
-          {backgroundLibrary ? <Panel title={t("backgroundLibrary")}>{backgroundLibrary}</Panel> : null}
           <Panel title={t("backgroundSource")}>
-            <Field label={t("backgroundType")}><Select value={value.background.type} onValueChange={(type) => commit({ ...value, background: { ...value.background, type: type as BioDesign["background"]["type"] } })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="color">Color</SelectItem><SelectItem value="gradient">Gradient</SelectItem><SelectItem value="image">Image</SelectItem><SelectItem value="video">Video</SelectItem></SelectContent></Select></Field>
+            <Field label={t("backgroundType")}>
+              <Tabs value={value.background.type} onValueChange={(type) => commit({ ...value, background: { ...value.background, type: type as BioDesign["background"]["type"] } })}>
+                <TabsList className="grid h-auto w-full grid-cols-4 rounded-xl bg-muted/60 p-1">
+                  {BACKGROUND_TYPE_TABS.map(({ type, icon: Icon }) => (
+                    <TabsTrigger key={type} value={type} className="h-9 gap-1.5 rounded-lg px-1.5 text-xs">
+                      <Icon className="size-3.5 shrink-0" aria-hidden />
+                      <span className="truncate">{t(`backgroundTypes.${type}`)}</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </Field>
             {value.background.type === "color" ? <ColorField label={t("backgroundColor")} value={value.background.color} onChange={(color) => commit({ ...value, background: { ...value.background, color } })} /> : null}
             {value.background.type === "gradient" ? <div className="grid gap-4 sm:grid-cols-2"><ColorField label="Gradient From" value={value.background.gradientFrom} onChange={(gradientFrom) => commit({ ...value, background: { ...value.background, gradientFrom } })} /><ColorField label="Gradient To" value={value.background.gradientTo} onChange={(gradientTo) => commit({ ...value, background: { ...value.background, gradientTo } })} /><RangeField label="Góc" value={value.background.gradientAngle} min={0} max={360} unit="°" onChange={(gradientAngle) => commit({ ...value, background: { ...value.background, gradientAngle } })} /></div> : null}
-            {value.background.type === "image" ? <Button type="button" variant="outline" className="w-full justify-start" onClick={() => onPickBackgroundAsset?.("image")}>{value.background.imageAssetId ? t("changeImage") : t("chooseImage")}</Button> : null}
-            {value.background.type === "video" ? <Button type="button" variant="outline" className="w-full justify-start" onClick={() => onPickBackgroundAsset?.("video")}>{value.background.videoAssetId ? t("changeVideo") : t("chooseVideo")}</Button> : null}
-            {value.background.type === "video" && isBioBuiltinAssetId(value.background.videoAssetId) ? <p className="text-[11px] leading-4 text-muted-foreground">{t("templateAsset")}</p> : null}
+            {value.background.type === "image" ? (
+              <MediaAssetTile
+                kind="image"
+                url={backgroundPreviewUrls?.image}
+                hasAsset={Boolean(value.background.imageAssetId)}
+                chooseLabel={t("chooseImage")}
+                changeLabel={t("changeImage")}
+                removeLabel={t("removeBackgroundMedia")}
+                onPick={() => onPickBackgroundAsset?.("image")}
+                onRemove={() => commit({ ...value, background: { ...value.background, imageAssetId: null } })}
+                note={isBioBuiltinAssetId(value.background.imageAssetId) ? t("templateAsset") : undefined}
+              />
+            ) : null}
+            {value.background.type === "video" ? (
+              <MediaAssetTile
+                kind="video"
+                url={backgroundPreviewUrls?.video}
+                hasAsset={Boolean(value.background.videoAssetId)}
+                chooseLabel={t("chooseVideo")}
+                changeLabel={t("changeVideo")}
+                removeLabel={t("removeBackgroundMedia")}
+                onPick={() => onPickBackgroundAsset?.("video")}
+                onRemove={() => commit({ ...value, background: { ...value.background, videoAssetId: null } })}
+                note={isBioBuiltinAssetId(value.background.videoAssetId) ? t("templateAsset") : undefined}
+              />
+            ) : null}
           </Panel>
           <Panel title={t("overlayFilters")}>
             <ToggleField label={t("overlayEnabled")} checked={value.background.overlay.enabled} onChange={(enabled) => commit({ ...value, background: { ...value.background, overlay: { ...value.background.overlay, enabled } } })} />
@@ -299,13 +392,84 @@ export function BioDesignStudio({
             {value.effects.social.glowEnabled ? <div className="border-l-2 border-border pl-4"><ColorField label={t("glow.color")} value={value.effects.social.glowColor} onChange={(glowColor) => commit({ ...value, effects: { ...value.effects, social: { ...value.effects.social, glowColor } } })} /></div> : null}
             <ToggleField label={t("glow.badges")} checked={value.effects.badges.glowEnabled} onChange={(glowEnabled) => commit({ ...value, effects: { ...value.effects, badges: { ...value.effects.badges, glowEnabled } } })} />
           </Panel>
-          <Panel title={t("cursor.title")}>
+          <Panel title={t("cursor.title")} description={t("cursor.hint")}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("cursor.effect")}>
+                <Select
+                  value={value.effects.cursor.trailEnabled ? value.effects.cursor.trailType : "none"}
+                  onValueChange={(type) => commit({ ...value, effects: { ...value.effects, cursor: { ...value.effects.cursor, trailType: type as BioCursorTrailType, trailEnabled: type !== "none" } } })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {bioCursorTrailTypes.map((type) => <SelectItem key={type} value={type}>{t(`cursor.effects.${type}`)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
+              {value.effects.cursor.trailEnabled && value.effects.cursor.trailType !== "none" && value.effects.cursor.trailType !== "rainbow" ? (
+                <ColorField label={t("cursor.effectColor")} value={value.effects.cursor.trailColor} onChange={(trailColor) => commit({ ...value, effects: { ...value.effects, cursor: { ...value.effects.cursor, trailColor } } })} />
+              ) : null}
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="relative size-16 shrink-0">
+                <button
+                  type="button"
+                  onClick={onPickCursorAsset}
+                  disabled={cursorProcessing}
+                  aria-label={value.effects.cursor.assetId ? t("cursor.change") : t("cursor.choose")}
+                  title={value.effects.cursor.assetId ? t("cursor.change") : t("cursor.choose")}
+                  className="relative grid size-16 place-items-center overflow-hidden rounded-2xl border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-wait"
+                  style={{ background: "repeating-conic-gradient(color-mix(in srgb, currentColor 14%, transparent) 0% 25%, transparent 0% 50%) 50% / 10px 10px" }}
+                >
+                  {cursorProcessing ? (
+                    <Loader2 className="size-5 animate-spin" />
+                  ) : value.effects.cursor.assetId && cursorPreviewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- ảnh con trỏ nhỏ (≤ 32px)
+                    <img src={cursorPreviewUrl} alt="" className="max-h-10 max-w-10 object-contain [image-rendering:pixelated]" />
+                  ) : (
+                    <MousePointer2 className="size-6" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={onPickCursorAsset}
+                  disabled={cursorProcessing}
+                  aria-label={value.effects.cursor.assetId ? t("cursor.change") : t("cursor.choose")}
+                  className="absolute -bottom-1 -right-1 grid size-6 place-items-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {value.effects.cursor.assetId ? <Pencil className="size-3" aria-hidden /> : <Plus className="size-3" aria-hidden />}
+                </button>
+                {value.effects.cursor.assetId && !cursorProcessing ? (
+                  <button
+                    type="button"
+                    onClick={() => commit({ ...value, effects: { ...value.effects, cursor: { ...value.effects.cursor, type: "default", assetId: null } } })}
+                    aria-label={t("cursor.remove")}
+                    title={t("cursor.remove")}
+                    className="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full border-2 border-background bg-muted text-muted-foreground shadow-sm hover:bg-destructive hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <X className="size-3" aria-hidden />
+                  </button>
+                ) : null}
+              </div>
+              <div className="min-w-0 text-xs leading-5">
+                <p className="font-medium text-foreground">
+                  {cursorProcessing ? t("cursor.processing") : value.effects.cursor.assetId ? t("cursor.change") : t("cursor.choose")}
+                </p>
+                <p className="text-muted-foreground">{t("cursor.autoResize")}</p>
+              </div>
+            </div>
+            {isBioBuiltinAssetId(value.effects.cursor.assetId) ? <p className="text-[11px] leading-4 text-muted-foreground">{t("templateAsset")}</p> : null}
             <ToggleField
               label={t("cursor.custom")}
-              hint={value.effects.cursor.assetId ? (isBioBuiltinAssetId(value.effects.cursor.assetId) ? t("templateAsset") : undefined) : t("cursor.noAsset")}
+              hint={value.effects.cursor.assetId ? undefined : t("cursor.noAsset")}
               checked={value.effects.cursor.type === "custom" && Boolean(value.effects.cursor.assetId)}
               onChange={(custom) => { if (value.effects.cursor.assetId) commit({ ...value, effects: { ...value.effects, cursor: { ...value.effects.cursor, type: custom ? "custom" : "default" } } }) }}
             />
+            {value.effects.cursor.type === "custom" && value.effects.cursor.assetId ? (
+              <div className="grid gap-4 border-l-2 border-border pl-4 sm:grid-cols-2">
+                <RangeField label={t("cursor.hotspotX")} value={value.effects.cursor.hotspotX} min={0} max={64} unit="px" onChange={(hotspotX) => commit({ ...value, effects: { ...value.effects, cursor: { ...value.effects.cursor, hotspotX } } })} />
+                <RangeField label={t("cursor.hotspotY")} value={value.effects.cursor.hotspotY} min={0} max={64} unit="px" onChange={(hotspotY) => commit({ ...value, effects: { ...value.effects, cursor: { ...value.effects.cursor, hotspotY } } })} />
+              </div>
+            ) : null}
           </Panel>
           <Panel title={t("profileAnimation")}>
             <Field label={t("animation")}>
@@ -320,14 +484,12 @@ export function BioDesignStudio({
 
         <TabsContent value="audio" className="space-y-4">
           {sectionHeader("audio", t("audioDescription"))}
-          <Panel title={t("backgroundMusic")}><ToggleField label={t("musicEnabled")} checked={value.audio.music.enabled} onChange={(enabled) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, enabled } } })} />{value.audio.music.enabled ? <div className="space-y-4 border-l-2 border-border pl-4"><Button type="button" variant="outline" className="w-full justify-start" onClick={onPickMusicAsset}>{value.audio.music.assetId ? t("changeMusic") : t("chooseMusic")}</Button>{isBioBuiltinAssetId(value.audio.music.assetId) ? <p className="text-[11px] leading-4 text-muted-foreground">{t("templateAsset")}</p> : null}<div className="grid gap-4 sm:grid-cols-2"><Field label={t("trackTitle")}><Input value={value.audio.music.title} onChange={(event) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, title: event.target.value } } })} /></Field><Field label={t("artist")}><Input value={value.audio.music.artist} onChange={(event) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, artist: event.target.value } } })} /></Field></div><RangeField label={t("volume")} value={value.audio.music.volume} min={0} max={100} unit="%" onChange={(volume) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, volume } } })} /><Field label={t("startMode")}><Select value={value.audio.music.startMode} onValueChange={(startMode) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, startMode: startMode as "manual" | "on-enter" } } })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="manual">Manual</SelectItem><SelectItem value="on-enter">On Enter</SelectItem></SelectContent></Select></Field></div> : null}</Panel>
-          <Panel title={t("musicPlayer")}><ToggleField label={t("musicPlayerVisible")} hint={t("musicPlayerHint")} checked={value.audio.player.visible} onChange={(visible) => commit({ ...value, audio: { ...value.audio, player: { ...value.audio.player, visible } } })} /></Panel>
-          <Panel title={t("soundEffects")}><ToggleField label={t("soundsEnabled")} hint={t("soundsHint")} checked={value.audio.sounds.enabled} onChange={(enabled) => commit({ ...value, audio: { ...value.audio, sounds: { ...value.audio.sounds, enabled } } })} /></Panel>
+          <Panel title={t("backgroundMusic")}><ToggleField label={t("musicEnabled")} checked={value.audio.music.enabled} onChange={(enabled) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, enabled } } })} />{value.audio.music.enabled ? <div className="space-y-4 border-l-2 border-border pl-4"><AudioManagerField music={value.audio.music} playerVisible={value.audio.player.visible} trackUrls={musicTrackUrls ?? {}} onUpload={onUploadMusic} onBrowseLibrary={onPickMusicAsset} onTrackUploaded={onMusicTrackUploaded} onChange={(music) => commit({ ...value, audio: { ...value.audio, music } })} onPlayerVisibleChange={(visible) => commit({ ...value, audio: { ...value.audio, player: { ...value.audio.player, visible } } })} /><RangeField label={t("volume")} value={value.audio.music.volume} min={0} max={100} unit="%" onChange={(volume) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, volume } } })} /><Field label={t("startMode")}><Select value={value.audio.music.startMode} onValueChange={(startMode) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, startMode: startMode as "manual" | "on-enter" } } })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="manual">Manual</SelectItem><SelectItem value="on-enter">On Enter</SelectItem></SelectContent></Select></Field></div> : null}</Panel>
         </TabsContent>
 
         <TabsContent value="templates" className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-            {BIO_DESIGN_TEMPLATES.map((template) => {
+          <div ref={templateGridRef} className="grid scroll-mt-[calc(var(--header-height,0px)+12px)] gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+            {visibleTemplates.map((template) => {
               const isApplying = applying?.id === template.id
               const isActive = appliedTemplateId === template.id && !isApplying
               return (
@@ -392,6 +554,38 @@ export function BioDesignStudio({
               )
             })}
           </div>
+          {templatePageCount > 1 ? (
+            <nav aria-label={t("templatePagination")} className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <p className="text-xs text-muted-foreground">
+                {t("templatePageInfo", { page: currentTemplatePage, pages: templatePageCount, total: BIO_DESIGN_TEMPLATES.length })}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button type="button" variant="outline" size="icon" className="size-8" onClick={() => goToTemplatePage(currentTemplatePage - 1)} disabled={currentTemplatePage <= 1} aria-label={t("templatePrev")}>
+                  <ChevronLeft className="size-4" />
+                </Button>
+                {getPageItems(currentTemplatePage, templatePageCount).map((item, index) =>
+                  item === "…" ? (
+                    <span key={`gap-${index}`} className="px-1 text-xs text-muted-foreground" aria-hidden>…</span>
+                  ) : (
+                    <Button
+                      key={item}
+                      type="button"
+                      size="sm"
+                      variant={item === currentTemplatePage ? "default" : "ghost"}
+                      className="h-8 min-w-8 px-2 tabular-nums"
+                      aria-current={item === currentTemplatePage ? "page" : undefined}
+                      onClick={() => goToTemplatePage(item)}
+                    >
+                      {item}
+                    </Button>
+                  ),
+                )}
+                <Button type="button" variant="outline" size="icon" className="size-8" onClick={() => goToTemplatePage(currentTemplatePage + 1)} disabled={currentTemplatePage >= templatePageCount} aria-label={t("templateNext")}>
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </nav>
+          ) : null}
         </TabsContent>
       </Tabs>
     </div>

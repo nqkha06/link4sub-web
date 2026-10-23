@@ -2,6 +2,10 @@
 
 import type { ChangeEvent } from "react";
 import * as React from "react";
+import { useTranslations } from "next-intl";
+import { useBusinessConfig } from "@/features/business-settings/use-business-config";
+import { getUploadMimeType } from "@/lib/upload-compatibility";
+import { uploadErrorMessage } from "@/lib/upload-request";
 
 import { FilePickerCredenza } from "@/components/file-picker-credenza";
 import {
@@ -43,10 +47,22 @@ export function ManagedImagePicker({
   accept?: string;
   uploadPurpose?: "file" | "cover";
 }) {
+  const t = useTranslations("Uploads");
+  const limits = useBusinessConfig().uploads;
+  const sizeLimit = maxSize ?? (uploadPurpose === "cover" ? limits.coverImageMaxBytes : limits.memberFileMaxBytes);
+  const uploadController = React.useRef<AbortController | null>(null);
+  React.useEffect(() => () => uploadController.current?.abort(), []);
   const [files, setFiles] = React.useState<ManagedFileDto[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [progress, setProgress] = React.useState(0);
+  const [finalizing, setFinalizing] = React.useState(false);
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) uploadController.current?.abort();
+    onOpenChange(nextOpen);
+  }
 
   const loadFiles = React.useCallback(async () => {
     setLoading(true);
@@ -61,7 +77,7 @@ export function ManagedImagePicker({
       setFiles(response.data.filter((file) =>
         acceptedMimePrefixes.some((prefix) => file.mimeType.startsWith(prefix)) &&
         (!acceptedMimeTypes || acceptedMimeTypes.includes(file.mimeType.toLowerCase())) &&
-        (!maxSize || file.size <= maxSize),
+        file.size <= sizeLimit,
       ));
     } catch (loadError) {
       setError(
@@ -72,7 +88,7 @@ export function ManagedImagePicker({
     } finally {
       setLoading(false);
     }
-  }, [acceptedMimePrefixes, acceptedMimeTypes, maxSize]);
+  }, [acceptedMimePrefixes, acceptedMimeTypes, sizeLimit]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -81,10 +97,11 @@ export function ManagedImagePicker({
   }, [loadFiles, open]);
 
   async function handleFiles(selected: File[]) {
+    if (uploadController.current) return;
     const images = selected.filter((file) =>
-      acceptedMimePrefixes.some((prefix) => file.type.startsWith(prefix)) &&
-      (!acceptedMimeTypes || acceptedMimeTypes.includes(file.type.toLowerCase())) &&
-      (!maxSize || file.size <= maxSize),
+      acceptedMimePrefixes.some((prefix) => getUploadMimeType(file).startsWith(prefix)) &&
+      (!acceptedMimeTypes || acceptedMimeTypes.includes(getUploadMimeType(file))) &&
+      file.size > 0 && file.size <= sizeLimit,
     );
     if (!images.length) {
       setError(`${assetLabel} không đúng định dạng hoặc vượt quá dung lượng cho phép.`);
@@ -95,13 +112,30 @@ export function ManagedImagePicker({
       ? selectedImages.slice(0, maxFiles)
       : selectedImages;
     if (!uploadQueue.length) return;
+    const controller = new AbortController();
+    uploadController.current = controller;
     setUploading(true);
+    setProgress(0);
+    setFinalizing(false);
     setError("");
     try {
-      const uploaded = await Promise.all(
-        uploadQueue.map((image) => uploadFile(image, { purpose: uploadPurpose })),
-      );
-      setFiles((current) => [...uploaded, ...current]);
+      const uploaded: ManagedFileDto[] = [];
+      const totalBytes = uploadQueue.reduce((sum, file) => sum + file.size, 0);
+      let completedBytes = 0;
+      for (const image of uploadQueue) {
+        setFinalizing(false);
+        const file = await uploadFile(image, {
+          purpose: uploadPurpose,
+          signal: controller.signal,
+          onProgress: (value) => setProgress(Math.min(99, Math.round((completedBytes + image.size * value / 100) / totalBytes * 100))),
+          onFinalizing: () => setFinalizing(true),
+        });
+        uploaded.push(file);
+        completedBytes += image.size;
+        setFiles((current) => [file, ...current]);
+      }
+      controller.signal.throwIfAborted();
+      setProgress(100);
       if (multiple && onSelectMany) {
         onSelectMany(uploaded);
       } else {
@@ -109,13 +143,11 @@ export function ManagedImagePicker({
       }
       onOpenChange(false);
     } catch (uploadError) {
-      setError(
-        uploadError instanceof Error
-          ? uploadError.message
-          : `Không thể upload ${assetLabel}.`,
-      );
+      if (!controller.signal.aborted) setError(uploadErrorMessage(uploadError, t, t("failed")));
     } finally {
+      uploadController.current = null;
       setUploading(false);
+      setFinalizing(false);
     }
   }
 
@@ -129,7 +161,7 @@ export function ManagedImagePicker({
   return (
     <FilePickerCredenza
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       files={files}
       isLoading={loading}
       error={error}
@@ -155,7 +187,8 @@ export function ManagedImagePicker({
         accept,
         isUploading: uploading,
         label: `Chọn ${assetLabel}`,
-        uploadingLabel: "Đang upload...",
+        progress,
+        uploadingLabel: finalizing ? t("finalizing") : t("uploading"),
         multiple,
         onChange: handleInput,
         onFiles: handleFiles,

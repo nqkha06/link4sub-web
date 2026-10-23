@@ -12,6 +12,8 @@ import {
   type PaginationMeta,
 } from "@/lib/api-response";
 import type { BioDesign } from "@/contracts";
+import { getUploadMimeType } from "@/lib/upload-compatibility";
+import { UploadError, uploadPart, withUploadDeadline } from "@/lib/upload-request";
 
 const BROWSER_API_URL = "/api/backend";
 
@@ -361,6 +363,8 @@ export type BioPageDto = {
     enterBackgroundUrl?: string;
     musicUrl?: string;
     musicCoverUrl?: string;
+    /** Danh sách nhạc đã có URL (dùng cho "Shuffle Audios"). */
+    musicTracks?: Array<{ assetId: string; title: string; url: string }>;
     clickSoundUrl?: string;
     hoverSoundUrl?: string;
     enterSoundUrl?: string;
@@ -826,27 +830,31 @@ export async function uploadFile(
     onFinalizing?: () => void;
   },
 ) {
+  if (file.size === 0) throw new UploadError("emptyFile");
   options?.onProgress?.(0);
 
-  const initiateResponse = await fetch(requestApiUrl("/member/files/multipart"), {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      fileName: file.name,
-      mimeType: file.type || "application/octet-stream",
-      size: file.size,
-      purpose: options?.purpose || "file",
-    }),
-    signal: options?.signal,
-  });
+  const upload = await withUploadDeadline(async (signal) => {
+    const initiateResponse = await fetch(requestApiUrl("/member/files/multipart"), {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: file.name,
+        mimeType: getUploadMimeType(file) || "application/octet-stream",
+        size: file.size,
+        purpose: options?.purpose || "file",
+      }),
+      signal,
+    });
 
-  const upload = await readApiData<{
-    uploadId: string;
-    partSize: number;
-    totalParts: number;
-  }>(initiateResponse);
+    return readApiData<{
+      uploadId: string;
+      partSize: number;
+      totalParts: number;
+    }>(initiateResponse);
+  }, options?.signal);
   const uploadId = upload.uploadId;
+  let completionStarted = false;
 
   try {
     for (let partNumber = 1; partNumber <= upload.totalParts; partNumber += 1) {
@@ -854,96 +862,49 @@ export async function uploadFile(
       const end = Math.min(start + upload.partSize, file.size);
       const chunk = file.slice(start, end);
 
-      await uploadMultipartPart(
-        upload.uploadId,
-        partNumber,
+      await uploadPart(
+        requestApiUrl(`/member/files/multipart/${uploadId}/parts/${partNumber}`),
         chunk,
         options?.signal,
         (loaded) => {
           const uploadedBytes = start + Math.min(loaded, chunk.size);
           options?.onProgress?.(Math.min(99, Math.round((uploadedBytes / file.size) * 100)));
         },
+        getApiErrorMessageFromText,
       );
     }
 
     options?.onFinalizing?.();
 
-    const completeResponse = await fetch(
-      requestApiUrl(`/member/files/multipart/${upload.uploadId}/complete`),
-      {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(options?.folderId ? { folderId: options.folderId } : {}),
-        signal: options?.signal,
-      },
-    );
+    options?.signal?.throwIfAborted();
+    completionStarted = true;
+    const completed = await withUploadDeadline(async (signal) => {
+      const completeResponse = await fetch(
+        requestApiUrl(`/member/files/multipart/${upload.uploadId}/complete`),
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(options?.folderId ? { folderId: options.folderId } : {}),
+          signal,
+        },
+      );
+      return readApiData<ManagedFileDto>(completeResponse);
+    }, options?.signal);
 
     options?.onProgress?.(100);
-    return readApiData<ManagedFileDto>(completeResponse);
+    return completed;
   } catch (error) {
-    await fetch(requestApiUrl(`/member/files/multipart/${uploadId}`), {
+    // A lost completion response does not mean the server failed. Deleting then
+    // could race with completion and remove a successfully stored file.
+    if (!completionStarted) void withUploadDeadline((signal) => fetch(requestApiUrl(`/member/files/multipart/${uploadId}`), {
       method: "DELETE",
       credentials: "include",
       keepalive: true,
-    }).catch(() => undefined);
+      signal,
+    }), undefined, 10_000).catch(() => undefined);
     throw error;
   }
-}
-
-function uploadMultipartPart(
-  uploadId: string,
-  partNumber: number,
-  chunk: Blob,
-  signal: AbortSignal | undefined,
-  onProgress: (loaded: number) => void,
-) {
-  return new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const formData = new FormData();
-    formData.append("chunk", chunk, `part-${partNumber}`);
-
-    const cleanup = () => signal?.removeEventListener("abort", abortUpload);
-    const abortUpload = () => xhr.abort();
-
-    xhr.open(
-      "POST",
-      requestApiUrl(`/member/files/multipart/${uploadId}/parts/${partNumber}`),
-    );
-    xhr.withCredentials = true;
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress(event.loaded);
-    };
-    xhr.onload = () => {
-      cleanup();
-      if (xhr.status >= 200 && xhr.status < 300) {
-        onProgress(chunk.size);
-        resolve();
-        return;
-      }
-      reject(new Error(getXhrApiError(xhr)));
-    };
-    xhr.onerror = () => {
-      cleanup();
-      reject(new Error("Không thể kết nối tới máy chủ upload."));
-    };
-    xhr.onabort = () => {
-      cleanup();
-      reject(new DOMException("Upload đã bị hủy.", "AbortError"));
-    };
-
-    if (signal?.aborted) {
-      reject(new DOMException("Upload đã bị hủy.", "AbortError"));
-      return;
-    }
-
-    signal?.addEventListener("abort", abortUpload, { once: true });
-    xhr.send(formData);
-  });
-}
-
-function getXhrApiError(xhr: XMLHttpRequest) {
-  return getApiErrorMessageFromText(xhr.responseText);
 }
 
 export async function updateFile(

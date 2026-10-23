@@ -1,4 +1,12 @@
 {
+  "Uploads": {
+    "timeout": "The upload stopped responding. Check your connection and try again. If it was finalizing, check Media Manager before uploading again.",
+    "network": "Cannot connect to the upload server. Check your connection and try again.",
+    "emptyFile": "Cannot upload an empty file.",
+    "failed": "Could not upload the file. Please try again.",
+    "uploading": "Uploading…",
+    "finalizing": "Finalizing…"
+  },
   "Common": {
     "copied": "Copied",
     "copyFailed": "Could not copy. Please try again.",
@@ -35,17 +43,178 @@
     "effectsDescription": "Presentation-only effects that respect reduced-motion preferences.",
     "audioDescription": "Audio is off by default and only starts after user interaction.",
     "templateBy": "by {creator}",
-    "backgroundEffectPicker": {"title": "Background effect", "change": "Change effect", "cancel": "Cancel", "save": "Save", "items": {"none": {"label": "None", "description": "No effect, just the background."}, "rain": {"label": "Rain", "description": "Slanted rain streaks across the screen."}, "snowflakes": {"label": "Snowflakes", "description": "Swaying snowflakes in front of the card, guns.lol style."}, "aurora": {"label": "Aurora", "description": "Flowing aurora light bands (WebGL)."}, "plasma": {"label": "Plasma", "description": "Soft glowing blobs in constant motion (WebGL)."}, "dither": {"label": "Dither", "description": "Halftone dot waves that react to the cursor."}, "blurred": {"label": "Blurred", "description": "Blurs and slightly darkens the background."}, "night-time": {"label": "Night time", "description": "A dark blue night tint."}, "old-tv": {"label": "Old TV", "description": "Scanlines and noise like an old TV screen."}, "wave": {"label": "Wave", "description": "Two soft wave layers drifting along the bottom."}, "star-drop": {"label": "Star Drop", "description": "Tiny square stars falling at different speeds."}, "noise": {"label": "Noise", "description": "Animated film grain over the background."}, "dots": {"label": "Dots", "description": "A dot-grid overlay; the background shows through tiny dots."}, "chroma-waves": {"label": "Chroma Waves", "description": "Large glowing blobs drifting slowly with grainy edges."}, "luminous-flow": {"label": "Luminous Flow", "description": "Thin light strands weaving across the screen."}, "aurora-silk": {"label": "Aurora Silk", "description": "A flowing ribbon of silky light."}, "velvet-waves": {"label": "Velvet Waves", "description": "Dark velvet folds moving softly."}, "nebula-drift": {"label": "Nebula Drift", "description": "Thin cloud layers drifting slowly."}, "soft-horizon": {"label": "Soft Horizon", "description": "A glowing horizon line with soft strata."}, "liquid-flow": {"label": "Liquid Flow", "description": "High-contrast liquid shapes with rippled edges."}, "spectrum-warp": {"label": "Spectrum Warp", "description": "A bright curved band with grainy glow."}, "aurora-lines": {"label": "Aurora Lines", "description": "A sweeping light beam over faint contour lines."}, "chromatic-pulse": {"label": "Chromatic Pulse", "description": "An iridescent liquid with subtle color shifts."}, "glitter-warp": {"label": "Glitter Warp", "description": "Glitter particles flying out from the center."}, "light-droplets": {"label": "Light Droplets", "description": "Short light streaks gliding sideways."}, "lightspeed": {"label": "Lightspeed", "description": "Hyperspace star streaks bursting from the center."}, "liquid-lines": {"label": "Liquid Lines", "description": "Soft diagonal light streaks."}, "metallic-swirl": {"label": "Metallic Swirl", "description": "A slow metallic gradient swirl."}, "topography": {"label": "Topography", "description": "Thin contour lines like a topographic map."}, "gradient-waves": {"label": "Gradient Waves", "description": "A diagonal wave of light with grainy edges."}}},
+    "removeBackgroundMedia": "Remove background",
+    "templatePagination": "Template pages",
+    "templatePageInfo": "Page {page}/{pages} · {total} templates",
+    "templatePrev": "Previous page",
+    "templateNext": "Next page",
+    "backgroundEffectPicker": {
+      "title": "Background effect",
+      "change": "Change effect",
+      "cancel": "Cancel",
+      "save": "Save",
+      "items": {
+        "none": {
+          "label": "None",
+          "description": "No effect, just the background."
+        },
+        "rain": {
+          "label": "Rain",
+          "description": "Slanted rain streaks across the screen."
+        },
+        "snowflakes": {
+          "label": "Snowflakes",
+          "description": "Swaying snowflakes in front of the card, guns.lol style."
+        },
+        "aurora": {
+          "label": "Aurora",
+          "description": "Flowing aurora light bands (WebGL)."
+        },
+        "plasma": {
+          "label": "Plasma",
+          "description": "Soft glowing blobs in constant motion (WebGL)."
+        },
+        "dither": {
+          "label": "Dither",
+          "description": "Halftone dot waves that react to the cursor."
+        },
+        "blurred": {
+          "label": "Blurred",
+          "description": "Blurs and slightly darkens the background."
+        },
+        "night-time": {
+          "label": "Night time",
+          "description": "A dark blue night tint."
+        },
+        "old-tv": {
+          "label": "Old TV",
+          "description": "Scanlines and noise like an old TV screen."
+        },
+        "wave": {
+          "label": "Wave",
+          "description": "Two soft wave layers drifting along the bottom."
+        },
+        "star-drop": {
+          "label": "Star Drop",
+          "description": "Tiny square stars falling at different speeds."
+        },
+        "noise": {
+          "label": "Noise",
+          "description": "Animated film grain over the background."
+        },
+        "dots": {
+          "label": "Dots",
+          "description": "A dot-grid overlay; the background shows through tiny dots."
+        },
+        "chroma-waves": {
+          "label": "Chroma Waves",
+          "description": "Large glowing blobs drifting slowly with grainy edges."
+        },
+        "luminous-flow": {
+          "label": "Luminous Flow",
+          "description": "Thin light strands weaving across the screen."
+        },
+        "aurora-silk": {
+          "label": "Aurora Silk",
+          "description": "A flowing ribbon of silky light."
+        },
+        "velvet-waves": {
+          "label": "Velvet Waves",
+          "description": "Dark velvet folds moving softly."
+        },
+        "nebula-drift": {
+          "label": "Nebula Drift",
+          "description": "Thin cloud layers drifting slowly."
+        },
+        "soft-horizon": {
+          "label": "Soft Horizon",
+          "description": "A glowing horizon line with soft strata."
+        },
+        "liquid-flow": {
+          "label": "Liquid Flow",
+          "description": "High-contrast liquid shapes with rippled edges."
+        },
+        "spectrum-warp": {
+          "label": "Spectrum Warp",
+          "description": "A bright curved band with grainy glow."
+        },
+        "aurora-lines": {
+          "label": "Aurora Lines",
+          "description": "A sweeping light beam over faint contour lines."
+        },
+        "chromatic-pulse": {
+          "label": "Chromatic Pulse",
+          "description": "An iridescent liquid with subtle color shifts."
+        },
+        "glitter-warp": {
+          "label": "Glitter Warp",
+          "description": "Glitter particles flying out from the center."
+        },
+        "light-droplets": {
+          "label": "Light Droplets",
+          "description": "Short light streaks gliding sideways."
+        },
+        "lightspeed": {
+          "label": "Lightspeed",
+          "description": "Hyperspace star streaks bursting from the center."
+        },
+        "liquid-lines": {
+          "label": "Liquid Lines",
+          "description": "Soft diagonal light streaks."
+        },
+        "metallic-swirl": {
+          "label": "Metallic Swirl",
+          "description": "A slow metallic gradient swirl."
+        },
+        "topography": {
+          "label": "Topography",
+          "description": "Thin contour lines like a topographic map."
+        },
+        "gradient-waves": {
+          "label": "Gradient Waves",
+          "description": "A diagonal wave of light with grainy edges."
+        }
+      }
+    },
     "cardGradient": "Gradient background",
     "cardGradientHint": "Use a gradient instead of a solid color (supports #RRGGBBAA alpha).",
     "gradientFrom": "Start color",
     "gradientTo": "End color",
     "effectColor": "Effect color",
-    "glow": {"title": "Glow", "hint": "Glow around the name, social icons and badges.", "username": "Name glow", "social": "Social icon glow", "badges": "Badge glow", "color": "Glow color"},
-    "cursor": {"title": "Cursor", "custom": "Custom cursor", "noAsset": "No cursor image yet — apply a template with a cursor to use one."},
-    "musicPlayer": "Music button",
-    "musicPlayerVisible": "Show music button",
-    "musicPlayerHint": "Play/mute and volume control in the top-left corner.",
+    "glow": {
+      "title": "Glow",
+      "hint": "Glow around the name, social icons and badges.",
+      "username": "Name glow",
+      "social": "Social icon glow",
+      "badges": "Badge glow",
+      "color": "Glow color"
+    },
+    "cursor": {
+      "title": "Cursor",
+      "custom": "Custom cursor",
+      "noAsset": "Choose an image to use as the cursor.",
+      "hint": "A small PNG/GIF/WebP. Click the tile to choose or change it.",
+      "choose": "Choose cursor image",
+      "change": "Change cursor image",
+      "remove": "Remove",
+      "hotspotX": "Hotspot X",
+      "hotspotY": "Hotspot Y",
+      "effect": "Cursor effect",
+      "effectColor": "Cursor effect color",
+      "effects": {
+        "none": "None",
+        "shooting-star": "Shooting Star",
+        "fairy-dust": "Fairy Dust",
+        "sparkles": "Sparkles",
+        "bubbles": "Bubbles",
+        "snowflakes": "Snowflakes",
+        "rainbow": "Rainbow",
+        "dots": "Trailing dots",
+        "ghost": "Ghost"
+      },
+      "processing": "Optimizing image…",
+      "autoResize": "Images larger than 32px are automatically scaled down (keeping proportions) to a 32px PNG."
+    },
     "templateAppliedHint": "Tabs with a dot are where settings were filled in — open them to keep editing.",
     "templateChangedTab": "Changed by template",
     "templateUse": "Use template",
@@ -54,8 +223,17 @@
     "templateApplied": "Applied template {name}",
     "templateUndo": "Undo",
     "templateAsset": "Using the file bundled with the template. Choose another file to replace it.",
-    "templateSteps": {"background": "Loading background video…", "colors": "Applying colors & card…", "effects": "Applying effects…", "media": "Applying music & cursor…"},
-    "templateFeatures": { "video": "Video", "music": "Music", "cursor": "Cursor" },
+    "templateSteps": {
+      "background": "Loading background video…",
+      "colors": "Applying colors & card…",
+      "effects": "Applying effects…",
+      "media": "Applying music & cursor…"
+    },
+    "templateFeatures": {
+      "video": "Video",
+      "music": "Music",
+      "cursor": "Cursor"
+    },
     "profileLayout": "Profile Layout",
     "layout": "Layout",
     "horizontalAlign": "Horizontal alignment",
@@ -75,7 +253,6 @@
     "shape": "Shape",
     "showAvatar": "Show avatar",
     "showDescription": "Show description",
-    "backgroundLibrary": "Background library",
     "backgroundSource": "Background Source",
     "backgroundType": "Background type",
     "chooseImage": "Choose image from Media Manager",
@@ -105,15 +282,8 @@
     "buttonText": "Button text",
     "backgroundMusic": "Background Music",
     "musicEnabled": "Enable music",
-    "chooseMusic": "Choose audio from Media Manager",
-    "changeMusic": "Change Media Manager audio",
-    "trackTitle": "Track title",
-    "artist": "Artist",
     "volume": "Volume",
     "startMode": "Start mode",
-    "soundEffects": "Sound Effects",
-    "soundsEnabled": "Enable interaction sounds",
-    "soundsHint": "Hover sounds are always disabled on touch devices.",
     "nameEffects": {
       "title": "Name effect",
       "change": "Change effect",
@@ -224,6 +394,52 @@
       "slide-up": "Slide up",
       "unfold": "Unfold",
       "bounce": "Bounce"
+    },
+    "audioManager": {
+      "title": "Audio Manager",
+      "instructions": "The main audio plays when visitors open your page. Click an audio to make it the main one, press ▶ to preview.",
+      "listTitle": "Audios",
+      "count": "{count}/{max} audios",
+      "empty": "No audio yet — click to add",
+      "emptyList": "No audios yet. Add up to 4.",
+      "untitled": "Untitled",
+      "templateTrack": "template audio",
+      "edit": "Rename",
+      "remove": "Delete",
+      "shuffle": "Shuffle Audios",
+      "shuffleHint": "Play a random audio from your list whenever someone visits your page",
+      "player": "Audio Player",
+      "playerHint": "Adds an audio player widget to your profile",
+      "add": "Add Audio",
+      "full": "4 audios max",
+      "addTitle": "Add an Audio",
+      "editTitle": "Rename audio",
+      "uploadPrompt": "Click to upload an audio",
+      "uploadFormats": "Accepts .mp3, .aac, .m4a",
+      "uploadReplace": "Click to choose another file",
+      "uploading": "Uploading… {progress}%",
+      "uploadFailed": "Couldn't upload the file. Please try again.",
+      "browseLibrary": "Or choose from Media Manager",
+      "trackTitle": "Audio Title",
+      "titlePlaceholder": "Add a title...",
+      "save": "Save",
+      "close": "Close",
+      "instructionsShuffle": "Shuffle is on: each visit plays a random audio from your list.",
+      "main": "Main",
+      "setMain": "Select",
+      "confirmRemove": "Delete?",
+      "previewPlay": "Preview",
+      "previewPause": "Stop preview",
+      "settingsTitle": "Playback",
+      "shuffleNeedsTwo": "Add at least 2 audios to turn this on.",
+      "shuffleSummary": "Shuffle Audios",
+      "manage": "click to manage"
+    },
+    "backgroundTypes": {
+      "color": "Color",
+      "gradient": "Gradient",
+      "image": "Image",
+      "video": "Video"
     }
   },
   "LandingControls": {

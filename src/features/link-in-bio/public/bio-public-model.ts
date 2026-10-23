@@ -3,7 +3,7 @@
  * Không import runtime qua alias `@/` để chạy được bằng `node --test`.
  */
 
-import { DEFAULT_BIO_DESIGN, resolveBioBuiltinAssetUrl, type BioDesign } from "../../../contracts/bio-design.ts";
+import { DEFAULT_BIO_DESIGN, getBioMusicTracks, resolveBioBuiltinAssetUrl, type BioDesign } from "../../../contracts/bio-design.ts";
 import type { BioPageDto, BioSocialLinkDto, BioWidgetDto } from "@/lib/api-client";
 
 export type BioDesignAssets = NonNullable<BioPageDto["designAssets"]>;
@@ -210,5 +210,11 @@ export function withBuiltinDesignAssets(design: BioDesign, assets: BioDesignAsse
     enterBackgroundUrl: pick(design.effects.enter.backgroundAssetId, assets.enterBackgroundUrl),
     musicUrl: pick(design.audio.music.assetId, assets.musicUrl),
     musicCoverUrl: pick(design.audio.music.coverAssetId, assets.musicCoverUrl),
+    musicTracks: getBioMusicTracks(design.audio.music).flatMap((track) => {
+      const known = assets.musicTracks?.find((item) => item.assetId === track.assetId)?.url
+        ?? (track.assetId === design.audio.music.assetId ? assets.musicUrl : undefined);
+      const url = pick(track.assetId, known);
+      return url ? [{ assetId: track.assetId, title: track.title, url }] : [];
+    }),
   };
 }

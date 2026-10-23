@@ -21,6 +21,7 @@ import {
   uploadFile,
 } from "@/lib/api-client";
 import { generateUuid } from "@/lib/id";
+import { uploadErrorMessage } from "@/lib/upload-request";
 import { useBusinessConfig } from "@/features/business-settings/use-business-config";
 
 import { FILE_CREATED_EVENT } from "./events";
@@ -51,6 +52,7 @@ function withViewData(file: ManagedFileDto): ManagedFileView { return { ...file,
 
 export function useFilesController() {
   const t = useTranslations("Files.toasts");
+  const uploadT = useTranslations("Uploads");
   const folderToast = useTranslations("Files.folders.toasts");
   const fileSizeLimit = useBusinessConfig().uploads.memberFileMaxBytes;
   const pathname = usePathname();
@@ -294,9 +296,7 @@ export function useFilesController() {
                 status: cancelled ? "cancelled" : "error",
                 error: cancelled
                   ? undefined
-                  : uploadError instanceof Error
-                    ? uploadError.message
-                    : t("uploadFailed"),
+                  : uploadErrorMessage(uploadError, uploadT, t("uploadFailed")),
                 retryable: !cancelled,
               }
             : entry,

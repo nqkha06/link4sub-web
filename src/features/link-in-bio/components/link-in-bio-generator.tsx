@@ -3,7 +3,7 @@
 
 import type React from "react"
 
-import { useEffect, useState, type ComponentType } from "react"
+import { useEffect, useRef, useState, type ComponentType } from "react"
 import {
   ChevronDown,
   CircleCheck,
@@ -14,6 +14,7 @@ import {
   Shield,
   X,
   ExternalLink,
+  Loader2,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -36,6 +37,7 @@ import {
   type CreateBioPagePayload,
   type LinkAnimationEffect,
   getFilePreviewUrl,
+  uploadFile,
 } from "@/lib/api-client"
 import { getPublicLinkSettingsClient } from "@/features/link-settings/api/link-settings.client"
 import { linkPath, type LinkSettings } from "@/features/link-settings/types"
@@ -43,12 +45,10 @@ import {
   normalizeBioButtonStyle,
 } from "./bio-appearance"
 import { ContentSection } from "../content-blocks/content-section"
-import { BackgroundPresetPicker } from "../backgrounds/background-preset-picker"
 import {
   DEFAULT_BIO_BACKGROUND_PRESET_ID,
   getBioBackgroundPresetById,
   getBioBackgroundPresetByImage,
-  type BioBackgroundPreset,
 } from "../backgrounds/background-presets"
 import { hasCompleteBankDetails } from "../content-blocks/simple-content-types"
 import { cn } from "@/lib/utils"
@@ -58,13 +58,21 @@ import {
 } from "../gallery/gallery-types"
 import { useBusinessConfig } from "@/features/business-settings/use-business-config"
 import { generateId } from "@/lib/id"
+import { AUDIO_UPLOAD_ACCEPT, getUploadMimeType } from "@/lib/upload-compatibility"
+import { uploadErrorMessage } from "@/lib/upload-request"
+import { useTranslations } from "next-intl"
 import { createStarterBioContent } from "../create/create-bio-page"
-import { DEFAULT_BIO_DESIGN, type BioDesign } from "@/contracts"
+import { DEFAULT_BIO_DESIGN, getBioMusicTracks, type BioDesign } from "@/contracts"
+import { addMusicTrack, titleFromFileName } from "../design/music-tracks"
+import { isUnfilledSocialUrl } from "../content-blocks/social-url-templates"
+import { findContentIssues, summarizeIssueLabels } from "../content-blocks/content-issues"
+import type { ContentSectionHandle } from "../content-blocks/content-section"
 import { BioDesignStudio } from "../design/bio-design-studio"
 import { normalizeDesignColors } from "../design/normalize-design-colors"
 import { PublicBioView } from "@/app/(public)/b/[slug]/public-bio-view"
 import publicBioStyles from "../public/VEXRO.module.css"
 import { withBuiltinDesignAssets } from "../public/bio-public-model"
+import { CURSOR_MAX_SIZE, prepareCursorImage } from "../design/prepare-cursor-image"
 
 const VIDEO_MIME_PREFIXES = ["video/"] as const
 const AUDIO_MIME_PREFIXES = ["audio/"] as const
@@ -194,13 +202,7 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
   )
 }
 
-export default function LinkInBioGenerator({
-  initialBio,
-  initialStatus,
-  starterContent = false,
-  onSaved,
-  onSavingChange,
-}: {
+type LinkInBioGeneratorProps = {
   initialBio?: BioPageDto | null
   /** Ghi đè trạng thái ban đầu, ví dụ khi người dùng chọn "Công khai" lúc tạo trang. */
   initialStatus?: "published" | "draft"
@@ -208,7 +210,37 @@ export default function LinkInBioGenerator({
   starterContent?: boolean
   onSaved?: (bioPage: BioPageDto) => void
   onSavingChange?: (saving: boolean) => void
-}) {
+}
+
+/**
+ * Bọc trình chỉnh sửa để "Đặt lại" (bỏ thay đổi chưa lưu) dựng lại form từ bản đã
+ * lưu gần nhất: đổi `key` → React tạo lại toàn bộ state từ `initialBio`.
+ */
+export default function LinkInBioGenerator({ initialBio, onSaved, ...props }: LinkInBioGeneratorProps) {
+  const [savedBase, setSavedBase] = useState(initialBio)
+  const [resetKey, setResetKey] = useState(0)
+  return (
+    <LinkInBioGeneratorForm
+      key={resetKey}
+      {...props}
+      initialBio={savedBase}
+      onSaved={(bioPage) => {
+        setSavedBase(bioPage)
+        onSaved?.(bioPage)
+      }}
+      onReset={() => setResetKey((key) => key + 1)}
+    />
+  )
+}
+
+function LinkInBioGeneratorForm({
+  initialBio,
+  initialStatus,
+  starterContent = false,
+  onSaved,
+  onSavingChange,
+  onReset,
+}: LinkInBioGeneratorProps & { onReset: () => void }) {
   const businessConfig = useBusinessConfig()
   const [linkSettings, setLinkSettings] = useState<LinkSettings>({
     publicDomain: "http://localhost:3000",
@@ -217,12 +249,14 @@ export default function LinkInBioGenerator({
     aliasLength: 8,
     aliasCaseSensitive: false,
   })
-  const [expandedSections, setExpandedSections] = useState<Record<EditorSectionKey, boolean>>({
-    details: true,
+  // Trang vừa tạo (?new=1): tên/slug đã đặt lúc tạo, nên thu gọn "Thông tin trang"
+  // và mở sẵn "Nội dung" để người dùng thêm link ngay.
+  const [expandedSections, setExpandedSections] = useState<Record<EditorSectionKey, boolean>>(() => ({
+    details: !starterContent,
     content: true,
     appearance: false,
     admin: false,
-  })
+  }))
   const [profileDetails, setProfileDetails] = useState<ProfileDetails>({
     name: initialBio?.name || "",
     title: initialBio?.title || "",
@@ -261,7 +295,8 @@ export default function LinkInBioGenerator({
     getBioBackgroundPresetById(initialBio?.appearance.selectedBackgroundId) ||
     getBioBackgroundPresetByImage(initialBio?.appearance.backgroundImage) ||
     (!initialBio ? getBioBackgroundPresetById(DEFAULT_BIO_BACKGROUND_PRESET_ID) : undefined)
-  const [appearanceSettings, setAppearanceSettings] = useState<AppearanceSettings>({
+  // Giữ nguyên thiết lập nền cũ của trang (thư viện nền đã bỏ, không còn đổi ở đây).
+  const [appearanceSettings] = useState<AppearanceSettings>({
     buttonStyle: normalizeBioButtonStyle(initialBio?.appearance.buttonStyle || "rounded"),
     backgroundColor: initialBackgroundPreset?.theme.accentColor || initialBio?.appearance.backgroundColor || "#ffffff",
     backgroundImage: initialBackgroundPreset
@@ -279,17 +314,41 @@ export default function LinkInBioGenerator({
   const [hiddenLinks, setHiddenLinks] = useState<string[]>(initialBio?.hiddenLinks || [])
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState("")
+  // Chỉ đánh dấu ô lỗi sau khi người dùng đã bấm lưu (không làm phiền lúc đang gõ).
+  const [showContentIssues, setShowContentIssues] = useState(false)
+  const contentSectionRef = useRef<ContentSectionHandle>(null)
   const [savedBio, setSavedBio] = useState<BioPageDto | null>(null)
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
-  const [designAssetPicker, setDesignAssetPicker] = useState<"image" | "video" | "music" | null>(null)
+  const [designAssetPicker, setDesignAssetPicker] = useState<"image" | "video" | "music" | "cursor" | null>(null)
   // Trang mới chưa có ngày tạo: cố định một mốc khi mở trình chỉnh sửa.
   // Đổi key để khung xem trước dựng lại và phát lại hiệu ứng xuất hiện (sau khi áp template).
   const [previewKey, setPreviewKey] = useState(0)
   const [previewCreatedAt] = useState(() => initialBio?.createdAt ?? new Date().toISOString())
+  const [cursorProcessing, setCursorProcessing] = useState(false)
+  const uploadT = useTranslations("Uploads")
+  // URL nghe thử của từng bài nhạc theo assetId (bài đã lưu + bài vừa tải lên).
+  const [musicTrackUrls, setMusicTrackUrls] = useState<Record<string, string | undefined>>(() => {
+    const urls: Record<string, string | undefined> = {}
+    for (const track of initialBio?.designAssets.musicTracks ?? []) urls[track.assetId] = track.url
+    const activeId = initialBio?.design?.audio.music.assetId
+    if (activeId && initialBio?.designAssets.musicUrl) urls[activeId] ??= initialBio.designAssets.musicUrl
+    return urls
+  })
+  const uploadMusic = async (file: File, onProgress: (value: number) => void) => {
+    if (!getUploadMimeType(file).startsWith("audio/")) throw new Error("File không phải âm thanh (mp3, aac, m4a).")
+    if (file.size > businessConfig.uploads.memberFileMaxBytes) throw new Error("File âm thanh vượt quá dung lượng cho phép.")
+    try {
+      const uploaded = await uploadFile(file, { purpose: "file", onProgress })
+      return { assetId: uploaded.id, url: getFilePreviewUrl(uploaded) }
+    } catch (error) {
+      throw new Error(uploadErrorMessage(error, uploadT, uploadT("failed")))
+    }
+  }
   const [designAssetPreviews, setDesignAssetPreviews] = useState({
     image: initialBio?.designAssets.backgroundImageUrl,
     video: initialBio?.designAssets.backgroundVideoUrl,
     music: initialBio?.designAssets.musicUrl,
+    cursor: initialBio?.designAssets.cursorUrl,
   })
 
   useEffect(() => {
@@ -326,7 +385,7 @@ export default function LinkInBioGenerator({
     title: profileDetails.title || undefined,
     customSlug: customSlug || undefined,
     status: statusOverride,
-    socialLinks: socialLinks.filter((link) => link.platform && isValidUrl(link.url)),
+    socialLinks: socialLinks.filter((link) => link.platform && !isUnfilledSocialUrl(link.url) && isValidUrl(link.url)),
     // iconUrl chỉ để xem trước; API chỉ nhận iconFileId và tự trả lại iconUrl.
     customLinks: customLinks
       .filter((link) => link.title.trim() && isValidUrl(link.url))
@@ -375,6 +434,15 @@ export default function LinkInBioGenerator({
     design: normalizeDesignColors(bioDesign),
   })
 
+  /*
+   * Thay đổi chưa lưu: so payload hiện tại với payload của bản đã lưu (lấy ở lần
+   * render đầu và sau mỗi lần lưu thành công).
+   */
+  const currentPayloadJson = JSON.stringify(buildBioPayload())
+  const [savedPayloadJson, setSavedPayloadJson] = useState<string | null>(null)
+  if (savedPayloadJson === null) setSavedPayloadJson(currentPayloadJson)
+  const hasUnsavedChanges = savedPayloadJson !== null && currentPayloadJson !== savedPayloadJson
+
   const handleSaveBio = async (saveMode: "draft" | "published" | "current" = "current") => {
     if (isSaving) return
 
@@ -384,8 +452,20 @@ export default function LinkInBioGenerator({
       setSaveError("Tên trang là bắt buộc.")
       return
     }
-    if (nextStatus === "published" && payload.socialLinks.length === 0 && payload.customLinks.length === 0 && payload.widgets.length === 0 && payload.galleries.every((gallery) => gallery.images.length === 0) && payload.dividers.length === 0 && payload.bankDetails.length === 0 && payload.textBlocks.length === 0) {
-      setSaveError("Thêm ít nhất một khối nội dung hợp lệ trước khi xuất bản, hoặc lưu dưới dạng bản nháp.")
+    const contentIssues = findContentIssues({ socialLinks, customLinks, widgets })
+    const hasPublishableContent = !(payload.socialLinks.length === 0 && payload.customLinks.length === 0 && payload.widgets.length === 0 && payload.galleries.every((gallery) => gallery.images.length === 0) && payload.dividers.length === 0 && payload.bankDetails.length === 0 && payload.textBlocks.length === 0)
+    if (nextStatus === "published" && !hasPublishableContent) {
+      setSaveError("")
+      setShowContentIssues(true)
+      setSectionOpen("content", true)
+      const firstIssue = contentIssues[0]
+      if (firstIssue) contentSectionRef.current?.revealIssue(firstIssue)
+      toast.error(firstIssue ? "Điền xong ít nhất một mục để xuất bản" : "Trang chưa có nội dung để xuất bản", {
+        description: firstIssue
+          ? `Chưa điền xong: ${summarizeIssueLabels(contentIssues)}. Các ô cần sửa đã được đánh dấu đỏ.`
+          : "Thêm một liên kết, mạng xã hội hoặc khối nội dung bất kỳ.",
+        action: { label: "Lưu nháp", onClick: () => void handleSaveBio("draft") },
+      })
       return
     }
     if (nextStatus === "published" && payload.bankDetails.some((block) => block.enabled && !hasCompleteBankDetails(block))) {
@@ -401,8 +481,17 @@ export default function LinkInBioGenerator({
         ? await updateBioPage(initialBio.id, payload)
         : await createBioPage(payload)
       setSavedBio(bioPage)
+      setSavedPayloadJson(JSON.stringify(buildBioPayload()))
       onSaved?.(bioPage)
-      toast.success("Đã lưu trang Link-in-bio")
+      if (contentIssues.length) {
+        // Lưu được nhưng có mục chưa điền: báo rõ mục nào bị bỏ qua và đánh dấu tại chỗ.
+        setShowContentIssues(true)
+        toast.success("Đã lưu trang Link-in-bio", {
+          description: `Bỏ qua mục chưa điền xong: ${summarizeIssueLabels(contentIssues)}.`,
+        })
+      } else {
+        toast.success("Đã lưu trang Link-in-bio")
+      }
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Không lưu được trang Link-in-bio.")
       toast.error(error instanceof Error ? error.message : "Không lưu được trang Link-in-bio.")
@@ -410,30 +499,6 @@ export default function LinkInBioGenerator({
       setIsSaving(false)
       onSavingChange?.(false)
     }
-  }
-
-  const selectBackgroundPreset = (preset: BioBackgroundPreset) => {
-    setAppearanceSettings((current) => ({
-      ...current,
-      backgroundColor: preset.theme.accentColor,
-      backgroundImage: preset.imageUrl || undefined,
-      backgroundMediaType: undefined,
-      backgroundMediaUrl: undefined,
-      backgroundFileId: undefined,
-      selectedBackgroundId: preset.id,
-    }))
-    setBioDesign((current) => ({
-      ...current,
-      background: {
-        ...current.background,
-        type: preset.imageUrl ? "image" : preset.backgroundGradient ? "gradient" : "color",
-        color: preset.backgroundColor || preset.theme.accentColor,
-        gradientFrom: preset.backgroundColor || preset.theme.accentColor,
-        gradientTo: preset.theme.accentColor,
-      },
-      // Chỉ đổi nền; giữ màu chữ/khung của Bio Design (thẻ kính tối) để chữ
-      // không bị đổi sang màu tối của mẫu nền sáng.
-    }))
   }
 
   const normalizedOrder = normalizeContentOrder(contentOrder, { socials: socialLinks, widgets, galleries, dividers, bankDetails, textBlocks, links: customLinks })
@@ -468,7 +533,12 @@ export default function LinkInBioGenerator({
       ...initialBio?.designAssets,
       backgroundImageUrl: designAssetPreviews.image,
       backgroundVideoUrl: designAssetPreviews.video,
-      musicUrl: designAssetPreviews.music,
+      musicUrl: (bioDesign.audio.music.assetId ? musicTrackUrls[bioDesign.audio.music.assetId] : undefined) ?? designAssetPreviews.music,
+      musicTracks: getBioMusicTracks(bioDesign.audio.music).flatMap((track) => {
+        const url = musicTrackUrls[track.assetId]
+        return url ? [{ assetId: track.assetId, title: track.title, url }] : []
+      }),
+      cursorUrl: designAssetPreviews.cursor,
     }),
     createdAt: previewCreatedAt,
     updatedAt: previewCreatedAt,
@@ -591,6 +661,8 @@ export default function LinkInBioGenerator({
               onTextBlocksChange={setTextBlocks}
               onHiddenLinksChange={setHiddenLinks}
               onContentOrderChange={setContentOrder}
+              ref={contentSectionRef}
+              issues={showContentIssues ? findContentIssues({ socialLinks, customLinks, widgets }) : undefined}
             />
           </EditorSection>
 
@@ -607,12 +679,13 @@ export default function LinkInBioGenerator({
               onChange={setBioDesign}
               onPickBackgroundAsset={setDesignAssetPicker}
               onPickMusicAsset={() => setDesignAssetPicker("music")}
-              backgroundLibrary={(
-                <BackgroundPresetPicker
-                  selectedPresetId={appearanceSettings.selectedBackgroundId}
-                  onSelect={selectBackgroundPreset}
-                />
-              )}
+              onPickCursorAsset={() => setDesignAssetPicker("cursor")}
+              musicTrackUrls={musicTrackUrls}
+              onUploadMusic={uploadMusic}
+              onMusicTrackUploaded={(assetId, url) => setMusicTrackUrls((current) => ({ ...current, [assetId]: url }))}
+              cursorPreviewUrl={previewBioPage.designAssets.cursorUrl}
+              backgroundPreviewUrls={{ image: previewBioPage.designAssets.backgroundImageUrl, video: previewBioPage.designAssets.backgroundVideoUrl }}
+              cursorProcessing={cursorProcessing}
             />
           </EditorSection>
 
@@ -628,7 +701,8 @@ export default function LinkInBioGenerator({
             <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
               <h3 className="text-sm font-semibold text-foreground">Xem trước trực tiếp</h3>
 
-              <div className="flex flex-wrap items-center gap-2">
+              {/* Điện thoại: ẩn — dùng thanh "thay đổi chưa lưu" ở đáy màn hình. */}
+              <div className="hidden flex-wrap items-center gap-2 sm:flex">
                 {initialBio?.publicUrl ? (
                   <Button asChild variant="outline" size="sm" className="h-9 px-3 shadow-none">
                     <a href={initialBio.publicUrl} target="_blank" rel="noreferrer">
@@ -674,6 +748,25 @@ export default function LinkInBioGenerator({
         }))}
       />
       <ManagedImagePicker
+        open={designAssetPicker === "cursor"}
+        onOpenChange={(open) => { if (!open) setDesignAssetPicker(null) }}
+        selectedFileId={bioDesign.effects.cursor.assetId}
+        title="Chọn ảnh con trỏ"
+        onSelect={(picked) => {
+          setDesignAssetPicker(null)
+          setCursorProcessing(true)
+          // Ảnh lớn hơn 32px được thu nhỏ thành PNG và tải lên thành file mới.
+          void prepareCursorImage(picked).then(({ file, resized }) => {
+            setBioDesign((current) => ({
+              ...current,
+              effects: { ...current.effects, cursor: { ...current.effects.cursor, type: "custom", assetId: file.id, hotspotX: 0, hotspotY: 0 } },
+            }))
+            setDesignAssetPreviews((current) => ({ ...current, cursor: getFilePreviewUrl(file) }))
+            if (resized) toast.success(`Đã tự thu nhỏ ảnh con trỏ về ${CURSOR_MAX_SIZE}px.`)
+          }).finally(() => setCursorProcessing(false))
+        }}
+      />
+      <ManagedImagePicker
         open={designAssetPicker === "image"}
         onOpenChange={(open) => { if (!open) setDesignAssetPicker(null) }}
         selectedFileId={bioDesign.background.imageAssetId}
@@ -708,21 +801,41 @@ export default function LinkInBioGenerator({
       <ManagedImagePicker
         open={designAssetPicker === "music"}
         onOpenChange={(open) => { if (!open) setDesignAssetPicker(null) }}
-        selectedFileId={bioDesign.audio.music.assetId}
+        selectedFileId={null}
         acceptedMimePrefixes={AUDIO_MIME_PREFIXES}
         assetLabel="âm thanh"
-        accept="audio/*"
+        accept={AUDIO_UPLOAD_ACCEPT}
         uploadPurpose="file"
-        title="Chọn nhạc nền Bio"
+        title="Thêm nhạc vào danh sách"
         onSelect={(file) => {
+          // Chọn từ thư viện = thêm một bài vào Audio Manager.
           setBioDesign((current) => ({
             ...current,
-            audio: { ...current.audio, music: { ...current.audio.music, assetId: file.id } },
+            audio: { ...current.audio, music: addMusicTrack(current.audio.music, { assetId: file.id, title: titleFromFileName(file.originalName || file.name) }) },
           }))
-          setDesignAssetPreviews((current) => ({ ...current, music: getFilePreviewUrl(file) }))
+          setMusicTrackUrls((current) => ({ ...current, [file.id]: getFilePreviewUrl(file) }))
           setDesignAssetPicker(null)
         }}
       />
+      {/* Điện thoại: thanh "thay đổi chưa lưu" kiểu guns.lol, trượt lên khi có thay đổi. */}
+      <div
+        aria-hidden={!hasUnsavedChanges}
+        className={cn(
+          "fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+1.75rem)] z-40 transition-all duration-300 sm:hidden",
+          hasUnsavedChanges || isSaving ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[150%] opacity-0",
+        )}
+      >
+        <div role="status" className="flex items-center gap-3 rounded-2xl border border-border/70 bg-popover/75 p-3 pl-4 text-popover-foreground shadow-2xl backdrop-blur-xl backdrop-saturate-150">
+          <p className="min-w-0 flex-1 truncate text-sm font-semibold">{isSaving ? "Đang lưu…" : "Bạn có thay đổi chưa lưu!"}</p>
+          <Button type="button" variant="ghost" size="sm" className="h-9 shrink-0 px-3" disabled={isSaving} tabIndex={hasUnsavedChanges ? 0 : -1} onClick={onReset}>
+            Đặt lại
+          </Button>
+          <Button type="submit" name="saveMode" value={initialBio ? "current" : "published"} size="sm" className="h-9 shrink-0 rounded-lg px-4 font-medium shadow-none" disabled={isSaving} tabIndex={hasUnsavedChanges ? 0 : -1}>
+            {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
+            Lưu thay đổi
+          </Button>
+        </div>
+      </div>
     </form>
   )
 }

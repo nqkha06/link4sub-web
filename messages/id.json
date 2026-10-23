@@ -1,4 +1,12 @@
 {
+  "Uploads": {
+    "timeout": "Unggahan tidak merespons. Periksa koneksi dan coba lagi. Jika sedang diselesaikan, periksa Media Manager sebelum mengunggah ulang.",
+    "network": "Tidak dapat terhubung ke server unggahan. Periksa koneksi dan coba lagi.",
+    "emptyFile": "Tidak dapat mengunggah file kosong.",
+    "failed": "Tidak dapat mengunggah file. Silakan coba lagi.",
+    "uploading": "Mengunggah…",
+    "finalizing": "Menyelesaikan…"
+  },
   "Common": {
     "copied": "Disalin",
     "copyFailed": "Tidak dapat menyalin. Silakan coba lagi.",
@@ -35,17 +43,178 @@
     "effectsDescription": "Efek tampilan yang menghormati pengaturan pengurangan gerakan.",
     "audioDescription": "Audio mati secara default dan hanya diputar setelah interaksi.",
     "templateBy": "oleh {creator}",
-    "backgroundEffectPicker": {"title": "Efek latar", "change": "Ganti efek", "cancel": "Batal", "save": "Simpan", "items": {"none": {"label": "Tanpa efek", "description": "Tanpa efek, hanya latar."}, "rain": {"label": "Hujan", "description": "Garis hujan miring di seluruh layar."}, "snowflakes": {"label": "Salju", "description": "Kepingan salju bergoyang di depan kartu."}, "aurora": {"label": "Aurora", "description": "Pita cahaya aurora yang mengalir (WebGL)."}, "plasma": {"label": "Plasma", "description": "Gumpalan cahaya lembut yang terus bergerak (WebGL)."}, "dither": {"label": "Dither", "description": "Gelombang titik halftone yang mengikuti kursor."}, "blurred": {"label": "Buram", "description": "Memburamkan dan sedikit menggelapkan latar."}, "night-time": {"label": "Malam", "description": "Nuansa biru gelap seperti malam hari."}, "old-tv": {"label": "TV lama", "description": "Garis pindai dan noise seperti TV lama."}, "wave": {"label": "Gelombang", "description": "Dua lapis gelombang lembut di bagian bawah."}, "star-drop": {"label": "Bintang jatuh", "description": "Bintang kecil jatuh dengan kecepatan berbeda."}, "noise": {"label": "Noise", "description": "Butiran film bergerak di atas latar."}, "dots": {"label": "Titik", "description": "Lapisan titik; latar terlihat lewat titik kecil."}, "chroma-waves": {"label": "Chroma Waves", "description": "Gumpalan cahaya besar bergerak pelan."}, "luminous-flow": {"label": "Luminous Flow", "description": "Untaian cahaya tipis yang saling bersilangan."}, "aurora-silk": {"label": "Aurora Silk", "description": "Pita cahaya seperti sutra yang mengalir."}, "velvet-waves": {"label": "Velvet Waves", "description": "Lipatan beludru gelap yang bergerak lembut."}, "nebula-drift": {"label": "Nebula Drift", "description": "Lapisan awan tipis yang melayang pelan."}, "soft-horizon": {"label": "Soft Horizon", "description": "Garis cakrawala bercahaya dengan lapisan lembut."}, "liquid-flow": {"label": "Liquid Flow", "description": "Bentuk cair kontras tinggi dengan tepi beriak."}, "spectrum-warp": {"label": "Spectrum Warp", "description": "Pita melengkung terang dengan cahaya berbutir."}, "aurora-lines": {"label": "Aurora Lines", "description": "Sorot cahaya di atas garis kontur samar."}, "chromatic-pulse": {"label": "Chromatic Pulse", "description": "Cairan berkilau dengan pergeseran warna halus."}, "glitter-warp": {"label": "Glitter Warp", "description": "Partikel kilau terbang dari tengah."}, "light-droplets": {"label": "Light Droplets", "description": "Garis cahaya pendek meluncur ke samping."}, "lightspeed": {"label": "Lightspeed", "description": "Garis bintang hiperspasi dari tengah."}, "liquid-lines": {"label": "Liquid Lines", "description": "Garis cahaya diagonal yang lembut."}, "metallic-swirl": {"label": "Metallic Swirl", "description": "Pusaran gradien metalik yang pelan."}, "topography": {"label": "Topography", "description": "Garis kontur tipis seperti peta topografi."}, "gradient-waves": {"label": "Gradient Waves", "description": "Gelombang cahaya diagonal dengan tepi berbutir."}}},
+    "removeBackgroundMedia": "Hapus latar",
+    "templatePagination": "Halaman template",
+    "templatePageInfo": "Halaman {page}/{pages} · {total} template",
+    "templatePrev": "Halaman sebelumnya",
+    "templateNext": "Halaman berikutnya",
+    "backgroundEffectPicker": {
+      "title": "Efek latar",
+      "change": "Ganti efek",
+      "cancel": "Batal",
+      "save": "Simpan",
+      "items": {
+        "none": {
+          "label": "Tanpa efek",
+          "description": "Tanpa efek, hanya latar."
+        },
+        "rain": {
+          "label": "Hujan",
+          "description": "Garis hujan miring di seluruh layar."
+        },
+        "snowflakes": {
+          "label": "Salju",
+          "description": "Kepingan salju bergoyang di depan kartu."
+        },
+        "aurora": {
+          "label": "Aurora",
+          "description": "Pita cahaya aurora yang mengalir (WebGL)."
+        },
+        "plasma": {
+          "label": "Plasma",
+          "description": "Gumpalan cahaya lembut yang terus bergerak (WebGL)."
+        },
+        "dither": {
+          "label": "Dither",
+          "description": "Gelombang titik halftone yang mengikuti kursor."
+        },
+        "blurred": {
+          "label": "Buram",
+          "description": "Memburamkan dan sedikit menggelapkan latar."
+        },
+        "night-time": {
+          "label": "Malam",
+          "description": "Nuansa biru gelap seperti malam hari."
+        },
+        "old-tv": {
+          "label": "TV lama",
+          "description": "Garis pindai dan noise seperti TV lama."
+        },
+        "wave": {
+          "label": "Gelombang",
+          "description": "Dua lapis gelombang lembut di bagian bawah."
+        },
+        "star-drop": {
+          "label": "Bintang jatuh",
+          "description": "Bintang kecil jatuh dengan kecepatan berbeda."
+        },
+        "noise": {
+          "label": "Noise",
+          "description": "Butiran film bergerak di atas latar."
+        },
+        "dots": {
+          "label": "Titik",
+          "description": "Lapisan titik; latar terlihat lewat titik kecil."
+        },
+        "chroma-waves": {
+          "label": "Chroma Waves",
+          "description": "Gumpalan cahaya besar bergerak pelan."
+        },
+        "luminous-flow": {
+          "label": "Luminous Flow",
+          "description": "Untaian cahaya tipis yang saling bersilangan."
+        },
+        "aurora-silk": {
+          "label": "Aurora Silk",
+          "description": "Pita cahaya seperti sutra yang mengalir."
+        },
+        "velvet-waves": {
+          "label": "Velvet Waves",
+          "description": "Lipatan beludru gelap yang bergerak lembut."
+        },
+        "nebula-drift": {
+          "label": "Nebula Drift",
+          "description": "Lapisan awan tipis yang melayang pelan."
+        },
+        "soft-horizon": {
+          "label": "Soft Horizon",
+          "description": "Garis cakrawala bercahaya dengan lapisan lembut."
+        },
+        "liquid-flow": {
+          "label": "Liquid Flow",
+          "description": "Bentuk cair kontras tinggi dengan tepi beriak."
+        },
+        "spectrum-warp": {
+          "label": "Spectrum Warp",
+          "description": "Pita melengkung terang dengan cahaya berbutir."
+        },
+        "aurora-lines": {
+          "label": "Aurora Lines",
+          "description": "Sorot cahaya di atas garis kontur samar."
+        },
+        "chromatic-pulse": {
+          "label": "Chromatic Pulse",
+          "description": "Cairan berkilau dengan pergeseran warna halus."
+        },
+        "glitter-warp": {
+          "label": "Glitter Warp",
+          "description": "Partikel kilau terbang dari tengah."
+        },
+        "light-droplets": {
+          "label": "Light Droplets",
+          "description": "Garis cahaya pendek meluncur ke samping."
+        },
+        "lightspeed": {
+          "label": "Lightspeed",
+          "description": "Garis bintang hiperspasi dari tengah."
+        },
+        "liquid-lines": {
+          "label": "Liquid Lines",
+          "description": "Garis cahaya diagonal yang lembut."
+        },
+        "metallic-swirl": {
+          "label": "Metallic Swirl",
+          "description": "Pusaran gradien metalik yang pelan."
+        },
+        "topography": {
+          "label": "Topography",
+          "description": "Garis kontur tipis seperti peta topografi."
+        },
+        "gradient-waves": {
+          "label": "Gradient Waves",
+          "description": "Gelombang cahaya diagonal dengan tepi berbutir."
+        }
+      }
+    },
     "cardGradient": "Latar gradien",
     "cardGradientHint": "Pakai gradien sebagai ganti warna solid (mendukung alpha #RRGGBBAA).",
     "gradientFrom": "Warna awal",
     "gradientTo": "Warna akhir",
     "effectColor": "Warna efek",
-    "glow": {"title": "Glow", "hint": "Cahaya di sekitar nama, ikon sosial dan lencana.", "username": "Glow nama", "social": "Glow ikon sosial", "badges": "Glow lencana", "color": "Warna glow"},
-    "cursor": {"title": "Kursor", "custom": "Kursor kustom", "noAsset": "Belum ada gambar kursor — terapkan template yang punya kursor."},
-    "musicPlayer": "Tombol musik",
-    "musicPlayerVisible": "Tampilkan tombol musik",
-    "musicPlayerHint": "Putar/bisukan dan atur volume di pojok kiri atas.",
+    "glow": {
+      "title": "Glow",
+      "hint": "Cahaya di sekitar nama, ikon sosial dan lencana.",
+      "username": "Glow nama",
+      "social": "Glow ikon sosial",
+      "badges": "Glow lencana",
+      "color": "Warna glow"
+    },
+    "cursor": {
+      "title": "Kursor",
+      "custom": "Kursor kustom",
+      "noAsset": "Pilih gambar untuk dipakai sebagai kursor.",
+      "hint": "PNG/GIF/WebP kecil. Klik kotak untuk memilih atau mengganti.",
+      "choose": "Pilih gambar kursor",
+      "change": "Ganti gambar kursor",
+      "remove": "Hapus",
+      "hotspotX": "Titik X",
+      "hotspotY": "Titik Y",
+      "effect": "Efek kursor",
+      "effectColor": "Warna efek kursor",
+      "effects": {
+        "none": "Tanpa efek",
+        "shooting-star": "Shooting Star",
+        "fairy-dust": "Fairy Dust",
+        "sparkles": "Sparkles",
+        "bubbles": "Gelembung",
+        "snowflakes": "Salju",
+        "rainbow": "Pelangi",
+        "dots": "Titik berantai",
+        "ghost": "Bayangan"
+      },
+      "processing": "Mengoptimalkan gambar…",
+      "autoResize": "Gambar di atas 32px otomatis diperkecil (proporsi tetap) menjadi PNG 32px."
+    },
     "templateAppliedHint": "Tab bertitik adalah tempat pengaturan diisi — buka untuk mengedit.",
     "templateChangedTab": "Diubah oleh template",
     "templateUse": "Pakai template",
@@ -54,8 +223,17 @@
     "templateApplied": "Template {name} diterapkan",
     "templateUndo": "Urungkan",
     "templateAsset": "Memakai file bawaan template. Pilih file lain untuk menggantinya.",
-    "templateSteps": {"background": "Memuat video latar…", "colors": "Menerapkan warna & kartu…", "effects": "Menerapkan efek…", "media": "Menerapkan musik & kursor…"},
-    "templateFeatures": { "video": "Video", "music": "Musik", "cursor": "Kursor" },
+    "templateSteps": {
+      "background": "Memuat video latar…",
+      "colors": "Menerapkan warna & kartu…",
+      "effects": "Menerapkan efek…",
+      "media": "Menerapkan musik & kursor…"
+    },
+    "templateFeatures": {
+      "video": "Video",
+      "music": "Musik",
+      "cursor": "Kursor"
+    },
     "profileLayout": "Tata letak profil",
     "layout": "Tata letak",
     "horizontalAlign": "Perataan horizontal",
@@ -75,7 +253,6 @@
     "shape": "Bentuk",
     "showAvatar": "Tampilkan avatar",
     "showDescription": "Tampilkan deskripsi",
-    "backgroundLibrary": "Pustaka latar",
     "backgroundSource": "Sumber latar",
     "backgroundType": "Jenis latar",
     "chooseImage": "Pilih gambar dari Media Manager",
@@ -105,15 +282,8 @@
     "buttonText": "Teks tombol",
     "backgroundMusic": "Musik latar",
     "musicEnabled": "Aktifkan musik",
-    "chooseMusic": "Pilih audio dari Media Manager",
-    "changeMusic": "Ganti audio",
-    "trackTitle": "Judul lagu",
-    "artist": "Artis",
     "volume": "Volume",
     "startMode": "Mode mulai",
-    "soundEffects": "Efek suara",
-    "soundsEnabled": "Aktifkan suara interaksi",
-    "soundsHint": "Suara hover selalu dimatikan pada perangkat sentuh.",
     "nameEffects": {
       "title": "Efek nama",
       "change": "Ganti efek",
@@ -224,6 +394,52 @@
       "slide-up": "Geser ke atas",
       "unfold": "Membuka",
       "bounce": "Memantul"
+    },
+    "audioManager": {
+      "title": "Pengelola Audio",
+      "instructions": "Audio utama diputar saat pengunjung membuka halamanmu. Klik audio untuk menjadikannya utama, tekan ▶ untuk mendengar.",
+      "listTitle": "Daftar audio",
+      "count": "{count}/{max} audio",
+      "empty": "Belum ada audio — klik untuk menambah",
+      "emptyList": "Belum ada audio. Tambahkan hingga 4.",
+      "untitled": "Tanpa judul",
+      "templateTrack": "audio template",
+      "edit": "Ganti nama",
+      "remove": "Hapus",
+      "shuffle": "Acak Audio",
+      "shuffleHint": "Putar audio acak dari daftar setiap kali seseorang mengunjungi halamanmu",
+      "player": "Pemutar Audio",
+      "playerHint": "Menambahkan widget pemutar audio ke profilmu",
+      "add": "Tambah Audio",
+      "full": "Maksimal 4 audio",
+      "addTitle": "Tambah Audio",
+      "editTitle": "Ganti nama audio",
+      "uploadPrompt": "Klik untuk mengunggah audio",
+      "uploadFormats": "Mendukung .mp3, .aac, .m4a",
+      "uploadReplace": "Klik untuk memilih file lain",
+      "uploading": "Mengunggah… {progress}%",
+      "uploadFailed": "Gagal mengunggah file. Silakan coba lagi.",
+      "browseLibrary": "Atau pilih dari Media Manager",
+      "trackTitle": "Judul Audio",
+      "titlePlaceholder": "Tambahkan judul...",
+      "save": "Simpan",
+      "close": "Tutup",
+      "instructionsShuffle": "Acak aktif: setiap kunjungan memutar audio acak dari daftar.",
+      "main": "Utama",
+      "setMain": "Pilih",
+      "confirmRemove": "Hapus?",
+      "previewPlay": "Dengarkan",
+      "previewPause": "Hentikan",
+      "settingsTitle": "Pemutaran",
+      "shuffleNeedsTwo": "Tambahkan minimal 2 audio untuk mengaktifkan.",
+      "shuffleSummary": "Acak audio",
+      "manage": "klik untuk mengelola"
+    },
+    "backgroundTypes": {
+      "color": "Warna",
+      "gradient": "Gradien",
+      "image": "Gambar",
+      "video": "Video"
     }
   },
   "LandingControls": {

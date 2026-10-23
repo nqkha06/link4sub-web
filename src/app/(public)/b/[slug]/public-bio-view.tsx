@@ -10,10 +10,8 @@ import QRCode from "qrcode";
 
 import {
   ArrowUpRight,
-  Banknote,
   Clapperboard,
   Eye,
-  Headphones,
   Link as LinkIcon,
   Music2,
   Radio,
@@ -23,23 +21,11 @@ import {
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
-import {
-  SiCashapp,
-  SiDiscord,
-  SiFacebook,
-  SiInstagram,
-  SiLinkerd,
-  SiPaypal,
-  SiReddit,
-  SiSpotify,
-  SiTiktok,
-  SiTwitch,
-  SiVenmo,
-  SiX,
-  SiYoutube,
-} from "@icons-pack/react-simple-icons";
+
+import { SiDiscord } from "@icons-pack/react-simple-icons";
 
 import { BioWidgetEmbed } from "@/components/bio-widget-embed";
+import { SocialIcon } from "@/features/link-in-bio/social-icon";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { BioDesign } from "@/contracts";
 import { getBioBackgroundPresetById } from "@/features/link-in-bio/backgrounds/background-presets";
@@ -53,6 +39,7 @@ import { hasCompleteBankDetails } from "@/features/link-in-bio/content-blocks/si
 import { GalleryRenderer } from "@/features/link-in-bio/gallery/gallery-renderer";
 import { contentOrderKey, normalizeContentOrder } from "@/features/link-in-bio/gallery/gallery-types";
 import { BioBackgroundEffect } from "@/features/link-in-bio/public/effects/bio-background-effect";
+import { CursorTrail } from "@/features/link-in-bio/public/effects/cursor-trail";
 import { BioPublicFonts, getBioFontStack } from "@/features/link-in-bio/public/bio-public-fonts";
 import styles from "@/features/link-in-bio/public/VEXRO.module.css";
 import {
@@ -100,29 +87,6 @@ const REVEAL_EASINGS = {
 /** Các phần của thẻ hiện lần lượt cách nhau 300ms. */
 const REVEAL_STEP_MS = 300;
 const RESTING_TRANSFORM = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
-
-function SocialIcon({ platform, className }: { platform: string; className?: string }) {
-  switch (platform.trim().toLowerCase()) {
-    case "youtube": return <SiYoutube className={className} />;
-    case "instagram": return <SiInstagram className={className} />;
-    case "facebook": return <SiFacebook className={className} />;
-    case "tiktok": return <SiTiktok className={className} />;
-    case "twitter":
-    case "x": return <SiX className={className} />;
-    case "linkedin": return <SiLinkerd className={className} />;
-    case "reddit": return <SiReddit className={className} />;
-    case "discord": return <SiDiscord className={className} />;
-    case "twitch": return <SiTwitch className={className} />;
-    case "spotify": return <SiSpotify className={className} />;
-    case "apple music": return <Headphones className={className} />;
-    case "paypal": return <SiPaypal className={className} />;
-    case "venmo": return <SiVenmo className={className} />;
-    case "cashapp": return <SiCashapp className={className} />;
-    case "money":
-    case "payment": return <Banknote className={className} />;
-    default: return <Users className={className} />;
-  }
-}
 
 function getYouTubeEmbedUrl(value?: string | null) {
   if (!value) return "";
@@ -623,7 +587,13 @@ export function PublicBioView({
     () => false,
   );
 
-  const musicUrl = design.audio.music.enabled ? assets.musicUrl : undefined;
+  // "Shuffle Audios": mỗi lượt xem chọn ngẫu nhiên một bài. Chỉ chọn ở client
+  // (thẻ <audio> vốn chỉ render ở client) để SSR và hydrate khớp nhau.
+  const [shuffleSeed] = useState(() => Math.random());
+  const shuffleTracks = design.audio.music.shuffle && isClient ? (assets.musicTracks ?? []) : [];
+  const shuffledTrack = shuffleTracks.length > 1 ? shuffleTracks[Math.floor(shuffleSeed * shuffleTracks.length)] : undefined;
+  const musicUrl = design.audio.music.enabled ? (shuffledTrack?.url ?? assets.musicUrl) : undefined;
+  const musicTitle = shuffledTrack?.title ?? design.audio.music.title;
   // Xem trước trong trình chỉnh sửa: chỉ hiện màn "click to enter" khi người dùng bật nó,
   // không tự hiện vì nhạc "on-enter" (nếu không cả thẻ bị ẩn sau lớp phủ).
   const needsEnter = design.effects.enter.enabled || (!preview && Boolean(musicUrl && design.audio.music.startMode === "on-enter"));
@@ -822,6 +792,9 @@ export function PublicBioView({
         } as React.CSSProperties}
       >
         <BioBackground bioPage={bioPage} design={design} hasDesign={hasDesign} assets={assets} videoRef={videoRef} />
+        {hasDesign && design.effects.cursor.trailEnabled && design.effects.cursor.trailType !== "none" ? (
+          <CursorTrail type={design.effects.cursor.trailType} color={design.effects.cursor.trailColor} length={design.effects.cursor.trailLength} />
+        ) : null}
 
         <div
           className={styles.center}
@@ -945,7 +918,7 @@ export function PublicBioView({
                   type="button"
                   onClick={() => void toggleMusic()}
                   aria-label={musicPlaying ? t("music.pause") : t("music.play")}
-                  title={design.audio.music.title || undefined}
+                  title={musicTitle || undefined}
                 >
                   {musicPlaying && volume > 0 ? <Volume2 aria-hidden /> : <VolumeX aria-hidden />}
                 </button>

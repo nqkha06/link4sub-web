@@ -1,4 +1,4 @@
-import { isBioBuiltinAssetId, type BioDesign, type BioUsernameEffect } from "@/contracts"
+import { BIO_MUSIC_MAX_TRACKS, getBioMusicTracks, isBioBuiltinAssetId, type BioDesign, type BioUsernameEffect } from "@/contracts"
 
 import { ADDITIONAL_GUNS_TEMPLATES } from "./bio-design-template-catalog"
 import { MORE_GUNS_TEMPLATES } from "./bio-design-template-catalog-2"
@@ -158,6 +158,7 @@ function applyTemplate(template: GunsTemplate, base: BioDesign): BioDesign {
   // Asset của template trước (builtin:...) thì bỏ khi template mới không có; file người dùng tự chọn thì giữ.
   const keepCursor = !isBioBuiltinAssetId(base.effects.cursor.assetId)
   const keepMusic = !isBioBuiltinAssetId(base.audio.music.assetId)
+  const userMusicTracks = getBioMusicTracks(base.audio.music).filter((track) => !isBioBuiltinAssetId(track.assetId))
   return {
     ...base,
     profile: {
@@ -201,9 +202,10 @@ function applyTemplate(template: GunsTemplate, base: BioDesign): BioDesign {
     },
     audio: {
       ...base.audio,
+      // Danh sách nhạc: giữ bài người dùng tự thêm, bỏ nhạc của template trước.
       music: template.music
-        ? { ...base.audio.music, enabled: true, assetId: asset(template, "music.mp3"), title: template.music.title, artist: "", startMode: "on-enter" }
-        : keepMusic ? base.audio.music : { ...base.audio.music, enabled: false, assetId: null, title: "" },
+        ? { ...base.audio.music, tracks: userMusicTracks.slice(0, BIO_MUSIC_MAX_TRACKS - 1), enabled: true, assetId: asset(template, "music.mp3"), title: template.music.title, artist: "", startMode: "on-enter" }
+        : keepMusic ? base.audio.music : { ...base.audio.music, tracks: userMusicTracks, enabled: false, assetId: null, title: "" },
       player: { ...base.audio.player, visible: template.volumeControl },
     },
   }

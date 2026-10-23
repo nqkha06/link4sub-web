@@ -4,7 +4,15 @@ import { useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog"
 import type { BioDesign } from "@/contracts"
 import { BioBackgroundEffect, getBioEffectFragment } from "@/features/link-in-bio/public/effects/bio-background-effect"
 import { renderShaderSnapshot } from "@/features/link-in-bio/public/effects/shader-canvas"
@@ -96,8 +104,8 @@ export function BackgroundEffectPicker({
   const withType = (type: EffectType): EffectSettings => ({ ...value, type })
 
   return (
-    <Dialog open={open} onOpenChange={openChange}>
-      <DialogTrigger asChild>
+    <ResponsiveDialog open={open} onOpenChange={openChange}>
+      <ResponsiveDialogTrigger asChild>
         <button
           type="button"
           className="flex w-full items-center gap-3 rounded-lg border border-border bg-background p-2 text-left transition hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -110,52 +118,54 @@ export function BackgroundEffectPicker({
             <span className="block text-xs text-muted-foreground">{t("change")}</span>
           </span>
         </button>
-      </DialogTrigger>
+      </ResponsiveDialogTrigger>
 
-      <DialogContent aria-describedby={undefined} className="max-h-[calc(100dvh-2rem)] gap-5 overflow-y-auto sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
-        </DialogHeader>
+      <ResponsiveDialogContent aria-describedby={undefined}>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{t("title")}</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
 
-        <div className="flex flex-col-reverse gap-5 md:flex-row md:items-start">
-          <div role="radiogroup" aria-label={t("title")} className={styles.grid}>
-            {BACKGROUND_EFFECT_OPTIONS.map((type, index) => (
-              <button
-                key={type}
-                type="button"
-                role="radio"
-                aria-checked={draft === type}
-                aria-label={t(`items.${type}.label`)}
-                onClick={() => setDraft(type)}
-                onPointerEnter={() => setHovered(type)}
-                onPointerLeave={() => setHovered((current) => (current === type ? null : current))}
-                onDoubleClick={() => { onChange(type); setOpen(false) }}
-                className={cn(
-                  styles.tile,
-                  "border-border hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  draft === type && "border-primary ring-2 ring-primary/30 hover:border-primary",
-                )}
-              >
-                <EffectStage settings={withType(type)} live={hovered === type || draft === type} delay={index * 25} />
-                <span className={styles.label}>{t(`items.${type}.label`)}</span>
-              </button>
-            ))}
-          </div>
+        <ResponsiveDialogBody>
+          <div className="flex flex-col-reverse gap-5 md:flex-row md:items-start">
+            <div role="radiogroup" aria-label={t("title")} className={styles.grid}>
+              {BACKGROUND_EFFECT_OPTIONS.map((type, index) => (
+                <button
+                  key={type}
+                  type="button"
+                  role="radio"
+                  aria-checked={draft === type}
+                  aria-label={t(`items.${type}.label`)}
+                  onClick={() => setDraft(type)}
+                  onPointerEnter={() => setHovered(type)}
+                  onPointerLeave={() => setHovered((current) => (current === type ? null : current))}
+                  onDoubleClick={() => { onChange(type); setOpen(false) }}
+                  className={cn(
+                    styles.tile,
+                    "border-border hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    draft === type && "border-primary ring-2 ring-primary/30 hover:border-primary",
+                  )}
+                >
+                  <EffectStage settings={withType(type)} live={hovered === type || draft === type} delay={index * 25} />
+                  <span className={styles.label}>{t(`items.${type}.label`)}</span>
+                </button>
+              ))}
+            </div>
 
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
-            <EffectStage key={draft} settings={withType(draft)} className={cn(styles.stageLarge, "border border-border")} />
-            <div className="rounded-lg bg-muted/60 p-3">
-              <h3 className="text-sm font-semibold text-foreground">{t(`items.${draft}.label`)}</h3>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">{t(`items.${draft}.description`)}</p>
+            <div className="flex min-w-0 flex-1 flex-col gap-3">
+              <EffectStage key={draft} settings={withType(draft)} className={cn(styles.stageLarge, "border border-border")} />
+              <div className="rounded-lg bg-muted/60 p-3">
+                <h3 className="text-sm font-semibold text-foreground">{t(`items.${draft}.label`)}</h3>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{t(`items.${draft}.description`)}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </ResponsiveDialogBody>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("cancel")}</Button>
           <Button type="button" onClick={() => { onChange(draft); setOpen(false) }}>{t("save")}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   )
 }

@@ -243,6 +243,7 @@ export function FilePickerCredenza({
   }
 
   function handleConfirmSelection() {
+    if (upload?.isUploading) return
     if (pendingFile) {
       onSelect(pendingFile)
       setPendingFileId(null)
@@ -572,7 +573,7 @@ export function FilePickerCredenza({
             <Button
               type="button"
               onClick={handleConfirmSelection}
-              disabled={!pendingFile || isLoading}
+              disabled={!pendingFile || isLoading || upload?.isUploading}
               className="h-9 rounded-lg shadow-none"
             >
               {labels.select}

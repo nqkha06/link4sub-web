@@ -18,7 +18,7 @@ import {
   Video,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useImperativeHandle, useState, type Ref } from "react";
 
 import {
   AlertDialog,
@@ -66,6 +66,9 @@ import { ContentBlockPickerDialog } from "./content-block-picker-dialog";
 import { LinkAdvancedSettings } from "./link-animation-picker";
 import type { ContentBlockPickerType } from "./content-block-registry";
 import { createBankDetailsBlock, createDividerBlock, createTextBlock } from "./simple-content-types";
+import { socialUrlForPlatformChange, socialUrlTemplate } from "./social-url-templates";
+import { SocialIcon } from "../social-icon";
+import type { ContentIssue } from "./content-issues";
 
 const socialPlatforms = [
   "Instagram", "Twitter", "Facebook", "TikTok", "YouTube", "LinkedIn", "PayPal", "Venmo",
@@ -74,6 +77,16 @@ const socialPlatforms = [
 
 function focusBlockField(id: string) {
   window.setTimeout(() => document.getElementById(id)?.focus(), 0);
+}
+
+export type ContentSectionHandle = {
+  /** Mở khối chứa ô lỗi, cuộn tới và focus vào ô đó. */
+  revealIssue: (issue: ContentIssue) => void;
+};
+
+/** Dòng báo lỗi ngay dưới ô nhập. */
+function FieldIssue({ id, issue }: { id: string; issue?: ContentIssue }) {
+  return issue ? <p id={`${id}-issue`} className="text-xs leading-4 text-destructive">{issue.message}</p> : null;
 }
 
 export function ContentSection({
@@ -96,6 +109,8 @@ export function ContentSection({
   onTextBlocksChange,
   onHiddenLinksChange,
   onContentOrderChange,
+  issues = [],
+  ref,
 }: {
   customLinks: BioCustomLinkDto[];
   socialLinks: BioSocialLinkDto[];
@@ -116,9 +131,27 @@ export function ContentSection({
   onTextBlocksChange: (textBlocks: BioTextBlockDto[]) => void;
   onHiddenLinksChange: (ids: string[]) => void;
   onContentOrderChange: (order: BioContentOrderItemDto[]) => void;
+  /** Ô chưa điền xong / sai (chỉ truyền sau khi người dùng bấm lưu). */
+  issues?: ContentIssue[];
+  ref?: Ref<ContentSectionHandle>;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  useImperativeHandle(ref, () => ({
+    revealIssue: (issue) => {
+      setExpandedKey(issue.blockKey);
+      // Chờ khối mở ra rồi mới cuộn + focus.
+      window.setTimeout(() => {
+        const field = document.getElementById(issue.fieldId);
+        field?.scrollIntoView({ behavior: "smooth", block: "center" });
+        field?.focus({ preventScroll: true });
+      }, 120);
+    },
+  }), []);
+  const issueOf = (fieldId: string) => issues.find((issue) => issue.fieldId === fieldId);
+  const invalidProps = (fieldId: string) => issueOf(fieldId)
+    ? { "aria-invalid": true, "aria-describedby": `${fieldId}-issue` }
+    : {};
   const [pendingDelete, setPendingDelete] = useState<BioContentOrderItemDto | null>(null);
   const [iconPickerLinkId, setIconPickerLinkId] = useState<string | null>(null);
   const imageMaxSize = useBusinessConfig().uploads.coverImageMaxBytes;
@@ -155,7 +188,7 @@ export function ContentSection({
     if (type === "social") {
       if (socialLinks.length) return;
       const id = `social-${generateId({ length: 10 })}`;
-      onSocialLinksChange([{ id, platform: "Instagram", url: "", enabled: true }]);
+      onSocialLinksChange([{ id, platform: "Instagram", url: socialUrlTemplate("Instagram"), enabled: true }]);
       appendOrder({ type: "social", id: "socials" });
       focusBlockField(`content-social-url-${id}`);
       return;
@@ -306,7 +339,7 @@ export function ContentSection({
               const linkIconUrl = item.type === "link" ? customLinks.find((entry) => entry.id === item.id)?.iconUrl : undefined;
               const open = expandedKey === key;
               return (
-                <SortableItem key={key} value={key} disabled={disabled} className="overflow-hidden rounded-lg border border-border bg-background">
+                <SortableItem key={key} value={key} disabled={disabled} className={cn("overflow-hidden rounded-lg border bg-background", issues.some((issue) => issue.blockKey === key) ? "border-destructive/50" : "border-border")}>
                   <Collapsible open={open} onOpenChange={(nextOpen) => setExpandedKey(nextOpen ? key : null)}>
                     <div className="flex min-h-13 items-center gap-1.5 px-2 py-2">
                       <SortableItemHandle disabled={disabled} className="grid size-9 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-accent" aria-label={`Kéo để sắp xếp ${meta.title}`}><GripVertical className="size-4" /></SortableItemHandle>
@@ -315,7 +348,7 @@ export function ContentSection({
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={linkIconUrl} alt="" className="size-full object-cover" />
                         ) : <Icon className="size-4" />}</span>
-                        <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-foreground">{meta.title}</span><span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{meta.summary}</span></span>
+                        <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-foreground">{meta.title}</span>{issues.some((issue) => issue.blockKey === key) ? <span className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-medium text-destructive"><span className="size-1.5 shrink-0 rounded-full bg-destructive" aria-hidden />Chưa điền xong</span> : <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{meta.summary}</span>}</span>
                       </button>
                       <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} onClick={() => toggleVisibility(item, !meta.visible)} aria-label={meta.visible ? `Ẩn ${meta.title}` : `Hiện ${meta.title}`} className="text-muted-foreground">{meta.visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}</Button>
                       <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} onClick={() => setPendingDelete(item)} aria-label={`Xóa ${meta.title}`} className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="size-4" /></Button>
@@ -328,8 +361,8 @@ export function ContentSection({
                           return link ? (
                             <div className="space-y-3">
                               <div className="grid gap-3 sm:grid-cols-2">
-                                <div className="grid gap-2"><Label htmlFor={`content-link-title-${link.id}`}>Tiêu đề <span className="text-destructive">*</span></Label><Input disabled={disabled} id={`content-link-title-${link.id}`} value={link.title} onChange={(event) => updateLink(link.id, { title: event.target.value })} placeholder="Shop ở đây" /></div>
-                                <div className="grid gap-2"><Label htmlFor={`content-link-url-${link.id}`}>URL <span className="text-destructive">*</span></Label><Input disabled={disabled} id={`content-link-url-${link.id}`} value={link.url} onChange={(event) => updateLink(link.id, { url: event.target.value })} placeholder="https://example.com" /></div>
+                                <div className="grid gap-2"><Label htmlFor={`content-link-title-${link.id}`}>Tiêu đề <span className="text-destructive">*</span></Label><Input disabled={disabled} id={`content-link-title-${link.id}`} {...invalidProps(`content-link-title-${link.id}`)} value={link.title} onChange={(event) => updateLink(link.id, { title: event.target.value })} placeholder="Shop ở đây" /><FieldIssue id={`content-link-title-${link.id}`} issue={issueOf(`content-link-title-${link.id}`)} /></div>
+                                <div className="grid gap-2"><Label htmlFor={`content-link-url-${link.id}`}>URL <span className="text-destructive">*</span></Label><Input disabled={disabled} id={`content-link-url-${link.id}`} {...invalidProps(`content-link-url-${link.id}`)} value={link.url} onChange={(event) => updateLink(link.id, { url: event.target.value })} placeholder="https://example.com" /><FieldIssue id={`content-link-url-${link.id}`} issue={issueOf(`content-link-url-${link.id}`)} /></div>
                               </div>
                               <LinkAdvancedSettings
                                 effect={link.animationEffect}
@@ -392,8 +425,8 @@ export function ContentSection({
                           return block ? <TextBlockEditor block={block} onChange={updateTextBlock} disabled={disabled} /> : null;
                         })() : item.type === "social" ? (
                           <div className="space-y-3">
-                            {socialLinks.map((social) => <div key={social.id} className="grid gap-2 sm:grid-cols-[150px_minmax(0,1fr)_36px] sm:items-end"><div className="grid gap-2"><Label>Nền tảng</Label><Select disabled={disabled} value={social.platform} onValueChange={(platform) => onSocialLinksChange(socialLinks.map((entry) => entry.id === social.id ? { ...entry, platform } : entry))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{socialPlatforms.map((platform) => <SelectItem key={platform} value={platform}>{platform}</SelectItem>)}</SelectContent></Select></div><div className="grid gap-2"><Label htmlFor={`content-social-url-${social.id}`}>URL hồ sơ <span className="text-destructive">*</span></Label><Input disabled={disabled} id={`content-social-url-${social.id}`} value={social.url} onChange={(event) => onSocialLinksChange(socialLinks.map((entry) => entry.id === social.id ? { ...entry, url: event.target.value } : entry))} placeholder="https://..." /></div><Button disabled={disabled} type="button" variant="ghost" size="icon" aria-label={`Xóa ${social.platform}`} onClick={() => removeSocial(social.id)}><Trash2 /></Button></div>)}
-                            <Button disabled={disabled} type="button" variant="outline" className="w-full border-dashed" onClick={() => { const id = `social-${generateId({ length: 10 })}`; onSocialLinksChange([...socialLinks, { id, platform: "Instagram", url: "", enabled: true }]); focusBlockField(`content-social-url-${id}`); }}><Plus />Thêm mạng xã hội</Button>
+                            {socialLinks.map((social) => <div key={social.id} className="grid gap-2 sm:grid-cols-[150px_minmax(0,1fr)_36px] sm:items-start"><div className="grid gap-2"><Label>Nền tảng</Label><Select disabled={disabled} value={social.platform} onValueChange={(platform) => onSocialLinksChange(socialLinks.map((entry) => entry.id === social.id ? { ...entry, platform, url: socialUrlForPlatformChange(entry.url, platform) } : entry))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{socialPlatforms.map((platform) => <SelectItem key={platform} value={platform}><SocialIcon platform={platform} className="size-4 shrink-0" />{platform}</SelectItem>)}</SelectContent></Select></div><div className="grid gap-2"><Label htmlFor={`content-social-url-${social.id}`}>URL hồ sơ <span className="text-destructive">*</span></Label><Input disabled={disabled} id={`content-social-url-${social.id}`} {...invalidProps(`content-social-url-${social.id}`)} value={social.url} onChange={(event) => onSocialLinksChange(socialLinks.map((entry) => entry.id === social.id ? { ...entry, url: event.target.value } : entry))} placeholder={socialUrlTemplate(social.platform) ? `${socialUrlTemplate(social.platform)}ten-cua-ban` : "https://..."} /><FieldIssue id={`content-social-url-${social.id}`} issue={issueOf(`content-social-url-${social.id}`)} /></div><Button disabled={disabled} type="button" variant="ghost" size="icon" className="sm:mt-[1.375rem]" aria-label={`Xóa ${social.platform}`} onClick={() => removeSocial(social.id)}><Trash2 /></Button></div>)}
+                            <Button disabled={disabled} type="button" variant="outline" className="w-full border-dashed" onClick={() => { const id = `social-${generateId({ length: 10 })}`; onSocialLinksChange([...socialLinks, { id, platform: "Instagram", url: socialUrlTemplate("Instagram"), enabled: true }]); focusBlockField(`content-social-url-${id}`); }}><Plus />Thêm mạng xã hội</Button>
                           </div>
                         ) : (() => {
                           const widget = widgets.find((entry) => entry.id === item.id);
@@ -423,7 +456,8 @@ export function ContentSection({
                               </div>
                               <div className="grid gap-2">
                                 <Label htmlFor={`content-widget-url-${widget.id}`}>URL <span className="text-destructive">*</span></Label>
-                                <Input disabled={disabled} id={`content-widget-url-${widget.id}`} value={widget.url} onChange={(event) => updateWidget(widget.id, { url: event.target.value })} placeholder={platform.placeholder} />
+                                <Input disabled={disabled} id={`content-widget-url-${widget.id}`} {...invalidProps(`content-widget-url-${widget.id}`)} value={widget.url} onChange={(event) => updateWidget(widget.id, { url: event.target.value })} placeholder={platform.placeholder} />
+                                <FieldIssue id={`content-widget-url-${widget.id}`} issue={issueOf(`content-widget-url-${widget.id}`)} />
                               </div>
                             </div>
                           );

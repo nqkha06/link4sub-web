@@ -13,6 +13,12 @@ export const bioBackgroundEffectTypes = [
 ] as const;
 export type BioBackgroundEffectType = (typeof bioBackgroundEffectTypes)[number];
 
+/** Hiệu ứng theo con trỏ (kiểu "Cursor Effects" của guns.lol). */
+export const bioCursorTrailTypes = [
+  "none", "shooting-star", "fairy-dust", "sparkles", "bubbles", "snowflakes", "rainbow", "dots", "ghost",
+] as const;
+export type BioCursorTrailType = (typeof bioCursorTrailTypes)[number];
+
 /** Font của trang bio (thứ tự = thứ tự trong ô chọn font, giống guns.lol). */
 export const bioDesignFontFamilies = [
   "Poppins",
@@ -67,6 +73,12 @@ export const bioUsernameEffects = [
 
 export type BioUsernameEffect = (typeof bioUsernameEffects)[number];
 export type BioHorizontalAlign = "left" | "center" | "right";
+
+export interface BioMusicTrack {
+  id: string;
+  assetId: string;
+  title: string;
+}
 
 export interface BioDesign {
   schemaVersion: typeof BIO_DESIGN_SCHEMA_VERSION;
@@ -300,7 +312,7 @@ export interface BioDesign {
       hotspotX: number;
       hotspotY: number;
       trailEnabled: boolean;
-      trailType: "none" | "dots" | "sparkles";
+      trailType: BioCursorTrailType;
       trailColor: string;
       trailLength: number;
       clickEffect: "none" | "ripple" | "particles";
@@ -333,6 +345,13 @@ export interface BioDesign {
       fadeIn: number;
       fadeOut: number;
       pauseWhenHidden: boolean;
+      /**
+       * Danh sách nhạc (tối đa BIO_MUSIC_MAX_TRACKS). `assetId`/`title` ở trên là
+       * bài đang "Active"; trang cũ chỉ có bài đó và chưa có danh sách.
+       */
+      tracks: BioMusicTrack[];
+      /** Mỗi lượt xem phát ngẫu nhiên một bài trong danh sách. */
+      shuffle: boolean;
     };
     player: {
       visible: boolean;
@@ -448,7 +467,7 @@ export const DEFAULT_BIO_DESIGN: BioDesign = {
     enter: { enabled: false, title: "click to enter...", subtitle: "", buttonText: "Enter", backgroundType: "blur", backgroundColor: "#000000", backgroundAssetId: null, textColor: "#FFFFFF", animation: "fade", duration: 450, startAudioOnClick: true, showOncePerSession: false },
   },
   audio: {
-    music: { enabled: false, assetId: null, title: "", artist: "", coverAssetId: null, volume: 60, loop: true, startMode: "on-enter", fadeIn: 0, fadeOut: 0, pauseWhenHidden: true },
+    music: { enabled: false, assetId: null, title: "", artist: "", coverAssetId: null, volume: 60, loop: true, startMode: "on-enter", fadeIn: 0, fadeOut: 0, pauseWhenHidden: true, tracks: [], shuffle: false },
     player: { visible: true, style: "minimal", position: "bottom-right", showTitle: true, showCover: true, showProgress: true, showVolume: false, showMute: true, accentColor: "#FFFFFF", backgroundColor: "#09090B", opacity: 88, borderRadius: 14 },
     sounds: { enabled: false, clickAssetId: null, hoverAssetId: null, enterAssetId: null, volume: 35, cooldownMs: 250 },
   },
@@ -473,4 +492,23 @@ export function isBioBuiltinAssetId(id: unknown): id is string {
 /** URL tương đối (phục vụ bởi web) của asset dựng sẵn; không phải asset dựng sẵn thì undefined. */
 export function resolveBioBuiltinAssetUrl(id: unknown): string | undefined {
   return isBioBuiltinAssetId(id) ? `/assets/bio/${id.slice(BIO_BUILTIN_ASSET_PREFIX.length)}` : undefined;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Danh sách nhạc                                                             */
+/* -------------------------------------------------------------------------- */
+
+export const BIO_MUSIC_MAX_TRACKS = 4;
+export const BIO_MUSIC_TITLE_MAX_LENGTH = 30;
+
+/**
+ * Danh sách nhạc hiệu lực: `tracks`, cộng thêm bài đang active nếu bài đó
+ * chưa nằm trong danh sách (dữ liệu cũ / template chỉ đặt `assetId`).
+ */
+export function getBioMusicTracks(music: Pick<BioDesign["audio"]["music"], "assetId" | "title"> & { tracks?: BioMusicTrack[] }): BioMusicTrack[] {
+  const tracks = (music.tracks ?? []).filter((track) => track && track.assetId);
+  if (music.assetId && !tracks.some((track) => track.assetId === music.assetId)) {
+    return [{ id: `active-${music.assetId}`, assetId: music.assetId, title: music.title }, ...tracks].slice(0, BIO_MUSIC_MAX_TRACKS);
+  }
+  return tracks.slice(0, BIO_MUSIC_MAX_TRACKS);
 }
