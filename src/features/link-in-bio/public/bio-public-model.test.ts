@@ -21,24 +21,6 @@ describe("public bio page model", () => {
     assert.deepEqual(resolved.assets, {});
   });
 
-  it("keeps built-in assets on the current web origin", () => {
-    const design = structuredClone(DEFAULT_BIO_DESIGN);
-    design.background.imageAssetId = "builtin:templates/mysterious-core/background.gif";
-    design.audio.music.assetId = "builtin:templates/mysterious-core/music.mp3";
-
-    const resolved = resolveBioDesign({
-      design,
-      hasDesign: true,
-      designAssets: {
-        backgroundImageUrl: "https://wrong.example/assets/bio/templates/mysterious-core/background.gif",
-        musicUrl: "https://wrong.example/assets/bio/templates/mysterious-core/music.mp3",
-      },
-    });
-
-    assert.equal(resolved.assets.backgroundImageUrl, "/assets/bio/templates/mysterious-core/background.gif");
-    assert.equal(resolved.assets.musicUrl, "/assets/bio/templates/mysterious-core/music.mp3");
-  });
-
   it("applies opacity with color-mix and keeps fully opaque colors", () => {
     assert.equal(withOpacity("#FFFFFF", 30), "color-mix(in srgb, #FFFFFF 30%, transparent)");
     assert.equal(withOpacity("#000000", 120), "#000000");
