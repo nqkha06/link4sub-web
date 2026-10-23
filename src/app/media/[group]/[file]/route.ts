@@ -36,5 +36,6 @@ export async function GET(
     `${backendApiUrl}/media/${group}/${file}`,
     request.headers.get("accept") || "*/*",
     request.signal,
+    request.headers.get("range"),
   );
 }

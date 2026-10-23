@@ -8,5 +8,8 @@ export const MEMBER_SOCIAL_LINK_API_LIMITS = {
   actionPlatformMaxLength: 80,
   actionValueMaxLength: 80,
   actionUrlMaxLength: 2_048,
+  actionLabelMaxLength: 80,
+  actionWatchDurationSecondsMin: 1,
+  actionWatchDurationSecondsMax: 300,
   appearanceMediaUrlMaxLength: 2_048,
 } as const;

@@ -17,6 +17,7 @@ import {
 import type { BioBackgroundPresetTheme } from "../backgrounds/background-presets";
 import type { BioCustomLinkDto } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import type { BioDesign } from "@/contracts";
 
 function getLinkHost(url: string) {
   try {
@@ -32,6 +33,7 @@ export function BioLinkButton({
   theme,
   contentIndex,
   preview = false,
+  design,
   onClick,
 }: {
   link: BioCustomLinkDto;
@@ -39,6 +41,7 @@ export function BioLinkButton({
   theme: BioBackgroundPresetTheme;
   contentIndex: number;
   preview?: boolean;
+  design?: BioDesign["appearance"]["links"];
   onClick?: () => void;
 }) {
   const animationClassName = preview
@@ -47,9 +50,28 @@ export function BioLinkButton({
   const animationStyle = preview
     ? getLinkAnimationStyle(0)
     : getLinkAnimationStyle(contentIndex, 180);
-  const className = cn(getBioLinkClass(buttonStyle), animationClassName);
+  const className = cn(
+    getBioLinkClass(buttonStyle),
+    design?.hoverEffect === "lift" && "hover:-translate-y-1",
+    design?.hoverEffect === "scale" && "hover:scale-[1.02]",
+    design?.hoverEffect === "glow" && "hover:shadow-[0_0_28px_var(--bio-accent)]",
+    animationClassName,
+  );
   const style = {
     ...getBioLinkStyle(buttonStyle, theme),
+    ...(design ? {
+      backgroundColor: design.variant === "minimal" ? "transparent" : design.backgroundColor,
+      color: design.textColor,
+      borderColor: design.variant === "minimal" ? "transparent" : design.borderColor,
+      borderWidth: design.variant === "outline" || design.variant === "glass" ? design.borderWidth : 0,
+      borderRadius: design.radius,
+      padding: `${design.paddingY}px ${design.paddingX}px`,
+      gap: design.gap,
+      width: design.fullWidth ? "100%" : "fit-content",
+      textAlign: design.alignment,
+      boxShadow: design.shadow ? "0 14px 36px rgba(0,0,0,.24)" : undefined,
+      backdropFilter: design.variant === "glass" ? "blur(14px)" : undefined,
+    } : {}),
     ...animationStyle,
     "--bio-accent": theme.accentColor,
     "--bio-button-border": theme.buttonBorderColor,

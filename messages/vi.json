@@ -16,6 +16,216 @@
     "inactive": "Không hoạt động",
     "paused": "Tạm dừng"
   },
+  "BioStudio": {
+    "history": "Lịch sử Design",
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "resetSection": "Đặt lại mục",
+    "tabs": {
+      "profile": "Profile",
+      "background": "Background",
+      "appearance": "Appearance",
+      "effects": "Effects",
+      "audio": "Audio",
+      "templates": "Templates"
+    },
+    "profileDescription": "Bố cục và hình thức hồ sơ; không thay đổi dữ liệu Content.",
+    "backgroundDescription": "Background trang độc lập với Profile Card.",
+    "appearanceDescription": "Token màu và style được áp dụng cho toàn bộ Content hiện có.",
+    "effectsDescription": "Hiệu ứng chỉ thay đổi cách trình bày; tự giảm chuyển động theo cài đặt thiết bị.",
+    "audioDescription": "Âm thanh mặc định tắt và chỉ phát sau tương tác của người dùng.",
+    "templateBy": "bởi {creator}",
+    "backgroundEffectPicker": {"title": "Hiệu ứng nền", "change": "Đổi hiệu ứng", "cancel": "Hủy", "save": "Lưu", "items": {"none": {"label": "Không có", "description": "Không có hiệu ứng, chỉ hiện nền."}, "rain": {"label": "Mưa", "description": "Những vệt mưa rơi xiên nhẹ trên toàn màn hình."}, "snowflakes": {"label": "Tuyết rơi", "description": "Bông tuyết rơi lắc lư trước thẻ, kiểu guns.lol."}, "aurora": {"label": "Cực quang", "description": "Dải sáng uốn lượn như cực quang, chạy bằng WebGL."}, "plasma": {"label": "Plasma", "description": "Khối sáng mềm chuyển động liên tục, chạy bằng WebGL."}, "dither": {"label": "Dither", "description": "Sóng chấm điểm kiểu in lưới, phản ứng theo con trỏ."}, "blurred": {"label": "Làm mờ", "description": "Làm mờ và tối nhẹ ảnh/video nền."}, "night-time": {"label": "Ban đêm", "description": "Phủ tông tối xanh như cảnh đêm."}, "old-tv": {"label": "TV cũ", "description": "Vạch quét và nhiễu như màn hình TV cũ."}, "wave": {"label": "Sóng", "description": "Hai lớp sóng mềm trôi ngang ở đáy màn hình."}, "star-drop": {"label": "Sao rơi", "description": "Những chấm sao nhỏ rơi thẳng xuống, nhiều tốc độ."}, "noise": {"label": "Nhiễu hạt", "description": "Nhiễu hạt phim nhảy liên tục trên nền."}, "dots": {"label": "Chấm", "description": "Phủ lưới chấm, nền chỉ lộ qua các chấm nhỏ."}, "chroma-waves": {"label": "Chroma Waves", "description": "Các khối sáng lớn trôi chậm, viền nhiễu hạt."}, "luminous-flow": {"label": "Luminous Flow", "description": "Nhiều sợi sáng mảnh lượn ngang, giao nhau."}, "aurora-silk": {"label": "Aurora Silk", "description": "Một dải lụa sáng uốn lượn có nếp gấp."}, "velvet-waves": {"label": "Velvet Waves", "description": "Màn nhung tối với nếp lượn mềm."}, "nebula-drift": {"label": "Nebula Drift", "description": "Các tầng mây mỏng trải ngang, trôi rất chậm."}, "soft-horizon": {"label": "Soft Horizon", "description": "Vạch sáng như đường chân trời cùng các tầng mờ."}, "liquid-flow": {"label": "Liquid Flow", "description": "Chất lỏng tương phản cao, mép có vân lặp."}, "spectrum-warp": {"label": "Spectrum Warp", "description": "Một dải sáng cong rực, viền nhiễu hạt."}, "aurora-lines": {"label": "Aurora Lines", "description": "Vệt sáng cong lớn trên nền đường đồng mức."}, "chromatic-pulse": {"label": "Chromatic Pulse", "description": "Lớp lỏng óng ánh, ánh màu nhẹ."}, "glitter-warp": {"label": "Glitter Warp", "description": "Hạt lấp lánh bay từ tâm ra ngoài."}, "light-droplets": {"label": "Light Droplets", "description": "Các vệt sáng ngắn trôi ngang."}, "lightspeed": {"label": "Lightspeed", "description": "Vệt sao toả ra từ tâm như nhảy siêu tốc."}, "liquid-lines": {"label": "Liquid Lines", "description": "Các vệt sáng chéo mềm chạy dọc theo đường."}, "metallic-swirl": {"label": "Metallic Swirl", "description": "Gradient kim loại xoáy rất chậm."}, "topography": {"label": "Topography", "description": "Đường đồng mức mảnh như bản đồ địa hình."}, "gradient-waves": {"label": "Gradient Waves", "description": "Một dải sáng chéo lượn, mép nhiễu hạt."}}},
+    "cardGradient": "Nền gradient",
+    "cardGradientHint": "Thay màu nền bằng dải màu (hỗ trợ độ trong #RRGGBBAA).",
+    "gradientFrom": "Màu bắt đầu",
+    "gradientTo": "Màu kết thúc",
+    "effectColor": "Màu hiệu ứng",
+    "glow": {"title": "Glow", "hint": "Quầng sáng quanh tên, icon mạng xã hội và huy hiệu.", "username": "Glow tên", "social": "Glow icon mạng xã hội", "badges": "Glow huy hiệu", "color": "Màu glow"},
+    "cursor": {"title": "Con trỏ", "custom": "Con trỏ tuỳ chỉnh", "noAsset": "Chưa có ảnh con trỏ — áp một template có con trỏ để dùng."},
+    "musicPlayer": "Nút nhạc",
+    "musicPlayerVisible": "Hiện nút nhạc",
+    "musicPlayerHint": "Nút bật/tắt và chỉnh âm lượng ở góc trên bên trái.",
+    "templateAppliedHint": "Các tab có chấm xanh là nơi thông số đã được điền — mở để chỉnh tiếp.",
+    "templateChangedTab": "Có thay đổi từ template",
+    "templateUse": "Dùng mẫu",
+    "templateApplying": "Đang áp dụng…",
+    "templateActive": "Đang dùng",
+    "templateApplied": "Đã áp dụng template {name}",
+    "templateUndo": "Hoàn tác",
+    "templateAsset": "Đang dùng file đi kèm template. Chọn file khác để thay.",
+    "templateSteps": {"background": "Đang tải video nền…", "colors": "Đang áp màu & thẻ…", "effects": "Đang áp hiệu ứng…", "media": "Đang áp nhạc & con trỏ…"},
+    "templateFeatures": { "video": "Video", "music": "Nhạc", "cursor": "Con trỏ" },
+    "profileLayout": "Profile Layout",
+    "layout": "Layout",
+    "horizontalAlign": "Canh ngang",
+    "maxWidth": "Chiều rộng tối đa",
+    "padding": "Padding",
+    "contentGap": "Khoảng cách nội dung",
+    "profileCard": "Profile Card",
+    "profileCardHint": "Tắt card chỉ bỏ lớp nền, border và blur; nội dung vẫn được render.",
+    "cardEnabled": "Bật nền card",
+    "backgroundColor": "Màu nền",
+    "opacity": "Độ trong",
+    "backdropBlur": "Backdrop blur",
+    "radius": "Bo góc",
+    "borderEnabled": "Hiện border",
+    "avatarDisplay": "Avatar & Display",
+    "avatarSize": "Kích thước avatar",
+    "shape": "Hình dạng",
+    "showAvatar": "Hiện avatar",
+    "showDescription": "Hiện mô tả",
+    "backgroundLibrary": "Thư viện nền",
+    "backgroundSource": "Background Source",
+    "backgroundType": "Loại nền",
+    "chooseImage": "Chọn ảnh từ Media Manager",
+    "changeImage": "Đổi ảnh từ Media Manager",
+    "chooseVideo": "Chọn video từ Media Manager",
+    "changeVideo": "Đổi video từ Media Manager",
+    "overlayFilters": "Overlay & Filters",
+    "overlayEnabled": "Bật lớp phủ",
+    "overlayColor": "Màu phủ",
+    "overlayOpacity": "Độ phủ",
+    "themeColors": "Theme Colors",
+    "typography": "Typography",
+    "fontFamily": "Font chung",
+    "usernameSize": "Cỡ username",
+    "linksAppearance": "Links Appearance",
+    "variant": "Variant",
+    "linkBackground": "Nền link",
+    "textColor": "Màu chữ",
+    "backgroundEffects": "Background Effects",
+    "preset": "Preset",
+    "intensity": "Intensity",
+    "profileAnimation": "Profile Animation",
+    "animation": "Animation",
+    "enterScreen": "Enter Screen",
+    "enterEnabled": "Bật màn hình chào",
+    "title": "Tiêu đề",
+    "buttonText": "Chữ trên nút",
+    "backgroundMusic": "Background Music",
+    "musicEnabled": "Bật nhạc nền",
+    "chooseMusic": "Chọn file nhạc từ Media Manager",
+    "changeMusic": "Đổi file nhạc từ Media Manager",
+    "trackTitle": "Tên bài",
+    "artist": "Nghệ sĩ",
+    "volume": "Âm lượng",
+    "startMode": "Chế độ phát",
+    "soundEffects": "Sound Effects",
+    "soundsEnabled": "Bật âm thanh tương tác",
+    "soundsHint": "Hover sound sẽ luôn bị tắt trên thiết bị cảm ứng.",
+    "nameEffects": {
+      "title": "Hiệu ứng tên",
+      "change": "Đổi hiệu ứng",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "previewName": "Tên của bạn",
+      "items": {
+        "none": {
+          "label": "None",
+          "description": "Tên hiển thị tĩnh, không có chuyển động."
+        },
+        "rainbow": {
+          "label": "Rainbow",
+          "description": "Dải màu cầu vồng chạy liên tục qua tên."
+        },
+        "typewriter": {
+          "label": "Typewriter",
+          "description": "Tên được gõ từng chữ rồi xoá đi, có con trỏ nhấp nháy."
+        },
+        "shine": {
+          "label": "Shine",
+          "description": "Một vệt sáng lướt qua tên theo chu kỳ."
+        },
+        "glitch": {
+          "label": "Glitch",
+          "description": "Tên bị nhiễu, tách lớp hồng – xanh như lỗi màn hình."
+        },
+        "shimmer": {
+          "label": "Shimmer",
+          "description": "Chữ mờ với dải sáng chạy ngang như đang tải."
+        },
+        "neon": {
+          "label": "Neon",
+          "description": "Chữ phát sáng như đèn neon, thỉnh thoảng chập chờn."
+        },
+        "wave": {
+          "label": "Wave",
+          "description": "Từng chữ nhấp nhô lần lượt như con sóng."
+        },
+        "scramble": {
+          "label": "Scram 1",
+          "description": "Ký tự ngẫu nhiên giải mã dần thành tên, từ trái sang phải."
+        },
+        "scramble-2": {
+          "label": "Scram 2",
+          "description": "Mọi ký tự xáo trộn rồi hiện ra theo thứ tự ngẫu nhiên."
+        },
+        "lightning": {
+          "label": "Lightning",
+          "description": "Tia sét loé lên trên tên, chữ sáng bừng theo."
+        },
+        "glitch-2": {
+          "label": "Glitch 2",
+          "description": "Bóng xanh lá – tím rung giật quanh chữ."
+        },
+        "stars": {
+          "label": "Stars",
+          "description": "Những ngôi sao nhỏ lấp lánh quanh tên."
+        },
+        "distort": {
+          "label": "Distort",
+          "description": "Chữ uốn lượn, méo nhẹ như nhìn qua mặt nước."
+        },
+        "fuzzy": {
+          "label": "Fuzzy",
+          "description": "Chữ nhiễu sọc ngang như tín hiệu TV yếu."
+        },
+        "pulse": {
+          "label": "Pulse",
+          "description": "Tên mờ rồi sáng lại nhịp nhàng."
+        },
+        "sparkles-black": {
+          "label": "Sparkles đen",
+          "description": "Những đốm sáng lấp lánh màu đen sau tên."
+        },
+        "sparkles-blue": {
+          "label": "Sparkles xanh dương",
+          "description": "Những đốm sáng lấp lánh màu xanh dương sau tên."
+        },
+        "sparkles-green": {
+          "label": "Sparkles xanh lá",
+          "description": "Những đốm sáng lấp lánh màu xanh lá sau tên."
+        },
+        "sparkles-pink": {
+          "label": "Sparkles hồng",
+          "description": "Những đốm sáng lấp lánh màu hồng sau tên."
+        },
+        "sparkles-red": {
+          "label": "Sparkles đỏ",
+          "description": "Những đốm sáng lấp lánh màu đỏ sau tên."
+        },
+        "sparkles-white": {
+          "label": "Sparkles trắng",
+          "description": "Những đốm sáng lấp lánh màu trắng sau tên."
+        },
+        "sparkles-yellow": {
+          "label": "Sparkles vàng",
+          "description": "Những đốm sáng lấp lánh màu vàng sau tên."
+        }
+      },
+      "sparklesLabel": "Sparkles",
+      "noneTile": "Không"
+    },
+    "animationTypes": {
+      "none": "Không có",
+      "zoom": "Phóng to (kiểu guns.lol)",
+      "fade": "Hiện dần",
+      "slide-up": "Trượt lên",
+      "unfold": "Mở ra",
+      "bounce": "Bật nảy"
+    }
+  },
   "LandingControls": {
     "backToTop": "Lên đầu trang",
     "cookieTitle": "Quyền riêng tư và cookie",
@@ -1245,6 +1455,12 @@
     "readyTitle": "Nội dung đã sẵn sàng",
     "pleaseWait": "Vui lòng chờ...",
     "done": "Xong",
+    "watchVideoTitle": "Xem video YouTube",
+    "watchVideoHint": "Xem video ít nhất {seconds} giây để hoàn tất hành động.",
+    "watchVideoRemaining": "Còn {seconds} giây",
+    "watchVideoCompleted": "Đã hoàn tất xem video",
+    "openOnYouTube": "Mở trên YouTube",
+    "closeWatchVideo": "Đóng",
     "snippetRevealed": "Nội dung đã được hiển thị",
     "revealSnippet": "Mở nội dung",
     "unlockSnippet": "Mở khóa nội dung",
@@ -1300,6 +1516,7 @@
       "follow-maker": "Theo dõi maker",
       "install-app": "Cài đặt ứng dụng",
       "visit-page": "Truy cập trang",
+      "custom": "Hành động tuỳ chỉnh",
       "like-video": "Like video"
     },
     "tabs": {
@@ -1389,6 +1606,17 @@
     "actions": "HÀNH ĐỘNG",
     "addAction": "Thêm hành động",
     "enterPlatformUrl": "Nhập URL {platform}",
+    "youtubeVideoUrlPlaceholder": "Dán URL video YouTube",
+    "youtubeVideoUrlInvalid": "Vui lòng nhập URL video YouTube hợp lệ.",
+    "watchAdvancedOptions": "Tính năng nâng cao",
+    "watchDurationLabel": "Thời gian xem",
+    "watchDurationHint": "Thời gian người xem cần phát video, từ {min} đến {max} giây.",
+    "secondsUnit": "giây",
+    "customActionUrlPlaceholder": "Nhập URL đích",
+    "customButtonLabel": "Tên nút",
+    "customButtonLabelPlaceholder": "Ví dụ: Tham gia cộng đồng",
+    "customButtonIcon": "Icon nút",
+    "customButtonHint": "Tên và icon này sẽ hiển thị trên nút hành động dành cho người xem.",
     "invalidInput": "Vui lòng nhập URL hợp lệ.",
     "changeAction": "Đổi hành động",
     "collapseAll": "Thu gọn tất cả",
@@ -1466,7 +1694,7 @@
     "snippetRequired": "Hãy chọn snippet",
     "actionRequired": "Cần ít nhất một bước",
     "actionUrlRequired": "Hãy nhập URL cho bước này",
-    "mostUsed": "Đã dùng nhiều",
+    "recentlyUsed": "Đã dùng gần đây",
     "addUsedAction": "Thêm {action} vào {target}",
     "expiryRequired": "Hãy nhập điều kiện hết hạn hợp lệ",
     "updated": "Cập nhật link thành công",
@@ -6938,6 +7166,45 @@
       "cancel": "Hủy",
       "deleting": "Đang xóa...",
       "delete": "Xóa"
+    },
+    "public": {
+      "joined": "Tham gia {time}",
+      "views": "Lượt xem",
+      "socials": "Mạng xã hội",
+      "avatarAlt": "Ảnh đại diện của {name}",
+      "empty": "Trang này chưa có nội dung.",
+      "createYours": "Your vibe. Your <brand>{siteName}</brand>.",
+      "createYoursLabel": "Tạo trang của bạn trên {siteName}",
+      "enter": "bấm để vào...",
+      "qrTitle": "Xem trên điện thoại",
+      "qrAlt": "Mã QR mở trang {name} trên điện thoại",
+      "music": {
+        "play": "Phát nhạc",
+        "pause": "Tạm dừng nhạc",
+        "volume": "Âm lượng"
+      },
+      "badges": {
+        "label": "Huy hiệu",
+        "streamer": "Streamer",
+        "creator": "Nhà sáng tạo",
+        "music": "Âm nhạc",
+        "community": "Cộng đồng"
+      },
+      "discord": {
+        "profile": "Discord",
+        "openProfile": "Mở hồ sơ Discord",
+        "server": "Server Discord",
+        "join": "Tham gia",
+        "online": "{count} trực tuyến",
+        "members": "{count} thành viên",
+        "listening": "Đang nghe {song} — {artist}",
+        "status": {
+          "online": "Trực tuyến",
+          "idle": "Vắng mặt",
+          "dnd": "Không làm phiền",
+          "offline": "Ngoại tuyến"
+        }
+      }
     }
   },
   "Support": {

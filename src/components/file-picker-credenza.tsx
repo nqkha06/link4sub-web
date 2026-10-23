@@ -26,6 +26,7 @@ import { FileTypeIcon } from "@/components/file-type-icon"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/member/fields/input"
+import { Progress } from "@/components/ui/progress"
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -89,6 +90,7 @@ type FilePickerUpload = {
   accept?: string
   isUploading: boolean
   label: string
+  progress?: number
   uploadingLabel: string
   multiple?: boolean
   onChange: (event: ChangeEvent<HTMLInputElement>) => void
@@ -208,6 +210,9 @@ export function FilePickerCredenza({
   const firstVisibleFile = filteredFiles.length === 0 ? 0 : (currentPage - 1) * pageSize + 1
   const lastVisibleFile = Math.min(currentPage * pageSize, filteredFiles.length)
   const visiblePages = getVisiblePages(currentPage, totalPages)
+  const uploadProgress = upload?.progress === undefined
+    ? null
+    : Math.min(100, Math.max(0, Math.round(upload.progress)))
 
   function handleDragOver(event: DragEvent<HTMLLabelElement>) {
     if (!upload?.onFiles || upload.isUploading) return
@@ -512,9 +517,22 @@ export function FilePickerCredenza({
                       {labels.browseHint || upload.label}
                     </span>
                   </span>
-                  <span className="inline-flex h-9 items-center rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground">
-                    {upload.label}
-                  </span>
+                  {upload.isUploading && uploadProgress !== null ? (
+                    <div className="w-full max-w-xs space-y-2" aria-live="polite">
+                      <span className="block text-right text-xs font-medium tabular-nums text-foreground">
+                        {uploadProgress}%
+                      </span>
+                      <Progress
+                        value={uploadProgress}
+                        aria-label={`${upload.uploadingLabel} ${uploadProgress}%`}
+                        aria-valuetext={`${uploadProgress}%`}
+                      />
+                    </div>
+                  ) : (
+                    <span className="inline-flex h-9 items-center rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground">
+                      {upload.label}
+                    </span>
+                  )}
                   <input
                     id={inputId}
                     type="file"

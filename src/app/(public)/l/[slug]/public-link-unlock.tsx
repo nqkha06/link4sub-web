@@ -32,7 +32,20 @@ import {
 import { useTranslations } from "next-intl";
 
 import { PublicCreatorLayout } from "@/components/public-creator-layout";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { LINK_BACKGROUND_IMAGE_PRESETS } from "@/features/link-creation/background-image-presets";
+import {
+  getYouTubeVideoId,
+  getYouTubeWatchEmbedUrl,
+} from "@/features/link-creation/lib/media";
 import {
   completePublicLinkVisit,
   type LinkDto,
@@ -41,6 +54,7 @@ import { generateUuid } from "@/lib/id";
 import { cn } from "@/lib/utils";
 import { socialPlatforms } from "@/features/create-link/social-catalog";
 import { getMonetizationActionIcon } from "@/lib/monetization-action-icons";
+import { MEMBER_SOCIAL_LINK_API_LIMITS } from "@/contracts";
 import {
   MONETIZATION_ACTION_HISTORY_KEY,
   nextMonetizationCooldownExpiry,
@@ -49,8 +63,25 @@ import {
   type MonetizationActionHistory,
 } from "@/lib/monetization-action-cooldown";
 
-const ACTION_DELAY_SECONDS = 6;
+const DEFAULT_ACTION_DELAY_SECONDS = 6;
 const DEVICE_ID_STORAGE_KEY = "stu:device-id";
+
+function getActionDelaySeconds(action?: LinkDto["actions"][number]): number {
+  if (
+    action?.platform.toLowerCase() !== "youtube" ||
+    action.action !== "watch"
+  ) {
+    return DEFAULT_ACTION_DELAY_SECONDS;
+  }
+
+  const value = action.watchDurationSeconds;
+  return typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= MEMBER_SOCIAL_LINK_API_LIMITS.actionWatchDurationSecondsMin &&
+    value <= MEMBER_SOCIAL_LINK_API_LIMITS.actionWatchDurationSecondsMax
+    ? value
+    : DEFAULT_ACTION_DELAY_SECONDS;
+}
 
 // Kỹ thuật phát hiện AdBlock kinh điển: tạo 1 phần tử "mồi" mang class name
 // thường bị các bộ lọc quảng cáo chặn (ẩn/xoá qua CSS), rồi kiểm tra xem nó
@@ -293,32 +324,8 @@ function getYouTubeEmbedUrl(
   }
 
   try {
-    const url = new URL(value.trim());
-    const host = url.hostname.replace(/^www\./, "");
-
-    let videoId = "";
-
-    if (host === "youtu.be") {
-      videoId = url.pathname.split("/").filter(Boolean)[0] || "";
-    } else if (
-      host === "youtube.com" ||
-      host === "m.youtube.com" ||
-      host === "music.youtube.com"
-    ) {
-      if (
-        url.pathname.startsWith("/shorts/") ||
-        url.pathname.startsWith("/embed/")
-      ) {
-        videoId =
-          url.pathname.split("/").filter(Boolean)[1] || "";
-      } else {
-        videoId = url.searchParams.get("v") || "";
-      }
-    }
-
-    if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-      return "";
-    }
+    const videoId = getYouTubeVideoId(value);
+    if (!videoId) return "";
 
     const params = new URLSearchParams({
       autoplay: "1",
@@ -376,6 +383,10 @@ export function PublicLinkUnlock({
   const [loadingIds, setLoadingIds] = useState<
     string[]
   >([]);
+
+  const [watchingActionId, setWatchingActionId] = useState<
+    string | null
+  >(null);
 
   const [
     remainingSecondsById,
@@ -785,6 +796,16 @@ export function PublicLinkUnlock({
     });
   };
 
+  const cancelAction = (id: string) => {
+    clearActionTimers(id);
+    setLoadingIds((current) => current.filter((loadingId) => loadingId !== id));
+    setRemainingSecondsById((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+  };
+
   const handleActionClick = (id: string, clickedAt: number) => {
     if (
       completedIdSet.has(id) ||
@@ -796,6 +817,7 @@ export function PublicLinkUnlock({
     const action = link.actions.find((item, index) =>
       (item.id || String(index)) === id,
     );
+    const actionDelaySeconds = getActionDelaySeconds(action);
     if (action?.monetization) {
       const nextHistory = recordMonetizationActionClick(
         actionClickHistoryRef.current,
@@ -822,14 +844,14 @@ export function PublicLinkUnlock({
 
     setRemainingSecondsById((current) => ({
       ...current,
-      [id]: ACTION_DELAY_SECONDS,
+      [id]: actionDelaySeconds,
     }));
 
     const countdownIntervalId =
       window.setInterval(() => {
         setRemainingSecondsById((current) => {
           const nextSeconds = Math.max(
-            (current[id] ?? ACTION_DELAY_SECONDS) - 1,
+            (current[id] ?? actionDelaySeconds) - 1,
             0,
           );
 
@@ -847,9 +869,33 @@ export function PublicLinkUnlock({
 
     const completionTimeoutId = window.setTimeout(() => {
       finishAction(id);
-    }, ACTION_DELAY_SECONDS * 1000);
+    }, actionDelaySeconds * 1000);
 
     completionTimeoutIdsRef.current.set(id, completionTimeoutId);
+  };
+
+  const watchingAction = watchingActionId
+    ? link.actions.find((action, index) => (action.id || String(index)) === watchingActionId)
+    : undefined;
+  const watchingEmbedUrl = watchingAction
+    ? getYouTubeWatchEmbedUrl(watchingAction.url)
+    : "";
+  const watchingCompleted = watchingActionId
+    ? completedIdSet.has(watchingActionId)
+    : false;
+  const watchingDurationSeconds = getActionDelaySeconds(watchingAction);
+  const watchingRemainingSeconds = watchingActionId
+    ? remainingSecondsById[watchingActionId] ?? watchingDurationSeconds
+    : watchingDurationSeconds;
+  const watchingProgress = watchingCompleted
+    ? 100
+    : ((watchingDurationSeconds - watchingRemainingSeconds) / watchingDurationSeconds) * 100;
+
+  const closeWatchVideo = () => {
+    if (watchingActionId && !completedIdSet.has(watchingActionId)) {
+      cancelAction(watchingActionId);
+    }
+    setWatchingActionId(null);
   };
 
   return (
@@ -980,11 +1026,13 @@ export function PublicLinkUnlock({
               const platformColor = getPlatformColor(action.platform);
 
               const remainingSeconds =
-                remainingSecondsById[id] ?? ACTION_DELAY_SECONDS;
+                remainingSecondsById[id] ?? getActionDelaySeconds(action);
+
+              const actionDelaySeconds = getActionDelaySeconds(action);
 
               const countdownProgress =
-                ((ACTION_DELAY_SECONDS - remainingSeconds) /
-                  ACTION_DELAY_SECONDS) *
+                ((actionDelaySeconds - remainingSeconds) /
+                  actionDelaySeconds) *
                 100;
 
               const actionLabel = action.label || (createT.has(
@@ -992,6 +1040,13 @@ export function PublicLinkUnlock({
               )
                 ? createT(`actionLabels.${action.action}`)
                 : formatAction(action));
+              const actionButtonLabel = action.label
+                ? actionLabel
+                : `${actionLabel} ${formatPlatform(action.platform)}`;
+              const inlineWatchUrl =
+                action.platform.toLowerCase() === "youtube" && action.action === "watch"
+                  ? getYouTubeWatchEmbedUrl(action.url)
+                  : "";
 
               return (
                 <a
@@ -1006,6 +1061,11 @@ export function PublicLinkUnlock({
                     if (loading) {
                       event.preventDefault();
                       return;
+                    }
+
+                    if (inlineWatchUrl) {
+                      event.preventDefault();
+                      setWatchingActionId(id);
                     }
 
                     handleActionClick(id, Date.now());
@@ -1041,7 +1101,7 @@ export function PublicLinkUnlock({
 
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px] font-semibold leading-5 text-center">
-                      {loading ? t("pleaseWait") : actionLabel + " " + formatPlatform(action.platform)}
+                      {loading ? t("pleaseWait") : actionButtonLabel}
                     </span>
                   </span>
 
@@ -1239,6 +1299,79 @@ export function PublicLinkUnlock({
           </Link>
         </div>
       </div>
+
+      <ResponsiveDialog
+        open={Boolean(watchingActionId && watchingEmbedUrl)}
+        onOpenChange={(open) => {
+          if (!open) closeWatchVideo();
+        }}
+      >
+        <ResponsiveDialogContent className="sm:max-w-2xl">
+          <ResponsiveDialogHeader className="border-b border-border">
+            <ResponsiveDialogTitle>{t("watchVideoTitle")}</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              {watchingCompleted
+                ? t("watchVideoCompleted")
+                : t("watchVideoHint", { seconds: watchingDurationSeconds })}
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+
+          <ResponsiveDialogBody className="space-y-4 pt-4">
+            <div className="aspect-video overflow-hidden rounded-xl bg-black shadow-sm">
+              {watchingEmbedUrl ? (
+                <iframe
+                  key={watchingActionId}
+                  src={watchingEmbedUrl}
+                  title={t("watchVideoTitle")}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="size-full border-0"
+                />
+              ) : null}
+            </div>
+
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="font-medium text-foreground">
+                  {watchingCompleted ? t("done") : t("pleaseWait")}
+                </span>
+                <span className="tabular-nums text-muted-foreground">
+                  {watchingCompleted
+                    ? t("watchVideoCompleted")
+                    : t("watchVideoRemaining", { seconds: watchingRemainingSeconds })}
+                </span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-1000 ease-linear"
+                  style={{ width: `${Math.min(Math.max(watchingProgress, 0), 100)}%` }}
+                />
+              </div>
+            </div>
+          </ResponsiveDialogBody>
+
+          <ResponsiveDialogFooter>
+            {watchingAction ? (
+              <a
+                href={watchingAction.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+              >
+                <ExternalLink className="size-4" />
+                {t("openOnYouTube")}
+              </a>
+            ) : null}
+            <button
+              type="button"
+              onClick={closeWatchVideo}
+              className="inline-flex min-h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              {watchingCompleted ? t("done") : t("closeWatchVideo")}
+            </button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </PublicCreatorLayout>
   );
 }

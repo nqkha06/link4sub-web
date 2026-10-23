@@ -10,6 +10,8 @@ import {
   uploadFile,
 } from "@/lib/api-client";
 
+const DEFAULT_IMAGE_MIME_PREFIXES = ["image/"] as const;
+
 export function ManagedImagePicker({
   open,
   onOpenChange,
@@ -21,6 +23,10 @@ export function ManagedImagePicker({
   acceptedMimeTypes,
   maxSize,
   title = "Chọn ảnh từ Media Manager",
+  acceptedMimePrefixes = DEFAULT_IMAGE_MIME_PREFIXES,
+  assetLabel = "ảnh",
+  accept = "image/*",
+  uploadPurpose = "cover",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,6 +38,10 @@ export function ManagedImagePicker({
   acceptedMimeTypes?: readonly string[];
   maxSize?: number;
   title?: string;
+  acceptedMimePrefixes?: readonly string[];
+  assetLabel?: string;
+  accept?: string;
+  uploadPurpose?: "file" | "cover";
 }) {
   const [files, setFiles] = React.useState<ManagedFileDto[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -49,7 +59,7 @@ export function ManagedImagePicker({
         limit: 100,
       });
       setFiles(response.data.filter((file) =>
-        file.mimeType.startsWith("image/") &&
+        acceptedMimePrefixes.some((prefix) => file.mimeType.startsWith(prefix)) &&
         (!acceptedMimeTypes || acceptedMimeTypes.includes(file.mimeType.toLowerCase())) &&
         (!maxSize || file.size <= maxSize),
       ));
@@ -62,7 +72,7 @@ export function ManagedImagePicker({
     } finally {
       setLoading(false);
     }
-  }, [acceptedMimeTypes, maxSize]);
+  }, [acceptedMimePrefixes, acceptedMimeTypes, maxSize]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -72,12 +82,12 @@ export function ManagedImagePicker({
 
   async function handleFiles(selected: File[]) {
     const images = selected.filter((file) =>
-      file.type.startsWith("image/") &&
+      acceptedMimePrefixes.some((prefix) => file.type.startsWith(prefix)) &&
       (!acceptedMimeTypes || acceptedMimeTypes.includes(file.type.toLowerCase())) &&
       (!maxSize || file.size <= maxSize),
     );
     if (!images.length) {
-      setError("Ảnh không đúng định dạng hoặc vượt quá dung lượng cho phép.");
+      setError(`${assetLabel} không đúng định dạng hoặc vượt quá dung lượng cho phép.`);
       return;
     }
     const selectedImages = multiple ? images : images.slice(0, 1);
@@ -89,7 +99,7 @@ export function ManagedImagePicker({
     setError("");
     try {
       const uploaded = await Promise.all(
-        uploadQueue.map((image) => uploadFile(image, { purpose: "cover" })),
+        uploadQueue.map((image) => uploadFile(image, { purpose: uploadPurpose })),
       );
       setFiles((current) => [...uploaded, ...current]);
       if (multiple && onSelectMany) {
@@ -102,7 +112,7 @@ export function ManagedImagePicker({
       setError(
         uploadError instanceof Error
           ? uploadError.message
-          : "Không thể upload ảnh.",
+          : `Không thể upload ${assetLabel}.`,
       );
     } finally {
       setUploading(false);
@@ -127,24 +137,24 @@ export function ManagedImagePicker({
       selectedFileId={selectedFileId ?? undefined}
       title={title}
       labels={{
-        action: "Chọn ảnh",
+        action: `Chọn ${assetLabel}`,
         close: "Đóng",
-        empty: "Chưa có ảnh trong Media Manager.",
-        loading: "Đang tải ảnh...",
-        name: "Tên ảnh",
-        select: "Dùng ảnh này",
+        empty: `Chưa có ${assetLabel} trong Media Manager.`,
+        loading: `Đang tải ${assetLabel}...`,
+        name: `Tên ${assetLabel}`,
+        select: `Dùng ${assetLabel} này`,
         size: "Dung lượng",
         uploaded: "Ngày tải lên",
-        search: "Tìm ảnh...",
+        search: `Tìm ${assetLabel}...`,
         filesTab: "Media Manager",
         uploadsTab: "Upload",
-        dragHint: "Kéo ảnh vào đây hoặc chọn từ máy",
-        browseHint: "PNG, JPG, WEBP hoặc GIF; tối đa 10 MB.",
+        dragHint: `Kéo ${assetLabel} vào đây hoặc chọn từ máy`,
+        browseHint: `Chọn ${assetLabel} phù hợp từ thiết bị.`,
       }}
       upload={{
-        accept: "image/*",
+        accept,
         isUploading: uploading,
-        label: "Chọn ảnh",
+        label: `Chọn ${assetLabel}`,
         uploadingLabel: "Đang upload...",
         multiple,
         onChange: handleInput,

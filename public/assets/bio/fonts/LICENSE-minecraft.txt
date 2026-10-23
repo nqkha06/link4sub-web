@@ -1,0 +1,13 @@
+Font: "Minecraft" (minecraft.woff2)
+Tác giả / Author: Pwnage_Block
+Nguồn gốc / Source: https://fontstruct.com/fontstructions/show/432966 (built with FontStruct, 2011)
+Giấy phép / License: Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0)
+  https://creativecommons.org/licenses/by-sa/3.0/
+
+Bản dùng ở đây được chuyển định dạng TTF → WOFF2 (fontTools), không sửa glyph.
+File TTF lấy từ gói npm `typeface-minecraft@1.0.0`; tên tác giả, bản quyền và
+giấy phép CC BY-SA 3.0 được kiểm tra trong bảng `name` của font và khớp với
+trang FontStruct gốc.
+
+This copy was converted from TTF to WOFF2 (fontTools) with no glyph changes.
+Any modified version of this font must be shared under CC BY-SA 3.0.

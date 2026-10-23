@@ -1,14 +1,20 @@
 "use client"
 
 import Image from "next/image"
-import { DEFAULT_LINK_BACKGROUND_EFFECTS, resolveLinkBackgroundEffects } from "@/contracts"
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react"
+import {
+  DEFAULT_LINK_BACKGROUND_EFFECTS,
+  MEMBER_SOCIAL_LINK_API_LIMITS,
+  resolveLinkBackgroundEffects,
+  type MonetizationActionIconKey,
+} from "@/contracts"
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/member/fields/input"
 import { MEMBER_FIELD_BARE, MEMBER_FIELD_SHELL } from "@/components/member/fields/field-styles"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FilePickerCredenza } from "@/components/file-picker-credenza"
 import { FileTypeIcon } from "@/components/file-type-icon"
 import { FILE_CREATED_EVENT } from "@/components/dashboard/files/events"
@@ -33,6 +39,7 @@ import {
   COVER_IMAGE_EXTENSIONS,
   formatSnippetSize,
   getYouTubeEmbedUrl,
+  getYouTubeVideoId,
   isImageFile,
   isVideoFile,
 } from "../lib/media"
@@ -126,6 +133,10 @@ import {
 } from "@icons-pack/react-simple-icons";
 import { cn } from "@/lib/utils"
 import { copyToClipboard } from "@/lib/clipboard"
+import {
+  getMonetizationActionIcon,
+  monetizationActionIconOptions,
+} from "@/lib/monetization-action-icons"
 
 
 type SocialActionItem = {
@@ -154,7 +165,7 @@ const baseSocialPlatforms: Record<string, SocialPlatform> = {
       { id: "like", label: "Like a video", requiresUrl: true, icon: SiYoutube },
       { id: "comment", label: "Comment on a video", requiresUrl: true, icon: SiYoutube },
       { id: "like-comment", label: "Like & comment on video", requiresUrl: true, icon: SiYoutube },
-      { id: "watch", label: "Watch video", requiresUrl: true, icon: SiYoutube },
+      { id: "watch", label: "Watch video", requiresUrl: true, icon: PlayCircle },
     ],
   },
 
@@ -514,6 +525,7 @@ const baseSocialPlatforms: Record<string, SocialPlatform> = {
     color: "bg-gray-700",
     actions: [
       { id: "visit-page", label: "Visit a page", requiresUrl: true, icon: Link },
+      { id: "custom", label: "Custom action", requiresUrl: true, icon: MousePointerClick },
     ],
   },
 }
@@ -595,12 +607,24 @@ interface SocialAction {
   platform: keyof typeof socialPlatforms
   action: string
   url: string
+  watchDurationSeconds?: number
+  customLabel?: string
+  customIcon?: MonetizationActionIconKey
   isValid: boolean
 }
 
-type MostUsedAction = Omit<SocialAction, "id" | "isValid"> & {
+type RecentlyUsedAction = Omit<SocialAction, "id" | "isValid"> & {
   count: number
   lastUsedAt: number
+}
+
+const DEFAULT_WATCH_DURATION_SECONDS = 6
+
+let generatedActionSequence = 0
+
+function createClientActionId() {
+  generatedActionSequence += 1
+  return `action-${Date.now()}-${generatedActionSequence}`
 }
 
 type AliasCheckStatus = "idle" | "checking" | "available" | "taken" | "invalid" | "error"
@@ -618,6 +642,11 @@ function isValidUrl(value: string) {
   } catch {
     return false
   }
+}
+
+function isValidActionUrl(platform: string, action: string, value: string) {
+  if (!isValidUrl(value)) return false
+  return platform !== "youtube" || action !== "watch" || Boolean(getYouTubeVideoId(value))
 }
 
 function formatActionTarget(value: string) {
@@ -706,6 +735,7 @@ export default function SocialLinksGenerator({
   draftValues?: LinkCreatorDraftValues
 } = {}) {
   const t = useTranslations("CreateLink")
+  const ti = useTranslations("Admin.monetizationActionIcons")
   const businessConfig = useBusinessConfig()
   const backgroundImages = LINK_BACKGROUND_IMAGE_PRESETS
   const backgroundVideos = businessConfig.presetLibrary.videos
@@ -727,10 +757,21 @@ export default function SocialLinksGenerator({
     platform: toPlatformKey(action.platform),
     action: action.action,
     url: action.url,
-    isValid: isValidUrl(action.url),
+    watchDurationSeconds:
+      action.platform.toLowerCase() === "youtube" && action.action === "watch"
+        ? action.watchDurationSeconds ?? DEFAULT_WATCH_DURATION_SECONDS
+        : undefined,
+    customLabel:
+      action.platform.toLowerCase() === "other" && action.action === "custom"
+        ? action.label ?? t("actionLabels.custom")
+        : undefined,
+    customIcon:
+      action.platform.toLowerCase() === "other" && action.action === "custom"
+        ? action.icon ?? "link"
+        : undefined,
+    isValid: isValidActionUrl(action.platform, action.action, action.url),
   })) ?? []
 
-  const actionIdRef = useRef(initialActions.length)
   const [destinationUrl, setDestinationUrl] = useState(
     initialInputType === "url" ? initialLink?.destinationUrl || draftValues?.destinationUrl || "" : "",
   )
@@ -743,6 +784,7 @@ export default function SocialLinksGenerator({
   const [availableFiles, setAvailableFiles] = useState<ManagedFileDto[]>([])
   const [filesLoading, setFilesLoading] = useState(false)
   const [fileUploading, setFileUploading] = useState(false)
+  const [fileUploadProgress, setFileUploadProgress] = useState(0)
   const [coverImageUploading, setCoverImageUploading] = useState(false)
   const [fileError, setFileError] = useState("")
   const [coverFileError, setCoverFileError] = useState("")
@@ -756,6 +798,7 @@ export default function SocialLinksGenerator({
   const [isSnippetDialogOpen, setIsSnippetDialogOpen] = useState(false)
   const [isCoverImageDialogOpen, setIsCoverImageDialogOpen] = useState(false)
   const [actions, setActions] = useState<SocialAction[]>(initialActions)
+  const [expandedAdvancedActionIds, setExpandedAdvancedActionIds] = useState<Set<string>>(new Set())
   const [isActionModalOpen, setIsActionModalOpen] = useState(false)
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false)
   const [expandedPlatforms, setExpandedPlatforms] = useState<Set<string>>(new Set(["youtube"]))
@@ -974,12 +1017,17 @@ export default function SocialLinksGenerator({
   }, [customAlias, isEditing, t])
 
   const addAction = (platform: keyof typeof socialPlatforms, actionId: string) => {
-    actionIdRef.current += 1
     const newAction: SocialAction = {
-      id: `action-${actionIdRef.current}`,
+      id: createClientActionId(),
       platform,
       action: actionId,
       url: "",
+      watchDurationSeconds:
+        platform === "youtube" && actionId === "watch"
+          ? DEFAULT_WATCH_DURATION_SECONDS
+          : undefined,
+      customLabel: platform === "other" && actionId === "custom" ? t("actionLabels.custom") : undefined,
+      customIcon: platform === "other" && actionId === "custom" ? "link" : undefined,
       isValid: false,
     }
     setActions((current) => [...current, newAction])
@@ -987,25 +1035,30 @@ export default function SocialLinksGenerator({
     setIsActionModalOpen(false)
   }
 
-  const addUsedAction = (usedAction: MostUsedAction) => {
-    actionIdRef.current += 1
+  const addUsedAction = (usedAction: RecentlyUsedAction) => {
+    const actionId = createClientActionId()
     setPreviewUnlocked(false)
     setActions((current) => {
       const alreadyAdded = current.some(
         (action) =>
           action.platform === usedAction.platform &&
           action.action === usedAction.action &&
-          action.url.trim().toLowerCase() === usedAction.url.trim().toLowerCase(),
+          action.url.trim().toLowerCase() === usedAction.url.trim().toLowerCase() &&
+          action.customLabel === usedAction.customLabel &&
+          action.customIcon === usedAction.customIcon,
       )
       if (alreadyAdded) return current
       return [
         ...current,
         {
-          id: `action-${actionIdRef.current}`,
+          id: actionId,
           platform: usedAction.platform,
           action: usedAction.action,
           url: usedAction.url,
-          isValid: isValidUrl(usedAction.url),
+          watchDurationSeconds: usedAction.watchDurationSeconds,
+          customLabel: usedAction.customLabel,
+          customIcon: usedAction.customIcon,
+          isValid: isValidActionUrl(usedAction.platform, usedAction.action, usedAction.url),
         },
       ]
     })
@@ -1014,10 +1067,40 @@ export default function SocialLinksGenerator({
   const updateActionUrl = (actionId: string, url: string) => {
     setActions((current) =>
       current.map((action) =>
-        action.id === actionId ? { ...action, url, isValid: url.length > 0 && isValidUrl(url) } : action,
+        action.id === actionId
+          ? { ...action, url, isValid: isValidActionUrl(action.platform, action.action, url) }
+          : action,
       ),
     )
     setPreviewCompletedActionIds((current) => current.filter((id) => id !== actionId))
+    setPreviewUnlocked(false)
+  }
+
+  const updateWatchDuration = (actionId: string, value: string) => {
+    const parsed = Number(value)
+    if (!Number.isInteger(parsed)) return
+    const duration = Math.min(
+      MEMBER_SOCIAL_LINK_API_LIMITS.actionWatchDurationSecondsMax,
+      Math.max(MEMBER_SOCIAL_LINK_API_LIMITS.actionWatchDurationSecondsMin, parsed),
+    )
+    setActions((current) =>
+      current.map((action) =>
+        action.id === actionId ? { ...action, watchDurationSeconds: duration } : action,
+      ),
+    )
+    setPreviewCompletedActionIds((current) => current.filter((id) => id !== actionId))
+    setPreviewUnlocked(false)
+  }
+
+  const updateCustomAction = (
+    actionId: string,
+    values: Pick<SocialAction, "customLabel" | "customIcon">,
+  ) => {
+    setActions((current) =>
+      current.map((action) =>
+        action.id === actionId ? { ...action, ...values } : action,
+      ),
+    )
     setPreviewUnlocked(false)
   }
 
@@ -1027,12 +1110,27 @@ export default function SocialLinksGenerator({
     setPreviewUnlocked(false)
   }
 
-  const getActionLabel = (platform: keyof typeof socialPlatforms, actionId: string) => {
+  const getActionLabel = (
+    platform: keyof typeof socialPlatforms,
+    actionId: string,
+    customLabel?: string,
+  ) => {
+    if (platform === "other" && actionId === "custom" && customLabel?.trim()) {
+      return customLabel.trim()
+    }
     const fallback = socialPlatforms[platform].actions.find((a) => a.id === actionId)?.label || actionId
     return t.has(`actionLabels.${actionId}`) ? t(`actionLabels.${actionId}`) : fallback
   }
 
-  const getActionIcon = (platform: keyof typeof socialPlatforms, actionId: string) => {
+  const getActionIcon = (
+    platform: keyof typeof socialPlatforms,
+    actionId: string,
+    customIcon?: MonetizationActionIconKey,
+  ) => {
+    if (platform === "other" && actionId === "custom") {
+      const icon = getMonetizationActionIcon(customIcon)
+      if (icon) return icon
+    }
     return socialPlatforms[platform].actions.find((action) => action.id === actionId)?.icon ?? socialPlatforms[platform].icon
   }
 
@@ -1178,11 +1276,23 @@ export default function SocialLinksGenerator({
 
     try {
       setFileUploading(true)
+      setFileUploadProgress(0)
       const uploadedFiles: ManagedFileDto[] = []
+      const totalBytes = files.reduce((sum, file) => sum + file.size, 0)
+      let completedBytes = 0
 
       for (const file of files) {
-        const uploaded = await uploadFile(file)
+        const uploaded = await uploadFile(file, {
+          onProgress: (progress) => {
+            const uploadedBytes = completedBytes + (file.size * progress) / 100
+            const batchProgress = totalBytes > 0
+              ? (uploadedBytes / totalBytes) * 100
+              : progress
+            setFileUploadProgress(Math.min(100, Math.round(batchProgress)))
+          },
+        })
         uploadedFiles.push(uploaded)
+        completedBytes += file.size
         window.dispatchEvent(new CustomEvent(FILE_CREATED_EVENT, { detail: uploaded }))
       }
 
@@ -1235,6 +1345,12 @@ export default function SocialLinksGenerator({
           platform,
           action: actionId,
           url: "",
+          watchDurationSeconds:
+            platform === "youtube" && actionId === "watch"
+              ? DEFAULT_WATCH_DURATION_SECONDS
+              : undefined,
+          customLabel: platform === "other" && actionId === "custom" ? t("actionLabels.custom") : undefined,
+          customIcon: platform === "other" && actionId === "custom" ? "link" : undefined,
           isValid: false,
         }
         setActions(updatedActions)
@@ -1373,8 +1489,8 @@ export default function SocialLinksGenerator({
     )
   })
   const filteredPopularActions = filterPopularActions(actionCategory)
-  const mostUsedActions = useMemo(() => {
-    const usage = new Map<string, MostUsedAction>()
+  const recentlyUsedActions = useMemo(() => {
+    const usage = new Map<string, RecentlyUsedAction>()
     for (const link of actionHistory ?? fetchedActionHistory) {
       const lastUsedAt = new Date(link.updatedAt).getTime()
       for (const action of link.actions) {
@@ -1387,12 +1503,25 @@ export default function SocialLinksGenerator({
         ) {
           continue
         }
-        const key = `${platform}:${action.action}:${action.url.trim().toLowerCase()}`
+        const watchDurationSeconds = action.watchDurationSeconds ?? DEFAULT_WATCH_DURATION_SECONDS
+        const customLabel = platform === "other" && action.action === "custom"
+          ? action.label?.trim() ?? ""
+          : ""
+        const customIcon = platform === "other" && action.action === "custom"
+          ? action.icon ?? "link"
+          : undefined
+        const key = `${platform}:${action.action}:${action.url.trim().toLowerCase()}:${watchDurationSeconds}:${customLabel}:${customIcon ?? ""}`
         const existing = usage.get(key)
         usage.set(key, {
           platform,
           action: action.action,
           url: action.url.trim(),
+          watchDurationSeconds:
+            platform === "youtube" && action.action === "watch"
+              ? watchDurationSeconds
+              : undefined,
+          customLabel: customLabel || undefined,
+          customIcon,
           count: (existing?.count ?? 0) + 1,
           lastUsedAt: Math.max(existing?.lastUsedAt ?? 0, lastUsedAt),
         })
@@ -1406,12 +1535,14 @@ export default function SocialLinksGenerator({
             (action) =>
               action.platform === usedAction.platform &&
               action.action === usedAction.action &&
-              action.url.trim().toLowerCase() === usedAction.url.toLowerCase(),
+              action.url.trim().toLowerCase() === usedAction.url.toLowerCase() &&
+              action.customLabel === usedAction.customLabel &&
+              action.customIcon === usedAction.customIcon,
           ),
       )
       .sort(
         (left, right) =>
-          right.count - left.count || right.lastUsedAt - left.lastUsedAt,
+          right.lastUsedAt - left.lastUsedAt || right.count - left.count,
       )
       .slice(0, 8)
   }, [actionHistory, actions, fetchedActionHistory])
@@ -1449,7 +1580,19 @@ export default function SocialLinksGenerator({
       id: /^\d+$/.test(a.id) ? a.id : undefined,
       platform: a.platform,
       action: a.action,
-      url: a.url.trim()
+      url: a.url.trim(),
+      watchDurationSeconds:
+        a.platform === "youtube" && a.action === "watch"
+          ? a.watchDurationSeconds ?? DEFAULT_WATCH_DURATION_SECONDS
+          : undefined,
+      label:
+        a.platform === "other" && a.action === "custom"
+          ? a.customLabel?.trim() || undefined
+          : undefined,
+      icon:
+        a.platform === "other" && a.action === "custom"
+          ? a.customIcon ?? "link"
+          : undefined,
     })),
     backgroundSettings: {
       selectedBackgroundId: selectedBackgroundId || undefined,
@@ -1773,6 +1916,7 @@ export default function SocialLinksGenerator({
           upload={{
             isUploading: fileUploading,
             label: t("uploadNewFile"),
+            progress: fileUploadProgress,
             uploadingLabel: t("uploading"),
             multiple: true,
             onChange: handleUploadFile,
@@ -1893,26 +2037,28 @@ export default function SocialLinksGenerator({
             />
           </CardHeader>
           <CardContent className="space-y-3 px-4 pt-0 pb-4 sm:px-5">
-            {mostUsedActions.length > 0 ? (
+            {recentlyUsedActions.length > 0 ? (
               <div className="flex flex-col rounded-xl border border-border bg-muted/20 p-4">
                 <div className="mb-3 flex items-center gap-2 text-muted-foreground">
                   <History className="size-4" aria-hidden="true" />
-                  <span className="text-sm font-medium">{t("mostUsed")}</span>
+                  <span className="text-sm font-medium">{t("recentlyUsed")}</span>
                 </div>
                 <div className="flex max-h-28 flex-wrap gap-2 overflow-auto">
-                  {mostUsedActions.map((usedAction) => {
+                  {recentlyUsedActions.map((usedAction) => {
                     const UsedActionIcon = getActionIcon(
                       usedAction.platform,
                       usedAction.action,
+                      usedAction.customIcon,
                     )
                     const target = formatActionTarget(usedAction.url)
                     const label = getActionLabel(
                       usedAction.platform,
                       usedAction.action,
+                      usedAction.customLabel,
                     )
                     return (
                       <button
-                        key={`${usedAction.platform}:${usedAction.action}:${usedAction.url}`}
+                        key={`${usedAction.platform}:${usedAction.action}:${usedAction.url}:${usedAction.customLabel ?? ""}:${usedAction.customIcon ?? ""}`}
                         type="button"
                         onClick={() => addUsedAction(usedAction)}
                         aria-label={t("addUsedAction", { target, action: label })}
@@ -1937,9 +2083,13 @@ export default function SocialLinksGenerator({
 
             {actions.map((action, index) => {
               const platform = socialPlatforms[action.platform]
-              const Icon = getActionIcon(action.platform, action.action)
+              const Icon = getActionIcon(action.platform, action.action, action.customIcon)
               const showActionUrlError =
                 !action.isValid && (validationAttempted || action.url.length > 0)
+              const isYouTubeWatchAction = action.platform === "youtube" && action.action === "watch"
+              const isCustomAction = action.platform === "other" && action.action === "custom"
+              const hasAdvancedOptions = isYouTubeWatchAction || isCustomAction
+              const isAdvancedOpen = expandedAdvancedActionIds.has(action.id)
               const actionErrorId = `action-url-error-${action.id}`
               return (
                 <div key={action.id} className="space-y-2 rounded-lg border border-border bg-muted/15 p-3">
@@ -1951,7 +2101,7 @@ export default function SocialLinksGenerator({
                         className="flex flex-1 items-center gap-2 rounded-md bg-muted px-3 py-2 text-left text-foreground transition-colors hover:bg-accent"
                       >
                         <Icon className={`w-4 h-4 ${getPlatformIconClass(action.platform)}`} />
-                        <span className="text-sm">{getActionLabel(action.platform, action.action)}</span>
+                        <span className="text-sm">{getActionLabel(action.platform, action.action, action.customLabel)}</span>
                       </button>
                     </div>
                     <Button
@@ -1967,7 +2117,11 @@ export default function SocialLinksGenerator({
                     <Input
                       aria-describedby={showActionUrlError ? actionErrorId : undefined}
                       aria-invalid={showActionUrlError}
-                      placeholder={t("enterPlatformUrl", { platform: platform.name.toLowerCase() })}
+                      placeholder={isYouTubeWatchAction
+                        ? t("youtubeVideoUrlPlaceholder")
+                        : isCustomAction
+                          ? t("customActionUrlPlaceholder")
+                          : t("enterPlatformUrl", { platform: platform.name.toLowerCase() })}
                       value={action.url}
                       onChange={(e) => updateActionUrl(action.id, e.target.value)}
                       className={`h-10 rounded-lg border-border bg-background text-foreground shadow-none placeholder:text-muted-foreground ${showActionUrlError ? "border-destructive" : ""
@@ -1975,10 +2129,133 @@ export default function SocialLinksGenerator({
                     />
                     {showActionUrlError && (
                       <p id={actionErrorId} className="mt-1 text-sm text-destructive">
-                        {action.url.trim() ? t("invalidInput") : t("actionUrlRequired")}
+                        {action.url.trim()
+                          ? isYouTubeWatchAction
+                            ? t("youtubeVideoUrlInvalid")
+                            : t("invalidInput")
+                          : t("actionUrlRequired")}
                       </p>
                     )}
                   </div>
+                  {hasAdvancedOptions ? (
+                    <Collapsible
+                      open={isAdvancedOpen}
+                      onOpenChange={(open) => {
+                        setExpandedAdvancedActionIds((current) => {
+                          const next = new Set(current)
+                          if (open) next.add(action.id)
+                          else next.delete(action.id)
+                          return next
+                        })
+                      }}
+                      className="space-y-1"
+                    >
+                      <CollapsibleTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-2 py-1 text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                          <ChevronDown
+                            className={cn(
+                              "size-4 shrink-0 transition-transform",
+                              isAdvancedOpen && "rotate-180",
+                            )}
+                            aria-hidden="true"
+                          />
+                          <span>{t("watchAdvancedOptions")}</span>
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="mt-2 space-y-4 rounded-lg border border-border/70 bg-muted/30 p-3">
+                          {isYouTubeWatchAction ? (
+                            <div className="space-y-2">
+                              <label
+                                htmlFor={`watch-duration-${action.id}`}
+                                className="text-sm font-medium text-foreground"
+                              >
+                                {t("watchDurationLabel")}
+                              </label>
+                              <div className="relative max-w-48">
+                                <Input
+                                  id={`watch-duration-${action.id}`}
+                                  type="number"
+                                  inputMode="numeric"
+                                  min={MEMBER_SOCIAL_LINK_API_LIMITS.actionWatchDurationSecondsMin}
+                                  max={MEMBER_SOCIAL_LINK_API_LIMITS.actionWatchDurationSecondsMax}
+                                  step={1}
+                                  value={action.watchDurationSeconds ?? DEFAULT_WATCH_DURATION_SECONDS}
+                                  onChange={(event) => updateWatchDuration(action.id, event.target.value)}
+                                  className="h-10 rounded-lg border-border bg-background pr-14 text-foreground shadow-none"
+                                />
+                                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">
+                                  {t("secondsUnit")}
+                                </span>
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground">
+                                {t("watchDurationHint", {
+                                  min: MEMBER_SOCIAL_LINK_API_LIMITS.actionWatchDurationSecondsMin,
+                                  max: MEMBER_SOCIAL_LINK_API_LIMITS.actionWatchDurationSecondsMax,
+                                })}
+                              </p>
+                            </div>
+                          ) : null}
+
+                          {isCustomAction ? (
+                            <>
+                              <div className="space-y-2">
+                                <label
+                                  htmlFor={`custom-action-label-${action.id}`}
+                                  className="text-sm font-medium text-foreground"
+                                >
+                                  {t("customButtonLabel")}
+                                </label>
+                                <Input
+                                  id={`custom-action-label-${action.id}`}
+                                  maxLength={MEMBER_SOCIAL_LINK_API_LIMITS.actionLabelMaxLength}
+                                  value={action.customLabel ?? ""}
+                                  onChange={(event) => updateCustomAction(action.id, { customLabel: event.target.value })}
+                                  placeholder={t("customButtonLabelPlaceholder")}
+                                  className="h-10 rounded-lg border-border bg-background text-foreground shadow-none"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label
+                                  htmlFor={`custom-action-icon-${action.id}`}
+                                  className="text-sm font-medium text-foreground"
+                                >
+                                  {t("customButtonIcon")}
+                                </label>
+                                <Select
+                                  value={action.customIcon ?? "link"}
+                                  onValueChange={(value) => updateCustomAction(action.id, {
+                                    customIcon: value as MonetizationActionIconKey,
+                                  })}
+                                >
+                                  <SelectTrigger
+                                    id={`custom-action-icon-${action.id}`}
+                                    className="h-10 w-full max-w-64 rounded-lg border-border bg-background shadow-none"
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {monetizationActionIconOptions.map(({ value, labelKey, icon: OptionIcon }) => (
+                                      <SelectItem key={value} value={value}>
+                                        <OptionIcon className="size-4" aria-hidden="true" />
+                                        {ti(labelKey)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground">
+                                {t("customButtonHint")}
+                              </p>
+                            </>
+                          ) : null}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ) : null}
                 </div>
               )
             })}
@@ -2227,7 +2504,7 @@ export default function SocialLinksGenerator({
 
                     <TabsContent value="images">
                       <div className="rounded-lg border border-border bg-muted/15 p-3">
-                        <div className="flex gap-2 mb-3 flex-wrap">
+                        <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
                           {backgroundImageCategories.map((category) => (
                             <button
                               key={category}
@@ -2247,13 +2524,13 @@ export default function SocialLinksGenerator({
                           {t("imageCountShort", { count: filteredBackgroundImages.length })}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:max-h-90 md:grid-cols-4 md:overflow-y-auto md:pr-2 lg:grid-cols-5">
+                        <div className="grid max-h-90 grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3 md:grid-cols-4 md:pr-2 lg:grid-cols-5">
                           <button
                             type="button"
                             onClick={clearBackground}
                             aria-pressed={!selectedBackgroundId}
                             className={`relative grid aspect-square w-full place-items-center rounded-lg border border-dashed border-border bg-muted/30 text-muted-foreground transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${!selectedBackgroundId
-                              ? "ring-[3px] ring-primary"
+                              ? "ring-inset ring-[3px] ring-primary"
                               : "hover:scale-105"
                               }`}
                           >
@@ -2268,7 +2545,7 @@ export default function SocialLinksGenerator({
                               onClick={() => selectBackgroundImage(bg)}
                               title={bg.name}
                               className={`relative aspect-square w-full overflow-hidden rounded-lg transition-transform transform will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selectedBackgroundId === bg.id
-                                ? "scale-100 ring-[3px] ring-primary"
+                                ? "scale-100 after:pointer-events-none after:absolute after:inset-0 after:z-10 after:rounded-[inherit] after:border-[3px] after:border-primary"
                                 : "hover:scale-105"
                                 }`}
                             >
@@ -2296,7 +2573,7 @@ export default function SocialLinksGenerator({
                     </TabsContent>
                     <TabsContent value="videos">
                       <div className="rounded-lg border border-border bg-muted/15 p-3">
-                        <div className="mb-3 flex flex-wrap gap-2">
+                        <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
                           {backgroundVideoCategories.map((category) => (
                             <button
                               key={category}
@@ -2316,13 +2593,13 @@ export default function SocialLinksGenerator({
                           {t("videoCountShort", { count: filteredBackgroundVideos.length })}
                         </div>
 
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:max-h-90 md:overflow-y-auto md:pr-2">
+                        <div className="grid max-h-90 grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 md:pr-2">
                           <button
                             type="button"
                             onClick={clearBackground}
                             aria-pressed={!selectedBackgroundId}
                             className={`relative grid aspect-video place-items-center rounded-lg border border-dashed border-border bg-muted/30 text-muted-foreground transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${!selectedBackgroundId
-                              ? "ring-[3px] ring-primary"
+                              ? "ring-inset ring-[3px] ring-primary"
                               : "hover:scale-[1.02]"
                               }`}
                           >
@@ -2338,7 +2615,7 @@ export default function SocialLinksGenerator({
                               onClick={() => selectBackgroundVideo(video)}
                               title={video.name}
                               className={`group relative aspect-video overflow-hidden rounded-lg text-left transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selectedBackgroundId === video.id
-                                ? "ring-[3px] ring-primary"
+                                ? "after:pointer-events-none after:absolute after:inset-0 after:z-10 after:rounded-[inherit] after:border-[3px] after:border-primary"
                                 : "hover:scale-[1.02]"
                                 }`}
                             >
@@ -2377,7 +2654,7 @@ export default function SocialLinksGenerator({
                             {t("backgroundFileHint")}
                           </div>
                         ) : (
-                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:max-h-90 md:overflow-y-auto md:pr-2">
+                          <div className="grid max-h-90 grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3 md:pr-2">
                             {backgroundFileMedia.map((file) => {
                               const fileUrl = getFilePreviewUrl(file)
                               const isVideo = isVideoFile(file)
@@ -2389,7 +2666,7 @@ export default function SocialLinksGenerator({
                                   type="button"
                                   onClick={() => selectBackgroundFile(file)}
                                   title={file.name}
-                                  className={`group overflow-hidden rounded-lg border bg-muted/20 text-left transition-colors hover:bg-muted/35 ${selected ? "border-primary ring-[3px] ring-primary" : "border-border hover:border-foreground/20"}`}
+                                  className={`group relative overflow-hidden rounded-lg border bg-muted/20 text-left transition-colors hover:bg-muted/35 ${selected ? "border-primary after:pointer-events-none after:absolute after:inset-0 after:z-10 after:rounded-[inherit] after:border-[3px] after:border-primary" : "border-border hover:border-foreground/20"}`}
                                 >
                                   <div className="relative aspect-square bg-muted">
                                     {isVideo ? (
@@ -3025,7 +3302,7 @@ export default function SocialLinksGenerator({
               <div className="space-y-2 w-full overflow-hidden">
                 {actions.map((action) => {
                   const platform = socialPlatforms[action.platform]
-                  const Icon = getActionIcon(action.platform, action.action)
+                  const Icon = getActionIcon(action.platform, action.action, action.customIcon)
                   const completed = previewCompletedActionIdSet.has(action.id)
 
                   return (
@@ -3048,7 +3325,7 @@ export default function SocialLinksGenerator({
                       <Icon className="relative size-4 shrink-0" />
 
                       <span className="relative min-w-0 flex-1 truncate text-sm font-medium">
-                        {getActionLabel(action.platform, action.action)}
+                        {getActionLabel(action.platform, action.action, action.customLabel)}
                       </span>
 
                       {completed ? (

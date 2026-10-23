@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { buildAppearanceSettingsPayload } from "../appearance-payload.ts";
 import { appearanceSettingsSchema } from "./appearance-schema.ts";
 
 const validSettings = {
@@ -46,6 +47,38 @@ describe("appearance settings schema", () => {
       appearanceSettingsSchema.safeParse({ ...validSettings, translations: [english] }).success,
       true,
     );
+  });
+
+  it("does not send the default locale as a translation", () => {
+    const values = appearanceSettingsSchema.parse({
+      ...validSettings,
+      translations: [
+        {
+          locale: "vi",
+          siteName: "Tên mặc định cũ",
+          siteShortName: "",
+          siteTagline: "",
+          siteDescription: "",
+        },
+        {
+          locale: "en",
+          siteName: "English name",
+          siteShortName: "",
+          siteTagline: "English tagline",
+          siteDescription: "",
+        },
+      ],
+    });
+
+    assert.deepEqual(buildAppearanceSettingsPayload(values, "vi").translations, [
+      {
+        locale: "en",
+        siteName: "English name",
+        siteShortName: null,
+        siteTagline: "English tagline",
+        siteDescription: null,
+      },
+    ]);
   });
 
   it("reports each security and uniqueness rule independently", () => {

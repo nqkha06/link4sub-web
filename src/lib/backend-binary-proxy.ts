@@ -5,12 +5,14 @@ export async function proxyBackendBinary(
   url: string,
   accept: string,
   signal?: AbortSignal,
+  /** Header Range của trình duyệt: chuyển tiếp để nhạc/video phát được ngay (206). */
+  range?: string | null,
 ) {
   let response: Response;
   try {
     response = await fetch(url, {
       cache: "no-store",
-      headers: { accept },
+      headers: range ? { accept, range } : { accept },
       signal,
     });
   } catch {

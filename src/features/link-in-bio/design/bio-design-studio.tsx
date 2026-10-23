@@ -1,0 +1,399 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { Check, History, Loader2, Redo2, RotateCcw, Undo2 } from "lucide-react"
+import { toast } from "sonner"
+import { useTranslations } from "next-intl"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  DEFAULT_BIO_DESIGN,
+  isBioBuiltinAssetId,
+  type BioDesign,
+  type BioHorizontalAlign,
+} from "@/contracts"
+import { BIO_DESIGN_TEMPLATES, type BioDesignTemplate } from "./bio-design-templates"
+import { cn } from "@/lib/utils"
+
+import { BackgroundEffectPicker } from "./background-effect-picker"
+import { ColorPickerInput } from "./color-picker-field"
+import { FontFamilyPicker } from "./font-family-picker"
+import { UsernameEffectPicker } from "./username-effect-picker"
+
+type DesignSection = keyof Pick<BioDesign, "profile" | "background" | "appearance" | "effects" | "audio">
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <div>
+        <p className="text-xs font-medium text-foreground">{label}</p>
+        {hint ? <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{hint}</p> : null}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function RangeField({
+  label, value, min, max, step = 1, unit = "", onChange,
+}: {
+  label: string; value: number; min: number; max: number; step?: number; unit?: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <Field label={label}>
+      <div className="flex items-center gap-3">
+        <Slider className="flex-1" value={[value]} min={min} max={max} step={step} onValueChange={([next]) => onChange(next)} />
+        <span className="min-w-14 rounded-md border border-border bg-background px-2 py-1 text-center text-[11px] tabular-nums text-muted-foreground">
+          {value}{unit}
+        </span>
+      </div>
+    </Field>
+  )
+}
+
+function ToggleField({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (value: boolean) => void }) {
+  return (
+    <label className="flex items-start justify-between gap-4 rounded-lg border border-border bg-background px-3 py-2.5">
+      <span>
+        <span className="block text-xs font-medium text-foreground">{label}</span>
+        {hint ? <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">{hint}</span> : null}
+      </span>
+      <Switch checked={checked} onCheckedChange={onChange} />
+    </label>
+  )
+}
+
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <Field label={label}>
+      <ColorPickerInput value={value} onChange={onChange} />
+    </Field>
+  )
+}
+
+function Panel({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-4 rounded-xl border border-border bg-muted/20 p-4">
+      <div>
+        <h4 className="text-sm font-semibold text-foreground">{title}</h4>
+        {description ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p> : null}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+
+const DESIGN_SECTIONS: DesignSection[] = ["profile", "background", "appearance", "effects", "audio"]
+const TEMPLATE_STEPS = ["background", "colors", "effects", "media"] as const
+const TEMPLATE_STEP_MS = 380
+
+/** Tải trước video nền của template (tối đa 4 giây) để xem trước có hình ngay khi áp dụng. */
+function preloadVideo(url: string | null) {
+  if (!url) return Promise.resolve()
+  return new Promise<void>((resolve) => {
+    const video = document.createElement("video")
+    const done = () => {
+      window.clearTimeout(timer)
+      video.removeAttribute("src")
+      video.load()
+      resolve()
+    }
+    const timer = window.setTimeout(done, 4000)
+    video.muted = true
+    video.preload = "auto"
+    video.addEventListener("canplay", done, { once: true })
+    video.addEventListener("error", done, { once: true })
+    video.src = url
+  })
+}
+
+export function BioDesignStudio({
+  value,
+  onChange,
+  backgroundLibrary,
+  onPickBackgroundAsset,
+  onPickMusicAsset,
+  previewName = "",
+  onTemplateApplied,
+}: {
+  previewName?: string
+  /** Gọi sau khi một template được áp dụng (trang xem trước phát lại hiệu ứng xuất hiện). */
+  onTemplateApplied?: () => void
+  value: BioDesign
+  onChange: (value: BioDesign) => void
+  backgroundLibrary?: React.ReactNode
+  onPickBackgroundAsset?: (kind: "image" | "video") => void
+  onPickMusicAsset?: () => void
+}) {
+  const t = useTranslations("BioStudio")
+  const historyRef = useRef<BioDesign[]>([value])
+  const [historyIndex, setHistoryIndex] = useState(0)
+  const [historyLength, setHistoryLength] = useState(1)
+
+  const commit = (next: BioDesign) => {
+    const history = [...historyRef.current.slice(0, historyIndex + 1), next].slice(-50)
+    historyRef.current = history
+    setHistoryIndex(history.length - 1)
+    setHistoryLength(history.length)
+    onChange(next)
+  }
+  const undo = () => {
+    if (historyIndex <= 0) return
+    const nextIndex = historyIndex - 1
+    setHistoryIndex(nextIndex)
+    onChange(historyRef.current[nextIndex])
+  }
+  const redo = () => {
+    if (historyIndex >= historyRef.current.length - 1) return
+    const nextIndex = historyIndex + 1
+    setHistoryIndex(nextIndex)
+    onChange(historyRef.current[nextIndex])
+  }
+  /* ------------------------------------------------------------ Template */
+  const [activeTab, setActiveTab] = useState<string>("profile")
+  /** Các tab có thiết lập vừa được template thay đổi (chấm nhỏ trên tab, mất khi mở tab). */
+  const [changedTabs, setChangedTabs] = useState<DesignSection[]>([])
+  const [applying, setApplying] = useState<{ id: string; step: number } | null>(null)
+  const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(null)
+  const applyTimers = useRef<number[]>([])
+  useEffect(() => () => applyTimers.current.forEach((timer) => window.clearTimeout(timer)), [])
+
+  const applyTemplate = (template: BioDesignTemplate) => {
+    if (applying) return
+    const before = value
+    setApplying({ id: template.id, step: 0 })
+    // Các bước hiển thị (giả lập) chạy song song với việc tải trước video nền thật.
+    TEMPLATE_STEPS.forEach((_, index) => {
+      applyTimers.current.push(window.setTimeout(() => setApplying({ id: template.id, step: index }), index * TEMPLATE_STEP_MS))
+    })
+    const minimum = new Promise<void>((resolve) => { applyTimers.current.push(window.setTimeout(resolve, TEMPLATE_STEPS.length * TEMPLATE_STEP_MS)) })
+    void Promise.all([minimum, preloadVideo(template.videoUrl)]).then(() => {
+      const next = template.apply(before)
+      commit(next)
+      setChangedTabs(DESIGN_SECTIONS.filter((section) => JSON.stringify(before[section]) !== JSON.stringify(next[section])))
+      setApplying(null)
+      setAppliedTemplateId(template.id)
+      onTemplateApplied?.()
+      toast.success(t("templateApplied", { name: template.name }), {
+        description: t("templateAppliedHint"),
+        action: { label: t("templateUndo"), onClick: () => { commit(before); setAppliedTemplateId(null); setChangedTabs([]) } },
+      })
+    })
+  }
+
+  const resetSection = (section: DesignSection) => commit({ ...value, [section]: DEFAULT_BIO_DESIGN[section] })
+
+  const sectionHeader = (section: DesignSection, label: string) => (
+    <div className="flex items-center justify-between gap-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <Button type="button" variant="ghost" size="sm" onClick={() => resetSection(section)} className="h-8 gap-1.5 px-2 text-xs text-muted-foreground">
+        <RotateCcw className="size-3.5" /> {t("resetSection")}
+      </Button>
+    </div>
+  )
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background px-3 py-2">
+        <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><History className="size-4" /> {t("history")}</span>
+        <div className="flex items-center gap-1">
+          <Button type="button" variant="ghost" size="icon" className="size-8" onClick={undo} disabled={historyIndex <= 0} aria-label={t("undo")}><Undo2 className="size-4" /></Button>
+          <Button type="button" variant="ghost" size="icon" className="size-8" onClick={redo} disabled={historyIndex >= historyLength - 1} aria-label={t("redo")}><Redo2 className="size-4" /></Button>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={(tab) => { setActiveTab(tab); setChangedTabs((current) => current.filter((item) => item !== tab)) }} className="gap-4">
+        <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-xl bg-muted/60 p-1">
+          {(["profile", "background", "appearance", "effects", "audio", "templates"] as const).map((id) => (
+            <TabsTrigger key={id} value={id} className="relative shrink-0 px-3">
+              {t(`tabs.${id}`)}
+              {(changedTabs as string[]).includes(id) ? <span className="absolute right-1 top-1 size-1.5 rounded-full bg-primary" aria-label={t("templateChangedTab")} /> : null}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="profile" className="space-y-4">
+          {sectionHeader("profile", t("profileDescription"))}
+          <Panel title={t("profileLayout")}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("layout")}>
+                <Select value={value.profile.layoutMode} onValueChange={(layoutMode) => commit({ ...value, profile: { ...value.profile, layoutMode: layoutMode as BioDesign["profile"]["layoutMode"] } })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="classic">Classic</SelectItem><SelectItem value="modern">Modern</SelectItem><SelectItem value="compact">Compact</SelectItem></SelectContent>
+                </Select>
+              </Field>
+              <Field label={t("horizontalAlign")}>
+                <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
+                  {(["left", "center", "right"] as BioHorizontalAlign[]).map((align) => <button key={align} type="button" onClick={() => commit({ ...value, profile: { ...value.profile, horizontalAlign: align } })} className={cn("rounded-md px-2 py-1.5 text-xs capitalize", value.profile.horizontalAlign === align ? "bg-background font-medium text-foreground shadow-sm" : "text-muted-foreground")}>{align}</button>)}
+                </div>
+              </Field>
+            </div>
+            <RangeField label={t("maxWidth")} value={value.profile.maxWidth} min={320} max={960} unit="px" onChange={(maxWidth) => commit({ ...value, profile: { ...value.profile, maxWidth } })} />
+            <div className="grid gap-4 sm:grid-cols-2"><RangeField label={t("padding")} value={value.profile.padding} min={0} max={64} unit="px" onChange={(padding) => commit({ ...value, profile: { ...value.profile, padding } })} /><RangeField label={t("contentGap")} value={value.profile.contentGap} min={0} max={48} unit="px" onChange={(contentGap) => commit({ ...value, profile: { ...value.profile, contentGap } })} /></div>
+          </Panel>
+
+          <Panel title={t("profileCard")} description={t("profileCardHint")}>
+            <ToggleField label={t("cardEnabled")} checked={value.profile.card.enabled} onChange={(enabled) => commit({ ...value, profile: { ...value.profile, card: { ...value.profile.card, enabled } } })} />
+            {value.profile.card.enabled ? <div className="space-y-4 border-l-2 border-border pl-4"><div className="grid gap-4 sm:grid-cols-2"><ColorField label={t("backgroundColor")} value={value.profile.card.backgroundColor} onChange={(backgroundColor) => commit({ ...value, profile: { ...value.profile, card: { ...value.profile.card, backgroundColor } } })} /><RangeField label={t("opacity")} value={value.profile.card.backgroundOpacity} min={0} max={100} unit="%" onChange={(backgroundOpacity) => commit({ ...value, profile: { ...value.profile, card: { ...value.profile.card, backgroundOpacity } } })} /></div><RangeField label={t("backdropBlur")} value={value.profile.card.backdropBlur} min={0} max={40} unit="px" onChange={(backdropBlur) => commit({ ...value, profile: { ...value.profile, card: { ...value.profile.card, backdropBlur } } })} /><RangeField label={t("radius")} value={value.profile.card.borderRadius} min={0} max={48} unit="px" onChange={(borderRadius) => commit({ ...value, profile: { ...value.profile, card: { ...value.profile.card, borderRadius } } })} /><ToggleField label={t("borderEnabled")} checked={value.profile.card.borderEnabled} onChange={(borderEnabled) => commit({ ...value, profile: { ...value.profile, card: { ...value.profile.card, borderEnabled } } })} /><ToggleField label={t("cardGradient")} hint={t("cardGradientHint")} checked={value.profile.card.gradientEnabled} onChange={(gradientEnabled) => commit({ ...value, profile: { ...value.profile, card: { ...value.profile.card, gradientEnabled } } })} />{value.profile.card.gradientEnabled ? <div className="grid gap-4 sm:grid-cols-2"><ColorField label={t("gradientFrom")} value={value.profile.card.gradientFrom} onChange={(gradientFrom) => commit({ ...value, profile: { ...value.profile, card: { ...value.profile.card, gradientFrom } } })} /><ColorField label={t("gradientTo")} value={value.profile.card.gradientTo} onChange={(gradientTo) => commit({ ...value, profile: { ...value.profile, card: { ...value.profile.card, gradientTo } } })} /></div> : null}</div> : null}
+          </Panel>
+
+          <Panel title={t("avatarDisplay")}>
+            <div className="grid gap-4 sm:grid-cols-2"><RangeField label={t("avatarSize")} value={value.profile.avatar.size} min={32} max={180} unit="px" onChange={(size) => commit({ ...value, profile: { ...value.profile, avatar: { ...value.profile.avatar, size } } })} /><Field label={t("shape")}><Select value={value.profile.avatar.shape} onValueChange={(shape) => commit({ ...value, profile: { ...value.profile, avatar: { ...value.profile.avatar, shape: shape as BioDesign["profile"]["avatar"]["shape"] } } })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="circle">Circle</SelectItem><SelectItem value="rounded">Rounded</SelectItem><SelectItem value="square">Square</SelectItem></SelectContent></Select></Field></div>
+            <ToggleField label={t("showAvatar")} checked={value.profile.display.showAvatar} onChange={(showAvatar) => commit({ ...value, profile: { ...value.profile, display: { ...value.profile.display, showAvatar } } })} />
+            <ToggleField label={t("showDescription")} checked={value.profile.display.showDescription} onChange={(showDescription) => commit({ ...value, profile: { ...value.profile, display: { ...value.profile.display, showDescription } } })} />
+          </Panel>
+        </TabsContent>
+
+        <TabsContent value="background" className="space-y-4">
+          {sectionHeader("background", t("backgroundDescription"))}
+          {backgroundLibrary ? <Panel title={t("backgroundLibrary")}>{backgroundLibrary}</Panel> : null}
+          <Panel title={t("backgroundSource")}>
+            <Field label={t("backgroundType")}><Select value={value.background.type} onValueChange={(type) => commit({ ...value, background: { ...value.background, type: type as BioDesign["background"]["type"] } })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="color">Color</SelectItem><SelectItem value="gradient">Gradient</SelectItem><SelectItem value="image">Image</SelectItem><SelectItem value="video">Video</SelectItem></SelectContent></Select></Field>
+            {value.background.type === "color" ? <ColorField label={t("backgroundColor")} value={value.background.color} onChange={(color) => commit({ ...value, background: { ...value.background, color } })} /> : null}
+            {value.background.type === "gradient" ? <div className="grid gap-4 sm:grid-cols-2"><ColorField label="Gradient From" value={value.background.gradientFrom} onChange={(gradientFrom) => commit({ ...value, background: { ...value.background, gradientFrom } })} /><ColorField label="Gradient To" value={value.background.gradientTo} onChange={(gradientTo) => commit({ ...value, background: { ...value.background, gradientTo } })} /><RangeField label="Góc" value={value.background.gradientAngle} min={0} max={360} unit="°" onChange={(gradientAngle) => commit({ ...value, background: { ...value.background, gradientAngle } })} /></div> : null}
+            {value.background.type === "image" ? <Button type="button" variant="outline" className="w-full justify-start" onClick={() => onPickBackgroundAsset?.("image")}>{value.background.imageAssetId ? t("changeImage") : t("chooseImage")}</Button> : null}
+            {value.background.type === "video" ? <Button type="button" variant="outline" className="w-full justify-start" onClick={() => onPickBackgroundAsset?.("video")}>{value.background.videoAssetId ? t("changeVideo") : t("chooseVideo")}</Button> : null}
+            {value.background.type === "video" && isBioBuiltinAssetId(value.background.videoAssetId) ? <p className="text-[11px] leading-4 text-muted-foreground">{t("templateAsset")}</p> : null}
+          </Panel>
+          <Panel title={t("overlayFilters")}>
+            <ToggleField label={t("overlayEnabled")} checked={value.background.overlay.enabled} onChange={(enabled) => commit({ ...value, background: { ...value.background, overlay: { ...value.background.overlay, enabled } } })} />
+            {value.background.overlay.enabled ? <div className="grid gap-4 border-l-2 border-border pl-4 sm:grid-cols-2"><ColorField label={t("overlayColor")} value={value.background.overlay.color} onChange={(color) => commit({ ...value, background: { ...value.background, overlay: { ...value.background.overlay, color } } })} /><RangeField label={t("overlayOpacity")} value={value.background.overlay.opacity} min={0} max={100} unit="%" onChange={(opacity) => commit({ ...value, background: { ...value.background, overlay: { ...value.background.overlay, opacity } } })} /></div> : null}
+            <RangeField label="Blur" value={value.background.filter.blur} min={0} max={40} unit="px" onChange={(blur) => commit({ ...value, background: { ...value.background, filter: { ...value.background.filter, blur } } })} />
+            <RangeField label="Brightness" value={value.background.filter.brightness} min={0} max={200} unit="%" onChange={(brightness) => commit({ ...value, background: { ...value.background, filter: { ...value.background.filter, brightness } } })} />
+          </Panel>
+        </TabsContent>
+
+        <TabsContent value="appearance" className="space-y-4">
+          {sectionHeader("appearance", t("appearanceDescription"))}
+          <Panel title={t("themeColors")}><div className="grid gap-4 sm:grid-cols-2">{(["primary", "secondary", "accent", "text", "textMuted", "icon", "link", "surface", "border", "success"] as const).map((key) => <ColorField key={key} label={key} value={value.appearance.colors[key]} onChange={(color) => commit({ ...value, appearance: { ...value.appearance, colors: { ...value.appearance.colors, [key]: color } } })} />)}</div></Panel>
+          <Panel title={t("typography")}><div className="grid gap-4 sm:grid-cols-2"><Field label={t("fontFamily")}><FontFamilyPicker value={value.appearance.font.family} onChange={(family) => commit({ ...value, appearance: { ...value.appearance, font: { ...value.appearance.font, family, usernameFamily: family } } })} /></Field><RangeField label={t("usernameSize")} value={value.appearance.font.usernameSize} min={16} max={72} unit="px" onChange={(usernameSize) => commit({ ...value, appearance: { ...value.appearance, font: { ...value.appearance.font, usernameSize } } })} /></div></Panel>
+          <Panel title={t("linksAppearance")}><div className="grid gap-4 sm:grid-cols-2"><Field label={t("variant")}><Select value={value.appearance.links.variant} onValueChange={(variant) => commit({ ...value, appearance: { ...value.appearance, links: { ...value.appearance.links, variant: variant as BioDesign["appearance"]["links"]["variant"] } } })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["card", "button", "outline", "minimal", "glass"].map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></Field><RangeField label={t("radius")} value={value.appearance.links.radius} min={0} max={40} unit="px" onChange={(radius) => commit({ ...value, appearance: { ...value.appearance, links: { ...value.appearance.links, radius } } })} /></div><div className="grid gap-4 sm:grid-cols-2"><ColorField label={t("linkBackground")} value={value.appearance.links.backgroundColor} onChange={(backgroundColor) => commit({ ...value, appearance: { ...value.appearance, links: { ...value.appearance.links, backgroundColor } } })} /><ColorField label={t("textColor")} value={value.appearance.links.textColor} onChange={(textColor) => commit({ ...value, appearance: { ...value.appearance, links: { ...value.appearance.links, textColor } } })} /></div></Panel>
+        </TabsContent>
+
+        <TabsContent value="effects" className="space-y-4">
+          {sectionHeader("effects", t("effectsDescription"))}
+          <Panel title={t("backgroundEffects")}><BackgroundEffectPicker value={value.effects.background} onChange={(type) => commit({ ...value, effects: { ...value.effects, background: { ...value.effects.background, type } } })} />{value.effects.background.type !== "none" ? <div className="space-y-4 border-l-2 border-border pl-4"><ColorField label={t("effectColor")} value={value.effects.background.color} onChange={(color) => commit({ ...value, effects: { ...value.effects, background: { ...value.effects.background, color } } })} /><RangeField label={t("opacity")} value={value.effects.background.opacity} min={0} max={100} unit="%" onChange={(opacity) => commit({ ...value, effects: { ...value.effects, background: { ...value.effects.background, opacity } } })} /><RangeField label={t("intensity")} value={value.effects.background.intensity} min={0} max={100} unit="%" onChange={(intensity) => commit({ ...value, effects: { ...value.effects, background: { ...value.effects.background, intensity } } })} /></div> : null}</Panel>
+          <Panel title={t("nameEffects.title")}>
+            <UsernameEffectPicker
+              value={value.effects.username.type}
+              name={previewName}
+              fontFamily={value.appearance.font.usernameFamily}
+              previewStyle={{
+                backgroundColor: value.profile.card.enabled ? `color-mix(in srgb, ${value.profile.card.backgroundColor} ${value.profile.card.backgroundOpacity}%, transparent)` : "transparent",
+                color: value.appearance.colors.text,
+                fontWeight: value.appearance.font.usernameWeight,
+              }}
+              onChange={(type) => commit({ ...value, effects: { ...value.effects, username: { ...value.effects.username, type } } })}
+            />
+          </Panel>
+          <Panel title={t("glow.title")} description={t("glow.hint")}>
+            <ToggleField label={t("glow.username")} checked={value.effects.username.glowEnabled} onChange={(glowEnabled) => commit({ ...value, effects: { ...value.effects, username: { ...value.effects.username, glowEnabled } } })} />
+            {value.effects.username.glowEnabled ? <div className="border-l-2 border-border pl-4"><ColorField label={t("glow.color")} value={value.effects.username.glowColor} onChange={(glowColor) => commit({ ...value, effects: { ...value.effects, username: { ...value.effects.username, glowColor } } })} /></div> : null}
+            <ToggleField label={t("glow.social")} checked={value.effects.social.glowEnabled} onChange={(glowEnabled) => commit({ ...value, effects: { ...value.effects, social: { ...value.effects.social, glowEnabled } } })} />
+            {value.effects.social.glowEnabled ? <div className="border-l-2 border-border pl-4"><ColorField label={t("glow.color")} value={value.effects.social.glowColor} onChange={(glowColor) => commit({ ...value, effects: { ...value.effects, social: { ...value.effects.social, glowColor } } })} /></div> : null}
+            <ToggleField label={t("glow.badges")} checked={value.effects.badges.glowEnabled} onChange={(glowEnabled) => commit({ ...value, effects: { ...value.effects, badges: { ...value.effects.badges, glowEnabled } } })} />
+          </Panel>
+          <Panel title={t("cursor.title")}>
+            <ToggleField
+              label={t("cursor.custom")}
+              hint={value.effects.cursor.assetId ? (isBioBuiltinAssetId(value.effects.cursor.assetId) ? t("templateAsset") : undefined) : t("cursor.noAsset")}
+              checked={value.effects.cursor.type === "custom" && Boolean(value.effects.cursor.assetId)}
+              onChange={(custom) => { if (value.effects.cursor.assetId) commit({ ...value, effects: { ...value.effects, cursor: { ...value.effects.cursor, type: custom ? "custom" : "default" } } }) }}
+            />
+          </Panel>
+          <Panel title={t("profileAnimation")}>
+            <Field label={t("animation")}>
+              <Select value={value.effects.profile.type} onValueChange={(type) => commit({ ...value, effects: { ...value.effects, profile: { ...value.effects.profile, type: type as BioDesign["effects"]["profile"]["type"] } } })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{(["none", "zoom", "fade", "slide-up", "unfold", "bounce"] as const).map((item) => <SelectItem key={item} value={item}>{t(`animationTypes.${item}`)}</SelectItem>)}</SelectContent>
+              </Select>
+            </Field>
+          </Panel>
+          <Panel title={t("enterScreen")}><ToggleField label={t("enterEnabled")} checked={value.effects.enter.enabled} onChange={(enabled) => commit({ ...value, effects: { ...value.effects, enter: { ...value.effects.enter, enabled } } })} />{value.effects.enter.enabled ? <div className="space-y-3 border-l-2 border-border pl-4"><Field label={t("title")}><Input value={value.effects.enter.title} onChange={(event) => commit({ ...value, effects: { ...value.effects, enter: { ...value.effects.enter, title: event.target.value } } })} /></Field><Field label={t("buttonText")}><Input value={value.effects.enter.buttonText} onChange={(event) => commit({ ...value, effects: { ...value.effects, enter: { ...value.effects.enter, buttonText: event.target.value } } })} /></Field></div> : null}</Panel>
+        </TabsContent>
+
+        <TabsContent value="audio" className="space-y-4">
+          {sectionHeader("audio", t("audioDescription"))}
+          <Panel title={t("backgroundMusic")}><ToggleField label={t("musicEnabled")} checked={value.audio.music.enabled} onChange={(enabled) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, enabled } } })} />{value.audio.music.enabled ? <div className="space-y-4 border-l-2 border-border pl-4"><Button type="button" variant="outline" className="w-full justify-start" onClick={onPickMusicAsset}>{value.audio.music.assetId ? t("changeMusic") : t("chooseMusic")}</Button>{isBioBuiltinAssetId(value.audio.music.assetId) ? <p className="text-[11px] leading-4 text-muted-foreground">{t("templateAsset")}</p> : null}<div className="grid gap-4 sm:grid-cols-2"><Field label={t("trackTitle")}><Input value={value.audio.music.title} onChange={(event) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, title: event.target.value } } })} /></Field><Field label={t("artist")}><Input value={value.audio.music.artist} onChange={(event) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, artist: event.target.value } } })} /></Field></div><RangeField label={t("volume")} value={value.audio.music.volume} min={0} max={100} unit="%" onChange={(volume) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, volume } } })} /><Field label={t("startMode")}><Select value={value.audio.music.startMode} onValueChange={(startMode) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, startMode: startMode as "manual" | "on-enter" } } })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="manual">Manual</SelectItem><SelectItem value="on-enter">On Enter</SelectItem></SelectContent></Select></Field></div> : null}</Panel>
+          <Panel title={t("musicPlayer")}><ToggleField label={t("musicPlayerVisible")} hint={t("musicPlayerHint")} checked={value.audio.player.visible} onChange={(visible) => commit({ ...value, audio: { ...value.audio, player: { ...value.audio.player, visible } } })} /></Panel>
+          <Panel title={t("soundEffects")}><ToggleField label={t("soundsEnabled")} hint={t("soundsHint")} checked={value.audio.sounds.enabled} onChange={(enabled) => commit({ ...value, audio: { ...value.audio, sounds: { ...value.audio.sounds, enabled } } })} /></Panel>
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+            {BIO_DESIGN_TEMPLATES.map((template) => {
+              const isApplying = applying?.id === template.id
+              const isActive = appliedTemplateId === template.id && !isApplying
+              return (
+                <article
+                  key={template.id}
+                  aria-busy={isApplying}
+                  className={cn(
+                    "group flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition",
+                    isActive || isApplying ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/40",
+                    applying && !isApplying && "opacity-50",
+                  )}
+                >
+                  <div className="relative aspect-video overflow-hidden bg-black">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- ảnh tĩnh nhỏ (webp 640px) */}
+                    <img src={template.thumbnailUrl} alt="" loading="lazy" className="size-full object-cover transition duration-300 group-hover:scale-105" />
+                    {template.features.length ? (
+                      <span className="absolute bottom-2 left-2 flex gap-1">
+                        {template.features.map((feature) => (
+                          <span key={feature} className="rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur">{t(`templateFeatures.${feature}`)}</span>
+                        ))}
+                      </span>
+                    ) : null}
+                    {isActive ? (
+                      <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground"><Check className="size-3" />{t("templateActive")}</span>
+                    ) : null}
+                    {isApplying ? (
+                      <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 px-4 text-white backdrop-blur-sm" role="status">
+                        <Loader2 className="size-5 animate-spin" />
+                        <span className="text-xs font-medium">{t(`templateSteps.${TEMPLATE_STEPS[applying.step]}`)}</span>
+                        <span className="h-1 w-full max-w-40 overflow-hidden rounded-full bg-white/20">
+                          <span className="block h-full rounded-full bg-white transition-[width] duration-300" style={{ width: `${((applying.step + 1) / TEMPLATE_STEPS.length) * 100}%` }} />
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-1 flex-col gap-3 p-3">
+                    <div className="min-w-0">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <h4 className="truncate text-sm font-semibold text-foreground">{template.name}</h4>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">{t("templateBy", { creator: template.creator })}</span>
+                      </div>
+                      <p className="mt-1 text-xs leading-4 text-muted-foreground">{template.description}</p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={isActive ? "secondary" : "default"}
+                      className="mt-auto w-full"
+                      disabled={Boolean(applying)}
+                      onClick={() => applyTemplate(template)}
+                    >
+                      {isApplying ? (
+                        <><Loader2 className="size-3.5 animate-spin" />{t("templateApplying")}</>
+                      ) : isActive ? (
+                        <><Check className="size-3.5" />{t("templateActive")}</>
+                      ) : (
+                        t("templateUse")
+                      )}
+                    </Button>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}

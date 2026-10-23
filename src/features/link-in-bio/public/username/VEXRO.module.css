@@ -1,0 +1,245 @@
+/*
+ * Hiệu ứng tên hiển thị. Màu chữ lấy từ currentColor để theo màu trong
+ * Bio Design; các hiệu ứng tô màu bằng background-clip tắt text-shadow để
+ * quầng sáng không lộ qua chữ trong suốt.
+ */
+
+.root {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  white-space: pre-wrap;
+}
+
+/* ------------------------------------------------------------ Rainbow */
+.rainbow {
+  background-image: linear-gradient(90deg, violet, indigo, blue, green, yellow, orange, red);
+  background-size: 1400% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  text-shadow: none !important;
+  animation: rainbow 4s linear infinite;
+}
+
+@keyframes rainbow {
+  0% { background-position: 0 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* --------------------------------------------------------- Typewriter */
+.caret {
+  display: inline-block;
+  width: 0.08em;
+  height: 0.95em;
+  margin-left: 0.06em;
+  vertical-align: -0.08em;
+  background: currentColor;
+  animation: caret 0.9s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% { opacity: 0; }
+}
+
+/* -------------------------------------------------------------- Shine */
+.shine {
+  background-image: linear-gradient(
+    105deg,
+    currentColor 0 42%,
+    #fff 48%,
+    rgba(255, 255, 255, 0.95) 50%,
+    #fff 52%,
+    currentColor 58% 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 35%, transparent));
+  text-shadow: none !important;
+  animation: shine 2.8s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% { background-position: 100% 0; }
+  60%, 100% { background-position: 0% 0; }
+}
+
+/* ------------------------------------------------------------ Shimmer */
+.shimmer {
+  background-image: linear-gradient(
+    110deg,
+    color-mix(in srgb, currentColor 45%, transparent) 35%,
+    currentColor 50%,
+    color-mix(in srgb, currentColor 45%, transparent) 65%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none !important;
+  animation: shimmer 2.2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+/* --------------------------------------------------------------- Neon */
+.neon {
+  text-shadow:
+    0 0 4px currentColor,
+    0 0 11px currentColor,
+    0 0 19px currentColor,
+    0 0 40px color-mix(in srgb, currentColor 70%, transparent) !important;
+  animation: neon 3s linear infinite;
+}
+
+@keyframes neon {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.45; text-shadow: none; }
+}
+
+/* --------------------------------------------------------------- Wave */
+.wave > span {
+  display: inline-block;
+  animation: wave 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.08s);
+}
+
+@keyframes wave {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-0.18em); }
+}
+
+/* ------------------------------------------------------------- Glitch */
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  text-shadow: none;
+}
+
+.glitch::before {
+  left: 2px;
+  color: #ff2bd6;
+  clip-path: inset(0 0 60% 0);
+  animation: glitch-top 2.4s steps(1) infinite;
+  mix-blend-mode: screen;
+}
+
+.glitch::after {
+  left: -2px;
+  color: #2b6bff;
+  clip-path: inset(55% 0 0 0);
+  animation: glitch-bottom 2.4s steps(1) infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes glitch-top {
+  0%, 100% { clip-path: inset(0 0 60% 0); transform: translate(0); }
+  10% { clip-path: inset(10% 0 70% 0); transform: translate(-3px, -1px); }
+  20% { clip-path: inset(40% 0 35% 0); transform: translate(3px, 0); }
+  30% { clip-path: inset(0 0 85% 0); transform: translate(-1px, 1px); }
+  60% { clip-path: inset(25% 0 50% 0); transform: translate(2px, -1px); }
+  80% { clip-path: inset(5% 0 75% 0); transform: translate(0); }
+}
+
+@keyframes glitch-bottom {
+  0%, 100% { clip-path: inset(55% 0 0 0); transform: translate(0); }
+  15% { clip-path: inset(70% 0 5% 0); transform: translate(3px, 1px); }
+  35% { clip-path: inset(45% 0 30% 0); transform: translate(-3px, 0); }
+  55% { clip-path: inset(80% 0 0 0); transform: translate(1px, -1px); }
+  75% { clip-path: inset(60% 0 15% 0); transform: translate(-2px, 1px); }
+}
+
+/* ----------------------------------------------------------- Glitch 2 */
+.glitch2 {
+  animation: glitch2 1.8s steps(1) infinite;
+}
+
+@keyframes glitch2 {
+  0%, 100% { text-shadow: 2px 0 rgba(0, 255, 140, 0.75), -2px 0 rgba(150, 70, 255, 0.75); transform: translate(0); }
+  20% { text-shadow: -3px 1px rgba(0, 255, 140, 0.75), 3px -1px rgba(150, 70, 255, 0.75); transform: translate(1px, 0); }
+  40% { text-shadow: 1px -1px rgba(0, 255, 140, 0.75), -1px 1px rgba(150, 70, 255, 0.75); transform: translate(-1px, 0); }
+  60% { text-shadow: 3px 0 rgba(0, 255, 140, 0.75), -3px 0 rgba(150, 70, 255, 0.75); transform: skewX(-4deg); }
+  80% { text-shadow: -1px 0 rgba(0, 255, 140, 0.75), 1px 0 rgba(150, 70, 255, 0.75); transform: translate(0); }
+}
+
+/* ---------------------------------------------------------- Lightning */
+.lightning {
+  animation: lightning-text 4s linear infinite;
+}
+
+.bolt {
+  position: absolute;
+  top: -0.15em;
+  width: 0.55em;
+  height: 1.3em;
+  pointer-events: none;
+  opacity: 0;
+  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 52'%3E%3Cpath d='M12 0 4 22h7L5 52 17 18h-7l6-18z' fill='none' stroke='white' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 8px rgba(160, 200, 255, 0.9));
+  animation: bolt 4s linear infinite;
+}
+
+@keyframes bolt {
+  0%, 86%, 100% { opacity: 0; }
+  87%, 89% { opacity: 1; }
+  88%, 90% { opacity: 0.2; }
+  91% { opacity: 0.9; }
+  93% { opacity: 0; }
+}
+
+@keyframes lightning-text {
+  0%, 86%, 93%, 100% { filter: none; }
+  87%, 91% { filter: brightness(1.8) drop-shadow(0 0 6px rgba(190, 220, 255, 0.9)); }
+}
+
+/* -------------------------------------------------------------- Stars */
+.star {
+  position: absolute;
+  pointer-events: none;
+  color: currentColor;
+  font-size: 0.32em;
+  line-height: 1;
+  text-shadow: 0 0 6px currentColor;
+  animation: twinkle 2.4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(45deg); }
+}
+
+/* -------------------------------------------------------------- Pulse */
+.pulse {
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.68; }
+}
+
+/* ----------------------------------------------------------- Sparkles */
+/* Ảnh GIF lấp lánh lặp lại phía sau chữ (đặt qua --sparkle-image). */
+.sparkles {
+  background-image: var(--sparkle-image);
+  background-repeat: repeat;
+  background-size: auto;
+  background-position: center;
+  color: inherit;
+}
+
+/* SVG filter (distort, fuzzy) đặt ẩn, không chiếm chỗ. */
+.filterDefs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}

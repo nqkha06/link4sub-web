@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import { Building2, Link, UserPlus } from "lucide-react"
+import { Building2, Link, PlayCircle, UserPlus } from "lucide-react"
 import {
   SiApplemusic,
   SiAppstore,
@@ -79,7 +79,7 @@ const baseSocialPlatforms: Record<string, SocialPlatform> = {
       { id: "like", label: "Like a video", requiresUrl: true, icon: SiYoutube },
       { id: "comment", label: "Comment on a video", requiresUrl: true, icon: SiYoutube },
       { id: "like-comment", label: "Like & comment on video", requiresUrl: true, icon: SiYoutube },
-      { id: "watch", label: "Watch video", requiresUrl: true, icon: SiYoutube },
+      { id: "watch", label: "Watch video", requiresUrl: true, icon: PlayCircle },
     ],
   },
   twitter: {
@@ -366,6 +366,7 @@ export type PopularActionOption = {
 const popularActionMappings: Array<{ platform: keyof typeof baseSocialPlatforms; actionId: string }> = [
   { platform: "youtube", actionId: "subscribe" },
   { platform: "youtube", actionId: "subscribe-notifications" },
+  { platform: "youtube", actionId: "watch" },
   { platform: "other", actionId: "visit-page" },
   { platform: "discord", actionId: "join-server" },
   { platform: "telegram", actionId: "join-channel" },
@@ -434,6 +435,7 @@ export interface SocialAction {
   platform: keyof typeof socialPlatforms
   action: string
   url: string
+  watchDurationSeconds?: number
   isValid: boolean
 }
 

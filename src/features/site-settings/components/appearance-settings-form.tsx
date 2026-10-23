@@ -158,6 +158,7 @@ export function AppearanceSettingsForm({
             result.data
               .filter((language) => language.locale !== defaultLocale)
               .map((language) => language.locale),
+            defaultLocale,
           ),
           { keepDirtyValues: true },
         );
@@ -212,14 +213,21 @@ export function AppearanceSettingsForm({
   async function onSubmit(values: AppearanceSettingsValues) {
     try {
       setSubmitError("");
-      const updated = await updateAppearanceSettings({
-        ...values,
-        socialLinks: values.socialLinks.map((link, index) => ({
-          ...link,
-          sortOrder: index,
-        })),
-      });
-      form.reset(valuesFromSettings(updated, otherLanguages.map((language) => language.locale)));
+      const updated = await updateAppearanceSettings(
+        {
+          ...values,
+          socialLinks: values.socialLinks.map((link, index) => ({
+            ...link,
+            sortOrder: index,
+          })),
+        },
+        defaultLocale,
+      );
+      form.reset(valuesFromSettings(
+        updated,
+        otherLanguages.map((language) => language.locale),
+        defaultLocale,
+      ));
       setSavedSettings(updated);
       setMedia(mediaFromSettings(updated));
       toast.success(t("saveSuccess"));
@@ -235,7 +243,11 @@ export function AppearanceSettingsForm({
     if (form.formState.isDirty && !window.confirm(t("discardConfirm"))) {
       return;
     }
-    form.reset(valuesFromSettings(savedSettings, otherLanguages.map((language) => language.locale)));
+    form.reset(valuesFromSettings(
+      savedSettings,
+      otherLanguages.map((language) => language.locale),
+      defaultLocale,
+    ));
     setMedia(mediaFromSettings(savedSettings));
     setSubmitError("");
   }
@@ -761,11 +773,14 @@ function MediaCard({
 function valuesFromSettings(
   settings: AdminWebsiteSettings,
   locales?: string[],
+  defaultLocale?: string,
 ): AppearanceSettingsValues {
   const savedTranslations = settings.translations ?? [];
   const translationLocales = [...new Set([
     ...(locales ?? []),
-    ...savedTranslations.map((translation) => translation.locale),
+    ...savedTranslations
+      .map((translation) => translation.locale)
+      .filter((locale) => locale !== defaultLocale),
   ])];
   return {
     siteName: settings.siteName,

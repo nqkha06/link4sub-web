@@ -16,6 +16,216 @@
     "inactive": "Tidak aktif",
     "paused": "Dijeda"
   },
+  "BioStudio": {
+    "history": "Riwayat desain",
+    "undo": "Urungkan",
+    "redo": "Ulangi",
+    "resetSection": "Atur ulang bagian",
+    "tabs": {
+      "profile": "Profil",
+      "background": "Latar",
+      "appearance": "Tampilan",
+      "effects": "Efek",
+      "audio": "Audio",
+      "templates": "Template"
+    },
+    "profileDescription": "Tata letak profil tanpa mengubah data Konten.",
+    "backgroundDescription": "Latar halaman yang terpisah dari kartu profil.",
+    "appearanceDescription": "Token warna dan gaya untuk semua Konten.",
+    "effectsDescription": "Efek tampilan yang menghormati pengaturan pengurangan gerakan.",
+    "audioDescription": "Audio mati secara default dan hanya diputar setelah interaksi.",
+    "templateBy": "oleh {creator}",
+    "backgroundEffectPicker": {"title": "Efek latar", "change": "Ganti efek", "cancel": "Batal", "save": "Simpan", "items": {"none": {"label": "Tanpa efek", "description": "Tanpa efek, hanya latar."}, "rain": {"label": "Hujan", "description": "Garis hujan miring di seluruh layar."}, "snowflakes": {"label": "Salju", "description": "Kepingan salju bergoyang di depan kartu."}, "aurora": {"label": "Aurora", "description": "Pita cahaya aurora yang mengalir (WebGL)."}, "plasma": {"label": "Plasma", "description": "Gumpalan cahaya lembut yang terus bergerak (WebGL)."}, "dither": {"label": "Dither", "description": "Gelombang titik halftone yang mengikuti kursor."}, "blurred": {"label": "Buram", "description": "Memburamkan dan sedikit menggelapkan latar."}, "night-time": {"label": "Malam", "description": "Nuansa biru gelap seperti malam hari."}, "old-tv": {"label": "TV lama", "description": "Garis pindai dan noise seperti TV lama."}, "wave": {"label": "Gelombang", "description": "Dua lapis gelombang lembut di bagian bawah."}, "star-drop": {"label": "Bintang jatuh", "description": "Bintang kecil jatuh dengan kecepatan berbeda."}, "noise": {"label": "Noise", "description": "Butiran film bergerak di atas latar."}, "dots": {"label": "Titik", "description": "Lapisan titik; latar terlihat lewat titik kecil."}, "chroma-waves": {"label": "Chroma Waves", "description": "Gumpalan cahaya besar bergerak pelan."}, "luminous-flow": {"label": "Luminous Flow", "description": "Untaian cahaya tipis yang saling bersilangan."}, "aurora-silk": {"label": "Aurora Silk", "description": "Pita cahaya seperti sutra yang mengalir."}, "velvet-waves": {"label": "Velvet Waves", "description": "Lipatan beludru gelap yang bergerak lembut."}, "nebula-drift": {"label": "Nebula Drift", "description": "Lapisan awan tipis yang melayang pelan."}, "soft-horizon": {"label": "Soft Horizon", "description": "Garis cakrawala bercahaya dengan lapisan lembut."}, "liquid-flow": {"label": "Liquid Flow", "description": "Bentuk cair kontras tinggi dengan tepi beriak."}, "spectrum-warp": {"label": "Spectrum Warp", "description": "Pita melengkung terang dengan cahaya berbutir."}, "aurora-lines": {"label": "Aurora Lines", "description": "Sorot cahaya di atas garis kontur samar."}, "chromatic-pulse": {"label": "Chromatic Pulse", "description": "Cairan berkilau dengan pergeseran warna halus."}, "glitter-warp": {"label": "Glitter Warp", "description": "Partikel kilau terbang dari tengah."}, "light-droplets": {"label": "Light Droplets", "description": "Garis cahaya pendek meluncur ke samping."}, "lightspeed": {"label": "Lightspeed", "description": "Garis bintang hiperspasi dari tengah."}, "liquid-lines": {"label": "Liquid Lines", "description": "Garis cahaya diagonal yang lembut."}, "metallic-swirl": {"label": "Metallic Swirl", "description": "Pusaran gradien metalik yang pelan."}, "topography": {"label": "Topography", "description": "Garis kontur tipis seperti peta topografi."}, "gradient-waves": {"label": "Gradient Waves", "description": "Gelombang cahaya diagonal dengan tepi berbutir."}}},
+    "cardGradient": "Latar gradien",
+    "cardGradientHint": "Pakai gradien sebagai ganti warna solid (mendukung alpha #RRGGBBAA).",
+    "gradientFrom": "Warna awal",
+    "gradientTo": "Warna akhir",
+    "effectColor": "Warna efek",
+    "glow": {"title": "Glow", "hint": "Cahaya di sekitar nama, ikon sosial dan lencana.", "username": "Glow nama", "social": "Glow ikon sosial", "badges": "Glow lencana", "color": "Warna glow"},
+    "cursor": {"title": "Kursor", "custom": "Kursor kustom", "noAsset": "Belum ada gambar kursor — terapkan template yang punya kursor."},
+    "musicPlayer": "Tombol musik",
+    "musicPlayerVisible": "Tampilkan tombol musik",
+    "musicPlayerHint": "Putar/bisukan dan atur volume di pojok kiri atas.",
+    "templateAppliedHint": "Tab bertitik adalah tempat pengaturan diisi — buka untuk mengedit.",
+    "templateChangedTab": "Diubah oleh template",
+    "templateUse": "Pakai template",
+    "templateApplying": "Menerapkan…",
+    "templateActive": "Dipakai",
+    "templateApplied": "Template {name} diterapkan",
+    "templateUndo": "Urungkan",
+    "templateAsset": "Memakai file bawaan template. Pilih file lain untuk menggantinya.",
+    "templateSteps": {"background": "Memuat video latar…", "colors": "Menerapkan warna & kartu…", "effects": "Menerapkan efek…", "media": "Menerapkan musik & kursor…"},
+    "templateFeatures": { "video": "Video", "music": "Musik", "cursor": "Kursor" },
+    "profileLayout": "Tata letak profil",
+    "layout": "Tata letak",
+    "horizontalAlign": "Perataan horizontal",
+    "maxWidth": "Lebar maksimum",
+    "padding": "Padding",
+    "contentGap": "Jarak konten",
+    "profileCard": "Kartu profil",
+    "profileCardHint": "Menonaktifkan kartu hanya menghapus latar, border, dan blur.",
+    "cardEnabled": "Aktifkan latar kartu",
+    "backgroundColor": "Warna latar",
+    "opacity": "Opasitas",
+    "backdropBlur": "Blur latar",
+    "radius": "Radius",
+    "borderEnabled": "Tampilkan border",
+    "avatarDisplay": "Avatar & Tampilan",
+    "avatarSize": "Ukuran avatar",
+    "shape": "Bentuk",
+    "showAvatar": "Tampilkan avatar",
+    "showDescription": "Tampilkan deskripsi",
+    "backgroundLibrary": "Pustaka latar",
+    "backgroundSource": "Sumber latar",
+    "backgroundType": "Jenis latar",
+    "chooseImage": "Pilih gambar dari Media Manager",
+    "changeImage": "Ganti gambar",
+    "chooseVideo": "Pilih video dari Media Manager",
+    "changeVideo": "Ganti video",
+    "overlayFilters": "Overlay & Filter",
+    "overlayEnabled": "Aktifkan overlay",
+    "overlayColor": "Warna overlay",
+    "overlayOpacity": "Opasitas overlay",
+    "themeColors": "Warna tema",
+    "typography": "Tipografi",
+    "fontFamily": "Font",
+    "usernameSize": "Ukuran nama",
+    "linksAppearance": "Tampilan tautan",
+    "variant": "Varian",
+    "linkBackground": "Latar tautan",
+    "textColor": "Warna teks",
+    "backgroundEffects": "Efek latar",
+    "preset": "Preset",
+    "intensity": "Intensitas",
+    "profileAnimation": "Animasi profil",
+    "animation": "Animasi",
+    "enterScreen": "Layar masuk",
+    "enterEnabled": "Aktifkan layar masuk",
+    "title": "Judul",
+    "buttonText": "Teks tombol",
+    "backgroundMusic": "Musik latar",
+    "musicEnabled": "Aktifkan musik",
+    "chooseMusic": "Pilih audio dari Media Manager",
+    "changeMusic": "Ganti audio",
+    "trackTitle": "Judul lagu",
+    "artist": "Artis",
+    "volume": "Volume",
+    "startMode": "Mode mulai",
+    "soundEffects": "Efek suara",
+    "soundsEnabled": "Aktifkan suara interaksi",
+    "soundsHint": "Suara hover selalu dimatikan pada perangkat sentuh.",
+    "nameEffects": {
+      "title": "Efek nama",
+      "change": "Ganti efek",
+      "cancel": "Batal",
+      "save": "Simpan",
+      "previewName": "Nama Anda",
+      "items": {
+        "none": {
+          "label": "Tidak ada",
+          "description": "Nama statis tanpa gerakan."
+        },
+        "rainbow": {
+          "label": "Pelangi",
+          "description": "Gradasi pelangi mengalir di sepanjang nama."
+        },
+        "typewriter": {
+          "label": "Mesin ketik",
+          "description": "Nama diketik huruf demi huruf lalu dihapus, dengan kursor berkedip."
+        },
+        "shine": {
+          "label": "Kilau",
+          "description": "Kilatan cahaya menyapu nama secara berkala."
+        },
+        "glitch": {
+          "label": "Glitch",
+          "description": "Nama terpecah menjadi lapisan merah muda dan biru seperti layar rusak."
+        },
+        "shimmer": {
+          "label": "Kemilau",
+          "description": "Huruf redup dengan pita cahaya yang bergeser, seperti sedang memuat."
+        },
+        "neon": {
+          "label": "Neon",
+          "description": "Huruf bercahaya seperti lampu neon yang sesekali berkedip."
+        },
+        "wave": {
+          "label": "Gelombang",
+          "description": "Setiap huruf naik turun bergantian seperti gelombang."
+        },
+        "scramble": {
+          "label": "Acak 1",
+          "description": "Karakter acak berubah menjadi nama dari kiri ke kanan."
+        },
+        "scramble-2": {
+          "label": "Acak 2",
+          "description": "Semua karakter teracak lalu muncul dalam urutan acak."
+        },
+        "lightning": {
+          "label": "Petir",
+          "description": "Petir menyambar di atas nama dan huruf ikut menyala."
+        },
+        "glitch-2": {
+          "label": "Glitch 2",
+          "description": "Bayangan hijau dan ungu bergetar di sekitar huruf."
+        },
+        "stars": {
+          "label": "Bintang",
+          "description": "Bintang kecil berkelip di sekitar nama."
+        },
+        "distort": {
+          "label": "Distorsi",
+          "description": "Huruf bergelombang seperti dilihat melalui air."
+        },
+        "fuzzy": {
+          "label": "Buram",
+          "description": "Huruf bergetar bergaris seperti sinyal TV lemah."
+        },
+        "pulse": {
+          "label": "Denyut",
+          "description": "Nama meredup dan menyala kembali secara berirama."
+        },
+        "sparkles-black": {
+          "label": "Kilauan hitam",
+          "description": "Kilauan berwarna hitam berkelip di belakang nama."
+        },
+        "sparkles-blue": {
+          "label": "Kilauan biru",
+          "description": "Kilauan berwarna biru berkelip di belakang nama."
+        },
+        "sparkles-green": {
+          "label": "Kilauan hijau",
+          "description": "Kilauan berwarna hijau berkelip di belakang nama."
+        },
+        "sparkles-pink": {
+          "label": "Kilauan merah muda",
+          "description": "Kilauan berwarna merah muda berkelip di belakang nama."
+        },
+        "sparkles-red": {
+          "label": "Kilauan merah",
+          "description": "Kilauan berwarna merah berkelip di belakang nama."
+        },
+        "sparkles-white": {
+          "label": "Kilauan putih",
+          "description": "Kilauan berwarna putih berkelip di belakang nama."
+        },
+        "sparkles-yellow": {
+          "label": "Kilauan kuning",
+          "description": "Kilauan berwarna kuning berkelip di belakang nama."
+        }
+      },
+      "sparklesLabel": "Kilauan",
+      "noneTile": "Tidak ada"
+    },
+    "animationTypes": {
+      "none": "Tidak ada",
+      "zoom": "Perbesar (gaya guns.lol)",
+      "fade": "Memudar masuk",
+      "slide-up": "Geser ke atas",
+      "unfold": "Membuka",
+      "bounce": "Memantul"
+    }
+  },
   "LandingControls": {
     "backToTop": "Kembali ke atas",
     "cookieTitle": "Privasi dan cookie",
@@ -6182,6 +6392,45 @@
       "label": "Navigasi Link-in-bio",
       "overview": "Ringkasan",
       "create": "Buat"
+    },
+    "public": {
+      "joined": "Bergabung {time}",
+      "views": "Dilihat",
+      "socials": "Media sosial",
+      "avatarAlt": "Foto profil {name}",
+      "empty": "Belum ada konten.",
+      "createYours": "Your vibe. Your <brand>{siteName}</brand>.",
+      "createYoursLabel": "Buat halamanmu di {siteName}",
+      "enter": "klik untuk masuk...",
+      "qrTitle": "Buka di ponsel",
+      "qrAlt": "Kode QR untuk membuka {name} di ponsel",
+      "music": {
+        "play": "Putar musik",
+        "pause": "Jeda musik",
+        "volume": "Volume"
+      },
+      "badges": {
+        "label": "Lencana",
+        "streamer": "Streamer",
+        "creator": "Kreator",
+        "music": "Musik",
+        "community": "Komunitas"
+      },
+      "discord": {
+        "profile": "Discord",
+        "openProfile": "Buka profil Discord",
+        "server": "Server Discord",
+        "join": "Gabung",
+        "online": "{count} online",
+        "members": "{count} anggota",
+        "listening": "Mendengarkan {song} — {artist}",
+        "status": {
+          "online": "Online",
+          "idle": "Idle",
+          "dnd": "Jangan ganggu",
+          "offline": "Offline"
+        }
+      }
     }
   }
 }

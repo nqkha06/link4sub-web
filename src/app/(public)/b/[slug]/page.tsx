@@ -4,7 +4,27 @@ import { notFound } from "next/navigation";
 
 import { getBioPage } from "@/lib/api-client";
 import { getPublicLinkSettings } from "@/features/link-settings/api/link-settings.server";
+import {
+  parseDiscordInvite,
+  parseDiscordTarget,
+  type DiscordInvite,
+} from "@/features/link-in-bio/public/bio-public-model";
 import { PublicBioView } from "./public-bio-view";
+
+/** Tên, icon, số thành viên của server Discord (lời mời công khai); lỗi thì bỏ qua. */
+async function loadDiscordInvite(url: string | undefined): Promise<DiscordInvite | null> {
+  const target = parseDiscordTarget(url);
+  if (target?.kind !== "invite") return null;
+  try {
+    const response = await fetch(
+      `https://discord.com/api/v10/invites/${encodeURIComponent(target.code)}?with_counts=true`,
+      { next: { revalidate: 300 }, signal: AbortSignal.timeout(2500) },
+    );
+    return response.ok ? parseDiscordInvite(target.code, await response.json()) : null;
+  } catch {
+    return null;
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -67,5 +87,10 @@ export async function renderPublicBioPage(slug: string) {
 
   if (!bioPage) return null;
 
-  return <PublicBioView bioPage={bioPage} />;
+  const discordUrl = bioPage.socialLinks.find(
+    (social) => social.enabled !== false && social.platform.trim().toLowerCase() === "discord",
+  )?.url;
+  const discordInvite = await loadDiscordInvite(discordUrl);
+
+  return <PublicBioView bioPage={bioPage} discordInvite={discordInvite} />;
 }

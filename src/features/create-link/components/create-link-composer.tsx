@@ -48,7 +48,11 @@ import { getPublicLinkSettingsClient } from "@/features/link-settings/api/link-s
 import { linkPath, type LinkSettings } from "@/features/link-settings/types"
 import { actionCategories, type ActionCategory } from "@/features/link-creation/catalog"
 import { LINK_BACKGROUND_IMAGE_PRESETS } from "@/features/link-creation/background-image-presets"
-import { formatSnippetSize, getYouTubeEmbedUrl } from "@/features/link-creation/lib/media"
+import {
+  formatSnippetSize,
+  getYouTubeEmbedUrl,
+  getYouTubeVideoId,
+} from "@/features/link-creation/lib/media"
 import { generateUuid } from "@/lib/id"
 import { cn } from "@/lib/utils"
 
@@ -254,7 +258,17 @@ export function CreateLinkComposer() {
 
   function updateActionUrl(id: string, url: string) {
     setActions((prev) =>
-      prev.map((action) => (action.id === id ? { ...action, url, isValid: isValidUrl(url) } : action)),
+      prev.map((action) => (action.id === id
+        ? {
+            ...action,
+            url,
+            isValid: isValidUrl(url) && (
+              action.platform !== "youtube" ||
+              action.action !== "watch" ||
+              Boolean(getYouTubeVideoId(url))
+            ),
+          }
+        : action)),
     )
   }
 
@@ -442,6 +456,7 @@ export function CreateLinkComposer() {
               const platform = socialPlatforms[action.platform]
               const Icon = getActionIcon(action.platform, action.action)
               const showError = !action.isValid && (validationAttempted || action.url.length > 0)
+              const isYouTubeWatchAction = action.platform === "youtube" && action.action === "watch"
 
               return (
                 <div key={action.id} className="space-y-2 rounded-lg border border-border bg-muted/15 p-3">
@@ -468,7 +483,9 @@ export function CreateLinkComposer() {
                   </div>
                   <div>
                     <Input
-                      placeholder={`Nhập URL ${platform.name.toLowerCase()}...`}
+                      placeholder={isYouTubeWatchAction
+                        ? "Dán URL video YouTube..."
+                        : `Nhập URL ${platform.name.toLowerCase()}...`}
                       value={action.url}
                       onChange={(event) => updateActionUrl(action.id, event.target.value)}
                       className={cn(
@@ -478,7 +495,11 @@ export function CreateLinkComposer() {
                     />
                     {showError ? (
                       <p className="mt-1 text-sm text-destructive">
-                        {action.url.trim() ? "URL không hợp lệ." : "Vui lòng nhập URL cho hành động này."}
+                        {action.url.trim()
+                          ? isYouTubeWatchAction
+                            ? "Vui lòng nhập URL video YouTube hợp lệ."
+                            : "URL không hợp lệ."
+                          : "Vui lòng nhập URL cho hành động này."}
                       </p>
                     ) : null}
                   </div>

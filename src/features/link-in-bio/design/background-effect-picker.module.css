@@ -1,0 +1,128 @@
+/*
+ * Bộ chọn hiệu ứng nền: mỗi ô là một "sân khấu" nhỏ chạy đúng hiệu ứng của
+ * trang bio trên nền tối (hiệu ứng chủ yếu màu sáng). Hộp thoại, chữ, nút và
+ * viền dùng component/tông màu chung của dự án (sáng/tối theo theme).
+ */
+
+.grid {
+  display: grid;
+  width: 372px;
+  max-height: 420px;
+  flex-shrink: 0;
+  grid-template-columns: repeat(3, 1fr);
+  /* Hàng cao cố định: tránh hàng bị ép thấp hơn ô (ô chồng lên nhau) khi lưới bị co. */
+  grid-auto-rows: 116px;
+  gap: 12px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.grid::-webkit-scrollbar {
+  display: none;
+}
+
+.tile {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 12px;
+  background: #111114;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.tile:active {
+  transform: scale(0.97);
+}
+
+.label {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 40;
+  padding: 18px 6px 9px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
+  color: #fafafa;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+/*
+ * Sân khấu: chứa các lớp position: fixed của hiệu ứng (contain: layout) và cho
+ * đơn vị --bio-vw/--bio-vh tính theo kích thước ô (cqw/cqh).
+ */
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  contain: layout paint;
+  container-type: size;
+  --bio-vw: 1cqw;
+  --bio-vh: 1cqh;
+  /* Nền tối nhẹ (hiệu ứng chủ yếu màu sáng nên cần nền tối để thấy rõ). */
+  background: radial-gradient(ellipse at 50% 120%, #34343c 0, #1b1b20 55%, #111114 100%);
+}
+
+.stageLarge {
+  position: relative;
+  inset: auto;
+  min-height: 220px;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+}
+
+.noneIcon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #6b6b6b;
+}
+
+.noneIcon svg {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 18px;
+}
+
+/* Nút mở bộ chọn trong studio. */
+.triggerStage {
+  position: relative;
+  width: 76px;
+  height: 48px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+/* Điện thoại: lưới rộng hết, không giới hạn chiều cao — cả hộp thoại cuộn. */
+@media (max-width: 767px) {
+  .grid {
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    grid-auto-rows: 96px;
+    gap: 10px;
+  }
+
+  .stageLarge {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* Khung tĩnh của hiệu ứng WebGL (ô chưa hover / chưa chọn). */
+.still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

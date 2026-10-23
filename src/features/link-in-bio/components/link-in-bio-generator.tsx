@@ -1,7 +1,6 @@
 "use client"
 /* eslint-disable @next/next/no-img-element */
 
-import { SiteBrandMark } from "@/components/site-brand"
 import type React from "react"
 
 import { useEffect, useState, type ComponentType } from "react"
@@ -9,29 +8,15 @@ import {
   ChevronDown,
   CircleCheck,
   Layers3,
-  Music,
   Palette,
   Settings,
   Pencil,
   Shield,
-  Users,
   X,
-  Share2,
   ExternalLink,
 } from "lucide-react"
 import { toast } from "sonner"
-import {
-  SiFacebook,
-  SiInstagram,
-  SiLinkerd,
-  SiTiktok,
-  SiTwitch,
-  SiX,
-  SiYoutube,
-} from "@icons-pack/react-simple-icons"
 
-import { BioWidgetEmbed } from "@/components/bio-widget-embed"
-import { getYouTubeEmbedUrl, type BackgroundMedia } from "@/components/image-picker"
 import { ManagedImagePicker } from "@/components/media/managed-image-picker"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -39,7 +24,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/member/fields/input"
 import { MEMBER_FIELD_BARE, MEMBER_FIELD_SHELL } from "@/components/member/fields/field-styles"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/member/fields/select"
-import { Slider } from "@/components/ui/slider"
 import {
   createBioPage,
   updateBioPage,
@@ -54,41 +38,36 @@ import {
   getFilePreviewUrl,
 } from "@/lib/api-client"
 import { getPublicLinkSettingsClient } from "@/features/link-settings/api/link-settings.client"
-import { linkPath, linkUrl, type LinkSettings } from "@/features/link-settings/types"
-import { useSiteBrand } from "@/features/site-settings/components/site-brand-provider"
+import { linkPath, type LinkSettings } from "@/features/link-settings/types"
 import {
-  bioButtonStyles,
   normalizeBioButtonStyle,
 } from "./bio-appearance"
-import { BioLinkButton } from "./bio-link-button"
 import { ContentSection } from "../content-blocks/content-section"
 import { BackgroundPresetPicker } from "../backgrounds/background-preset-picker"
 import {
   DEFAULT_BIO_BACKGROUND_PRESET_ID,
   getBioBackgroundPresetById,
   getBioBackgroundPresetByImage,
-  getBioPresetTheme,
   type BioBackgroundPreset,
 } from "../backgrounds/background-presets"
-import { BankDetailsRenderer, DividerRenderer, TextBlockRenderer } from "../content-blocks/simple-content-renderers"
 import { hasCompleteBankDetails } from "../content-blocks/simple-content-types"
-import { GalleryRenderer } from "../gallery/gallery-renderer"
-import {
-  BIO_CONTENT_STACK_CLASS,
-  BIO_FOOTER_CLASS,
-  BIO_HEADER,
-  BIO_SOCIAL_ICON_CLASS,
-  BIO_SOCIAL_ROW_CLASS,
-} from "../bio-spacing"
 import { cn } from "@/lib/utils"
 import {
-  contentOrderKey,
   GALLERY_ACCEPTED_MIME_TYPES,
   normalizeContentOrder,
 } from "../gallery/gallery-types"
 import { useBusinessConfig } from "@/features/business-settings/use-business-config"
 import { generateId } from "@/lib/id"
 import { createStarterBioContent } from "../create/create-bio-page"
+import { DEFAULT_BIO_DESIGN, type BioDesign } from "@/contracts"
+import { BioDesignStudio } from "../design/bio-design-studio"
+import { normalizeDesignColors } from "../design/normalize-design-colors"
+import { PublicBioView } from "@/app/(public)/b/[slug]/public-bio-view"
+import publicBioStyles from "../public/VEXRO.module.css"
+import { withBuiltinDesignAssets } from "../public/bio-public-model"
+
+const VIDEO_MIME_PREFIXES = ["video/"] as const
+const AUDIO_MIME_PREFIXES = ["audio/"] as const
 
 function isEmptyBio(bio?: BioPageDto | null) {
   if (!bio) return false
@@ -139,6 +118,34 @@ interface Widget {
   url: string
   description?: string
   enabled?: boolean
+}
+
+/**
+ * Trang cũ (chưa có Bio Design): giữ nguyên style mặc định (thẻ kính tối) và
+ * chỉ chuyển phần nền. Không chép màu của mẫu nền cũ — đó là màu sáng dạng
+ * `rgba(...)`, API chỉ nhận hex nên sẽ từ chối khi lưu.
+ */
+function legacyCompatibleDesign(bio?: BioPageDto | null): BioDesign {
+  if (!bio || bio.hasDesign) return bio?.design ?? DEFAULT_BIO_DESIGN
+  const legacyMedia = bio.appearance.backgroundMediaType === "video" ? "video" : bio.appearance.backgroundImage || bio.appearance.backgroundMediaUrl ? "image" : null
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+  return {
+    ...DEFAULT_BIO_DESIGN,
+    background: {
+      ...DEFAULT_BIO_DESIGN.background,
+      type: legacyMedia ?? DEFAULT_BIO_DESIGN.background.type,
+      overlay: {
+        ...DEFAULT_BIO_DESIGN.background.overlay,
+        enabled: Boolean(bio.appearance.backgroundOverlay),
+        opacity: clamp(bio.appearance.backgroundOverlay ?? 0, 0, 100),
+      },
+      filter: {
+        ...DEFAULT_BIO_DESIGN.background.filter,
+        blur: clamp(bio.appearance.backgroundBlur ?? 0, 0, 40),
+        brightness: clamp(bio.appearance.backgroundBrightness ?? 100, 0, 200),
+      },
+    },
+  }
 }
 
 type EditorSectionKey = "details" | "content" | "appearance" | "admin"
@@ -202,7 +209,6 @@ export default function LinkInBioGenerator({
   onSaved?: (bioPage: BioPageDto) => void
   onSavingChange?: (saving: boolean) => void
 }) {
-  const brand = useSiteBrand()
   const businessConfig = useBusinessConfig()
   const [linkSettings, setLinkSettings] = useState<LinkSettings>({
     publicDomain: "http://localhost:3000",
@@ -269,11 +275,22 @@ export default function LinkInBioGenerator({
     backgroundOverlay: initialBio?.appearance.backgroundOverlay ?? 0,
     backgroundBrightness: initialBio?.appearance.backgroundBrightness ?? 100,
   })
+  const [bioDesign, setBioDesign] = useState<BioDesign>(() => legacyCompatibleDesign(initialBio))
   const [hiddenLinks, setHiddenLinks] = useState<string[]>(initialBio?.hiddenLinks || [])
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState("")
   const [savedBio, setSavedBio] = useState<BioPageDto | null>(null)
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
+  const [designAssetPicker, setDesignAssetPicker] = useState<"image" | "video" | "music" | null>(null)
+  // Trang mới chưa có ngày tạo: cố định một mốc khi mở trình chỉnh sửa.
+  // Đổi key để khung xem trước dựng lại và phát lại hiệu ứng xuất hiện (sau khi áp template).
+  const [previewKey, setPreviewKey] = useState(0)
+  const [previewCreatedAt] = useState(() => initialBio?.createdAt ?? new Date().toISOString())
+  const [designAssetPreviews, setDesignAssetPreviews] = useState({
+    image: initialBio?.designAssets.backgroundImageUrl,
+    video: initialBio?.designAssets.backgroundVideoUrl,
+    music: initialBio?.designAssets.musicUrl,
+  })
 
   useEffect(() => {
     let active = true
@@ -293,10 +310,6 @@ export default function LinkInBioGenerator({
 
   const updateProfileDetails = (field: keyof ProfileDetails, value: string) => {
     setProfileDetails((current) => ({ ...current, [field]: value }))
-  }
-
-  const updateAppearanceSettings = (field: keyof AppearanceSettings, value: string | number | undefined) => {
-    setAppearanceSettings((current) => ({ ...current, [field]: value }))
   }
 
   const isValidUrl = (value: string) => {
@@ -359,6 +372,7 @@ export default function LinkInBioGenerator({
       backgroundMediaUrl: appearanceSettings.backgroundFileId ? undefined : appearanceSettings.backgroundMediaUrl,
       avatarFileId: profileDetails.avatarFileId,
     },
+    design: normalizeDesignColors(bioDesign),
   })
 
   const handleSaveBio = async (saveMode: "draft" | "published" | "current" = "current") => {
@@ -398,28 +412,6 @@ export default function LinkInBioGenerator({
     }
   }
 
-  const getSocialIcon = (platform: string) => {
-    const className = "size-5"
-    switch (platform.toLowerCase()) {
-      case "youtube": return <SiYoutube className={className} />
-      case "instagram": return <SiInstagram className={className} />
-      case "facebook": return <SiFacebook className={className} />
-      case "twitter": return <SiX className={className} />
-      case "linkedin": return <SiLinkerd className={className} />
-      case "tiktok": return <SiTiktok className={className} />
-      case "twitch": return <SiTwitch className={className} />
-      case "spotify":
-      case "apple music": return <Music className={className} />
-      default: return <Users className={className} />
-    }
-  }
-
-  const selectedBackgroundMedia: BackgroundMedia | null = appearanceSettings.backgroundMediaType && appearanceSettings.backgroundMediaUrl
-    ? { id: appearanceSettings.selectedBackgroundId || appearanceSettings.backgroundMediaType, fileId: appearanceSettings.backgroundFileId, type: appearanceSettings.backgroundMediaType, url: appearanceSettings.backgroundMediaUrl }
-    : appearanceSettings.backgroundImage
-      ? { id: appearanceSettings.selectedBackgroundId || "legacy-image", type: "image", url: appearanceSettings.backgroundImage }
-      : null
-
   const selectBackgroundPreset = (preset: BioBackgroundPreset) => {
     setAppearanceSettings((current) => ({
       ...current,
@@ -430,39 +422,57 @@ export default function LinkInBioGenerator({
       backgroundFileId: undefined,
       selectedBackgroundId: preset.id,
     }))
+    setBioDesign((current) => ({
+      ...current,
+      background: {
+        ...current.background,
+        type: preset.imageUrl ? "image" : preset.backgroundGradient ? "gradient" : "color",
+        color: preset.backgroundColor || preset.theme.accentColor,
+        gradientFrom: preset.backgroundColor || preset.theme.accentColor,
+        gradientTo: preset.theme.accentColor,
+      },
+      // Chỉ đổi nền; giữ màu chữ/khung của Bio Design (thẻ kính tối) để chữ
+      // không bị đổi sang màu tối của mẫu nền sáng.
+    }))
   }
 
-  const backgroundStyle: React.CSSProperties = selectedBackgroundMedia?.type === "image"
-    ? { backgroundImage: `url('${selectedBackgroundMedia.url}')`, backgroundPosition: "center", backgroundSize: "cover" }
-    : {
-        backgroundColor:
-          getBioBackgroundPresetById(appearanceSettings.selectedBackgroundId)?.backgroundColor ||
-          appearanceSettings.backgroundColor ||
-          "#f4f7fb",
-        backgroundImage:
-          getBioBackgroundPresetById(appearanceSettings.selectedBackgroundId)?.backgroundGradient,
-      }
-  const backgroundFilter = [
-    appearanceSettings.backgroundBlur ? `blur(${appearanceSettings.backgroundBlur}px)` : "",
-    appearanceSettings.backgroundBrightness && appearanceSettings.backgroundBrightness !== 100
-      ? `brightness(${appearanceSettings.backgroundBrightness}%)`
-      : "",
-  ].filter(Boolean).join(" ") || undefined
-  const backgroundOverlayOpacity = Math.min(80, Math.max(0, appearanceSettings.backgroundOverlay || 0)) / 100
-  const activeTheme = getBioPresetTheme(
-    appearanceSettings.selectedBackgroundId,
-    appearanceSettings.backgroundImage,
-    appearanceSettings.backgroundColor,
-  )
-  const selectedButtonStyle = normalizeBioButtonStyle(appearanceSettings.buttonStyle)
-  const previewThemeVariables = {
-    "--bio-accent": activeTheme.accentColor,
-    "--bio-section-bg": activeTheme.sectionColor,
-    "--bio-section-border": activeTheme.sectionBorderColor,
-    "--bio-text": activeTheme.textColor,
-    "--bio-muted-text": activeTheme.mutedTextColor,
-  } as React.CSSProperties
   const normalizedOrder = normalizeContentOrder(contentOrder, { socials: socialLinks, widgets, galleries, dividers, bankDetails, textBlocks, links: customLinks })
+  /* Dữ liệu cho khung xem trước: dựng BioPageDto từ trạng thái đang sửa (chưa lưu). */
+  const previewBioPage: BioPageDto = {
+    id: initialBio?.id ?? 0,
+    slug: customSlug || initialBio?.slug || "ten-cua-ban",
+    publicUrl: initialBio?.publicUrl ?? "",
+    name: profileDetails.name.trim() || "Tên của bạn",
+    title: profileDetails.title || null,
+    status,
+    views: initialBio?.views ?? 0,
+    clicks: initialBio?.clicks ?? 0,
+    socialLinks,
+    customLinks,
+    widgets,
+    galleries,
+    dividers,
+    bankDetails,
+    textBlocks,
+    contentOrder: normalizedOrder,
+    hiddenLinks,
+    appearance: {
+      ...appearanceSettings,
+      avatarFileId: profileDetails.avatarFileId,
+      avatarUrl: profileDetails.avatarUrl,
+    },
+    design: bioDesign,
+    hasDesign: true,
+    // Asset dựng sẵn của template (builtin:...) đè lên file đã chọn trong thư viện.
+    designAssets: withBuiltinDesignAssets(bioDesign, {
+      ...initialBio?.designAssets,
+      backgroundImageUrl: designAssetPreviews.image,
+      backgroundVideoUrl: designAssetPreviews.video,
+      musicUrl: designAssetPreviews.music,
+    }),
+    createdAt: previewCreatedAt,
+    updatedAt: previewCreatedAt,
+  }
 
   return (
     <form id="link-in-bio-editor-form" className="space-y-5" onSubmit={(event) => {
@@ -584,226 +594,27 @@ export default function LinkInBioGenerator({
             />
           </EditorSection>
 
-  <EditorSection
-  title="Giao diện"
-  icon={Palette}
-  open={expandedSections.appearance}
-  onOpenChange={(open) => setSectionOpen("appearance", open)}
->
-  <div className="space-y-5">
-    {/* Background preset */}
-    <div className="rounded-xl border border-border bg-muted/20 p-4">
-      <div className="mb-4">
-        <div className="text-sm font-semibold text-foreground">
-          Mẫu giao diện
-        </div>
-      </div>
-
-      <BackgroundPresetPicker
-        selectedPresetId={appearanceSettings.selectedBackgroundId}
-        onSelect={selectBackgroundPreset}
-      />
-    </div>
-
-    {/* Background effects */}
-    <div className="rounded-xl border border-border bg-muted/20 p-4">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-foreground">
-            Hiệu ứng nền
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            updateAppearanceSettings("backgroundBlur", 0);
-            updateAppearanceSettings("backgroundOverlay", 0);
-            updateAppearanceSettings("backgroundBrightness", 100);
-          }}
-          className="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          Đặt lại
-        </button>
-      </div>
-
-      <div className="space-y-5">
-        {/* Blur */}
-        <div>
-          <div className="mb-2.5 flex items-center justify-between gap-3">
-            <span className="text-xs font-medium text-foreground">
-              Độ mờ
-            </span>
-
-            <span className="min-w-11 rounded-md bg-background px-2 py-1 text-center text-[11px] font-medium tabular-nums text-muted-foreground shadow-sm ring-1 ring-border">
-              {appearanceSettings.backgroundBlur ?? 0}px
-            </span>
-          </div>
-
-          <Slider
-            value={[appearanceSettings.backgroundBlur ?? 0]}
-            min={0}
-            max={24}
-            step={1}
-            onValueChange={([value]) =>
-              updateAppearanceSettings("backgroundBlur", value)
-            }
-            aria-label="Độ mờ background"
-          />
-        </div>
-
-        {/* Overlay */}
-        <div>
-          <div className="mb-2.5 flex items-center justify-between gap-3">
-            <span className="text-xs font-medium text-foreground">
-              Lớp phủ tối
-            </span>
-
-            <span className="min-w-11 rounded-md bg-background px-2 py-1 text-center text-[11px] font-medium tabular-nums text-muted-foreground shadow-sm ring-1 ring-border">
-              {appearanceSettings.backgroundOverlay ?? 0}%
-            </span>
-          </div>
-
-          <Slider
-            value={[appearanceSettings.backgroundOverlay ?? 0]}
-            min={0}
-            max={80}
-            step={1}
-            onValueChange={([value]) =>
-              updateAppearanceSettings("backgroundOverlay", value)
-            }
-            aria-label="Độ tối lớp phủ background"
-          />
-        </div>
-
-        {/* Brightness */}
-        <div>
-          <div className="mb-2.5 flex items-center justify-between gap-3">
-            <span className="text-xs font-medium text-foreground">
-              Độ sáng
-            </span>
-
-            <span className="min-w-11 rounded-md bg-background px-2 py-1 text-center text-[11px] font-medium tabular-nums text-muted-foreground shadow-sm ring-1 ring-border">
-              {appearanceSettings.backgroundBrightness ?? 100}%
-            </span>
-          </div>
-
-          <Slider
-            value={[appearanceSettings.backgroundBrightness ?? 100]}
-            min={50}
-            max={150}
-            step={5}
-            onValueChange={([value]) =>
-              updateAppearanceSettings("backgroundBrightness", value)
-            }
-            aria-label="Độ sáng background"
-          />
-        </div>
-      </div>
-    </div>
-
-    {/* Button shape */}
-    <div className="rounded-xl border border-border bg-muted/20 p-4">
-      <div className="mb-4">
-        <div className="text-sm font-semibold text-foreground">
-          Kiểu nút
-        </div>
-      </div>
-
-      <div
-        className="grid grid-cols-3 gap-2"
-        role="radiogroup"
-        aria-label="Chọn hình dáng nút"
-      >
-        {bioButtonStyles.map((style) => {
-          const selected = selectedButtonStyle === style.value;
-
-          const radiusClass =
-            style.value === "rounded-border"
-              ? "rounded-full"
-              : style.value === "mineral-square"
-                ? "rounded-[4px]"
-                : "rounded-lg";
-
-          return (
-            <button
-              key={style.value}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() =>
-                updateAppearanceSettings("buttonStyle", style.value)
-              }
-              className={`
-                group relative min-w-0 rounded-xl border p-2.5
-                text-center transition-all duration-200
-                focus-visible:outline-none focus-visible:ring-2
-                focus-visible:ring-ring focus-visible:ring-offset-2
-                ${
-                  selected
-                    ? "border-primary bg-primary/[0.06] shadow-sm ring-1 ring-primary/20"
-                    : "border-border bg-background hover:border-foreground/20 hover:bg-muted/30"
-                }
-              `}
-            >
-              {/* Selected indicator */}
-              <span
-                className={`
-                  absolute right-2 top-2 flex size-4 items-center justify-center
-                  rounded-full border transition-all
-                  ${
-                    selected
-                      ? "border-primary bg-primary"
-                      : "border-border bg-background opacity-0 group-hover:opacity-100"
-                  }
-                `}
-                aria-hidden
-              >
-                {selected && (
-                  <span className="size-1.5 rounded-full bg-primary-foreground" />
-                )}
-              </span>
-
-              {/* Preview */}
-              <div className="flex h-11 items-center justify-center px-1">
-                <span
-                  className={`
-                    block h-7 w-full max-w-20 border-2
-                    transition-transform duration-200
-                    group-hover:scale-[1.03]
-                    ${radiusClass}
-                  `}
-                  style={{
-                    backgroundColor: activeTheme.buttonColor,
-                    borderColor: activeTheme.buttonBorderColor,
-                    boxShadow:
-                      style.value === "mineral-square"
-                        ? `3px 3px 0 ${activeTheme.buttonBorderColor}`
-                        : undefined,
-                  }}
-                  aria-hidden
+          <EditorSection
+            title="Design"
+            icon={Palette}
+            open={expandedSections.appearance}
+            onOpenChange={(open) => setSectionOpen("appearance", open)}
+          >
+            <BioDesignStudio
+              previewName={profileDetails.name}
+              onTemplateApplied={() => setPreviewKey((key) => key + 1)}
+              value={bioDesign}
+              onChange={setBioDesign}
+              onPickBackgroundAsset={setDesignAssetPicker}
+              onPickMusicAsset={() => setDesignAssetPicker("music")}
+              backgroundLibrary={(
+                <BackgroundPresetPicker
+                  selectedPresetId={appearanceSettings.selectedBackgroundId}
+                  onSelect={selectBackgroundPreset}
                 />
-              </div>
-
-              <span
-                className={`
-                  mt-1 block truncate text-[11px]
-                  ${
-                    selected
-                      ? "font-semibold text-foreground"
-                      : "font-medium text-muted-foreground"
-                  }
-                `}
-              >
-                {style.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  </div>
-</EditorSection>
+              )}
+            />
+          </EditorSection>
 
           <EditorSection title="Xuất bản" icon={Shield} open={expandedSections.admin} onOpenChange={(open) => setSectionOpen("admin", open)}>
             <div><FieldLabel>Trạng thái</FieldLabel><Select value={status} onValueChange={(value) => setStatus(value as "published" | "draft")}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="published">Đã xuất bản</SelectItem><SelectItem value="draft">Bản nháp</SelectItem></SelectContent></Select></div>
@@ -841,86 +652,9 @@ export default function LinkInBioGenerator({
             </div>
 
             <div className="bg-muted/20 p-3 sm:p-4">
-              <div className="relative min-h-[600px] overflow-hidden rounded-xl border border-border bg-[#f4f7fb]">
-                <div className="pointer-events-none absolute inset-0" style={{ ...backgroundStyle, filter: backgroundFilter }} />
-                {selectedBackgroundMedia?.type === "video" ? <video src={selectedBackgroundMedia.url} autoPlay muted loop playsInline className="pointer-events-none absolute inset-0 size-full object-cover" style={{ filter: backgroundFilter }} /> : null}
-                {selectedBackgroundMedia?.type === "youtube" && getYouTubeEmbedUrl(selectedBackgroundMedia.url) ? <iframe src={getYouTubeEmbedUrl(selectedBackgroundMedia.url)} title="Xem trước background YouTube" allow="autoplay; encrypted-media; picture-in-picture" className="pointer-events-none absolute left-1/2 top-1/2 h-[150%] w-[266%] -translate-x-1/2 -translate-y-1/2" style={{ filter: backgroundFilter }} /> : null}
-                {backgroundOverlayOpacity > 0 ? <div className="pointer-events-none absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${backgroundOverlayOpacity})` }} /> : null}
-                <div className="relative z-10 flex min-h-[600px] flex-col">
-                  <div
-                    className="mx-auto flex w-full max-w-md flex-1 flex-col"
-                    style={{
-                      ...previewThemeVariables,
-                      color: activeTheme.textColor,
-                    }}
-                  >
-                    <div className="flex items-center justify-between px-4 pt-4" aria-hidden>
-                      <span
-                        className="grid size-10 place-items-center rounded-2xl border shadow-sm backdrop-blur-md"
-                        style={{ backgroundColor: activeTheme.surfaceColor, borderColor: activeTheme.surfaceBorderColor }}
-                      >
-                        <SiteBrandMark className="size-6 rounded-lg border-0 bg-transparent" />
-                      </span>
-                      <span
-                        className="grid size-10 place-items-center rounded-2xl border shadow-sm backdrop-blur-md"
-                        style={{ backgroundColor: activeTheme.surfaceColor, borderColor: activeTheme.surfaceBorderColor }}
-                      >
-                        <Share2 className="size-4" />
-                      </span>
-                    </div>
-                    <div className="flex flex-1 flex-col px-4 pb-6 pt-5">
-                      <header className="text-center">
-                        <div className={BIO_HEADER.avatar} style={{ boxShadow: `0 10px 30px rgba(2,6,23,.20), 0 0 0 1px ${activeTheme.surfaceBorderColor}` }}>
-                          <span>{profileDetails.name.trim().slice(0, 1).toUpperCase() || "R"}</span>
-                          {profileDetails.avatarUrl ? <img src={profileDetails.avatarUrl} alt="" className="absolute inset-0 size-full object-cover" onError={(event) => { event.currentTarget.hidden = true }} /> : null}
-                        </div>
-                        <h4 className={cn(BIO_HEADER.name, "truncate")} style={{ color: activeTheme.textColor }}>{profileDetails.name || "Tên của bạn"}</h4>
-                        <p className={cn(BIO_HEADER.handle, "truncate")} style={{ color: activeTheme.mutedTextColor }}>
-                          {linkUrl(linkSettings, "bio", customSlug || "ten-cua-ban")}
-                        </p>
-                        <p className={BIO_HEADER.description} style={{ color: activeTheme.mutedTextColor }}>{profileDetails.title || "Thêm một mô tả ngắn để mọi người biết bạn là ai và nội dung bạn chia sẻ."}</p>
-                      </header>
-
-                      <div className={BIO_CONTENT_STACK_CLASS}>
-                        {normalizedOrder.map((item, contentIndex) => {
-                          if (item.type === "social") {
-                            const visibleSocials = socialLinks.filter((social) => social.enabled !== false).slice(0, 8)
-                            return visibleSocials.length ? <div key={contentOrderKey(item)} className={BIO_SOCIAL_ROW_CLASS}>{visibleSocials.map((social) => <button key={social.id} type="button" title={social.platform} className={BIO_SOCIAL_ICON_CLASS} style={{ backgroundColor: activeTheme.sectionColor, borderColor: activeTheme.sectionBorderColor, color: activeTheme.textColor }}>{getSocialIcon(social.platform)}</button>)}</div> : null
-                          }
-                          if (item.type === "gallery") {
-                            const gallery = galleries.find((entry) => entry.id === item.id)
-                            return gallery ? <GalleryRenderer key={contentOrderKey(item)} gallery={gallery} emptyState={<div className="rounded-lg border border-dashed border-slate-300 px-3 py-5 text-center text-xs text-slate-500">Chưa có ảnh trong bộ sưu tập.</div>} /> : null
-                          }
-                          if (item.type === "divider") {
-                            const block = dividers.find((entry) => entry.id === item.id)
-                            return block ? <DividerRenderer key={contentOrderKey(item)} block={block} /> : null
-                          }
-                          if (item.type === "bank-details") {
-                            const block = bankDetails.find((entry) => entry.id === item.id)
-                            return block ? <BankDetailsRenderer key={contentOrderKey(item)} block={block} /> : null
-                          }
-                          if (item.type === "text") {
-                            const block = textBlocks.find((entry) => entry.id === item.id)
-                            return block ? <TextBlockRenderer key={contentOrderKey(item)} block={block} /> : null
-                          }
-                          if (item.type === "widget") {
-                            const widget = widgets.find((entry) => entry.id === item.id)
-                            return widget && widget.enabled !== false ? <BioWidgetEmbed key={contentOrderKey(item)} widget={widget} /> : null
-                          }
-                          const link = customLinks.find((entry) => entry.id === item.id)
-                          if (!link || hiddenLinks.includes(link.id)) return null
-                          return <BioLinkButton key={`${contentOrderKey(item)}:${link.animationEffect || "none"}`} link={link} buttonStyle={selectedButtonStyle} theme={activeTheme} contentIndex={contentIndex} preview />
-                        })}
-                        {customLinks.every((link) => hiddenLinks.includes(link.id)) && socialLinks.every((social) => social.enabled === false) && widgets.every((widget) => widget.enabled === false) && galleries.every((gallery) => !gallery.enabled || gallery.images.length === 0) && dividers.every((block) => !block.enabled) && bankDetails.every((block) => !block.enabled || !hasCompleteBankDetails(block)) && textBlocks.every((block) => !block.enabled || !block.content.trim()) ? <div className="rounded-xl border border-dashed px-4 py-8 text-center text-sm" style={{ backgroundColor: activeTheme.sectionColor, borderColor: activeTheme.sectionBorderColor, color: activeTheme.mutedTextColor }}>Thêm nội dung để xem trước tại đây.</div> : null}
-                      </div>
-                      <div className={BIO_FOOTER_CLASS}>
-                        <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 py-2.5 text-center text-[13px] font-semibold text-slate-950 shadow-[0_10px_30px_rgba(2,6,23,0.18)]">
-                          Tạo trang của bạn trên {brand.siteName}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* Dùng đúng component của trang công khai /b/[slug] với dữ liệu đang sửa. */}
+              <div className={cn(publicBioStyles.previewFrame, "h-[min(820px,calc(100dvh-150px))] min-h-[560px] rounded-xl border border-border bg-black")}>
+                <PublicBioView key={previewKey} bioPage={previewBioPage} preview />
               </div>
             </div>
           </div>
@@ -938,6 +672,56 @@ export default function LinkInBioGenerator({
           avatarFileId: file.id,
           avatarUrl: getFilePreviewUrl(file),
         }))}
+      />
+      <ManagedImagePicker
+        open={designAssetPicker === "image"}
+        onOpenChange={(open) => { if (!open) setDesignAssetPicker(null) }}
+        selectedFileId={bioDesign.background.imageAssetId}
+        title="Chọn ảnh nền Bio"
+        onSelect={(file) => {
+          setBioDesign((current) => ({
+            ...current,
+            background: { ...current.background, type: "image", imageAssetId: file.id },
+          }))
+          setDesignAssetPreviews((current) => ({ ...current, image: getFilePreviewUrl(file) }))
+          setDesignAssetPicker(null)
+        }}
+      />
+      <ManagedImagePicker
+        open={designAssetPicker === "video"}
+        onOpenChange={(open) => { if (!open) setDesignAssetPicker(null) }}
+        selectedFileId={bioDesign.background.videoAssetId}
+        acceptedMimePrefixes={VIDEO_MIME_PREFIXES}
+        assetLabel="video"
+        accept="video/*"
+        uploadPurpose="file"
+        title="Chọn video nền Bio"
+        onSelect={(file) => {
+          setBioDesign((current) => ({
+            ...current,
+            background: { ...current.background, type: "video", videoAssetId: file.id },
+          }))
+          setDesignAssetPreviews((current) => ({ ...current, video: getFilePreviewUrl(file) }))
+          setDesignAssetPicker(null)
+        }}
+      />
+      <ManagedImagePicker
+        open={designAssetPicker === "music"}
+        onOpenChange={(open) => { if (!open) setDesignAssetPicker(null) }}
+        selectedFileId={bioDesign.audio.music.assetId}
+        acceptedMimePrefixes={AUDIO_MIME_PREFIXES}
+        assetLabel="âm thanh"
+        accept="audio/*"
+        uploadPurpose="file"
+        title="Chọn nhạc nền Bio"
+        onSelect={(file) => {
+          setBioDesign((current) => ({
+            ...current,
+            audio: { ...current.audio, music: { ...current.audio.music, assetId: file.id } },
+          }))
+          setDesignAssetPreviews((current) => ({ ...current, music: getFilePreviewUrl(file) }))
+          setDesignAssetPicker(null)
+        }}
       />
     </form>
   )

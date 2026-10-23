@@ -1,0 +1,1085 @@
+/*
+ * Trang bio công khai — phong cách "glass card".
+ * Mọi màu/kích thước đọc từ biến CSS do Bio Design của trang đặt trên `.page`.
+ *
+ * Đơn vị màn hình đi qua biến để trang xem trước trong trình chỉnh sửa dùng lại
+ * đúng component này trong một khung nhỏ (xem .previewFrame cuối file):
+ *   --bio-vw / --bio-vh   1vw / 1vh ở trang thật, 1cqw / 1cqh trong khung xem trước
+ *   --bio-page-h          chiều cao "màn hình"
+ */
+
+.page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: var(--bio-page-h, 100svh);
+  width: 100%;
+  overflow-x: hidden;
+  color: var(--textColor);
+}
+
+.page ::selection {
+  background: var(--textColor);
+  color: var(--selectionText, #111);
+}
+
+/* ---------------------------------------------------------------- Nền */
+
+.bgColor {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  height: 100%;
+  width: 100%;
+}
+
+.bgMedia {
+  position: fixed;
+  left: calc(var(--bio-vw, 1vw) * -6);
+  top: calc(var(--bio-vh, 1vh) * -6);
+  z-index: -2;
+  width: calc(var(--bio-vw, 1vw) * 112);
+  max-width: none; /* Tailwind preflight đặt img/video max-width: 100% → video chỉ rộng 100vw, hở 6vw bên phải. */
+  height: calc(var(--bio-vh, 1vh) * 112);
+  max-height: none;
+  object-fit: cover;
+  background-size: cover;
+  background-position: 50% center;
+  pointer-events: none;
+}
+
+.bgOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------- Bố cục */
+
+.center {
+  display: flex;
+  min-height: 100vh;
+  min-height: var(--bio-page-h, 100svh);
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 50px 15px;
+  box-sizing: border-box;
+}
+
+.tilt {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  max-width: var(--containerWidth);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  will-change: transform;
+  transition: transform 700ms cubic-bezier(0.03, 0.98, 0.52, 0.99);
+  transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1);
+}
+
+.container {
+  width: 100%;
+  max-width: var(--containerWidth);
+  box-sizing: border-box;
+  padding: var(--containerPadding);
+  border: var(--containerBorder);
+  border-radius: var(--containerRadius);
+  background-color: var(--containerColor);
+  background-image: var(--containerGradient);
+  background-origin: border-box;
+  box-shadow: var(--containerShadow, none);
+  -webkit-backdrop-filter: blur(var(--containerBlur));
+  backdrop-filter: blur(var(--containerBlur));
+}
+
+/*
+ * Hiệu ứng xuất hiện (Profile Animation): mỗi phần (thẻ, header, mô tả,
+ * widget, nội dung, lượt xem) lần lượt hiện ra, cách nhau --reveal-step.
+ * Kiểu hiệu ứng lấy từ data-anim trên .page:
+ *   zoom      thu nhỏ 0.8 + kéo lên 80px (giống guns.lol)
+ *   fade      chỉ mờ → rõ
+ *   slide-up  trượt lên từ dưới 32px
+ *   unfold    mở dần từ trên xuống
+ *   bounce    bật lên từ dưới, vượt quá một chút rồi về chỗ
+ *   none      hiện ngay
+ * Thời lượng / độ trễ / easing: --reveal-duration, --reveal-base-delay, --reveal-easing.
+ */
+.reveal {
+  /* translate/scale/box-shadow cho hiệu ứng hover của thẻ. */
+  transition-property: opacity, transform, margin-top, clip-path, filter, translate, scale, box-shadow;
+  transition-duration: var(--reveal-duration, 400ms);
+  transition-timing-function: var(--reveal-easing, ease);
+  transition-delay: calc(var(--reveal-base-delay, 0ms) + var(--reveal-delay, 0ms));
+}
+
+[data-anim="zoom"] .reveal {
+  margin-top: -80px;
+  opacity: 0.001;
+  transform: scale(0.8);
+}
+
+[data-anim="fade"] .reveal {
+  opacity: 0;
+}
+
+[data-anim="slide-up"] .reveal {
+  opacity: 0;
+  transform: translateY(32px);
+}
+
+[data-anim="unfold"] .reveal {
+  opacity: 0;
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(-14px);
+  filter: blur(4px);
+}
+
+[data-anim="bounce"] .reveal {
+  opacity: 0;
+  transform: translateY(56px) scale(0.94);
+}
+
+[data-anim] .revealed {
+  margin-top: 0 !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+[data-anim="unfold"] .revealed {
+  /* Mở rộng vùng cắt để không cắt mất bóng/glow sau khi hiện xong. */
+  clip-path: inset(-50% -50% -50% -50%);
+}
+
+/* Hiệu ứng khi rê chuột lên thẻ (dùng thuộc tính translate/scale riêng để không đè transform). */
+.hoverLift:hover {
+  translate: 0 -6px;
+}
+
+.hoverScale:hover {
+  scale: 1.02;
+}
+
+.hoverGlow:hover {
+  box-shadow: 0 0 34px -6px color-mix(in srgb, var(--textColor) 55%, transparent), var(--containerShadow, 0 0 #0000);
+}
+
+/* Thẻ bồng bềnh lên xuống. */
+.float {
+  animation: bio-float 6s ease-in-out infinite;
+}
+
+@keyframes bio-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+
+/* ------------------------------------------------------------ Header */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: -10px;
+  padding-top: 10px;
+}
+
+.headerClassic {
+  flex-direction: column;
+  text-align: center;
+}
+
+.avatar {
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  width: var(--avatarSize);
+  height: var(--avatarSize);
+  border: var(--avatarBorder);
+  border-radius: var(--avatarRadius);
+  box-shadow: var(--avatarGlow, none);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: var(--avatarFit, cover);
+}
+
+.avatarPlaceholder {
+  display: flex;
+  height: 110px;
+  align-items: center;
+  margin-right: 10px;
+  font-size: 5em;
+  color: var(--textColor);
+}
+
+.nameBlock {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.headerClassic .nameBlock {
+  align-items: center;
+}
+
+.nameRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.headerClassic .nameRow {
+  justify-content: center;
+}
+
+.username {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--textColor);
+  font-family: var(--usernameFont);
+  font-size: var(--usernameSize);
+  font-weight: var(--usernameWeight);
+  line-height: 1.14;
+  letter-spacing: var(--usernameLetterSpacing);
+  text-transform: var(--usernameTransform);
+  text-shadow: var(--colorUsernameGlow);
+  background-image: var(--usernameEffects, none);
+}
+
+.usernameGradient {
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.joined {
+  margin: 0;
+  color: var(--joinStatus);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.badges {
+  display: flex;
+  height: auto;
+  margin: 0 0 0 5px;
+  padding: 6px 10px;
+  list-style: none;
+  align-items: center;
+  justify-content: center;
+  gap: 5.5px;
+  border: var(--badgeContainerBorder);
+  border-radius: 25px;
+  background-color: var(--badgeContainerBackground);
+}
+
+.badges li {
+  display: flex;
+  position: relative;
+  color: var(--badgeColor);
+  filter: var(--badgeGlow, none);
+}
+
+.badges svg {
+  width: var(--userBadge);
+  height: var(--userBadge);
+}
+
+/* Mô tả nằm dưới username (cách 5px), rộng tối đa 27rem như guns.lol. */
+.description {
+  max-width: 27rem;
+  margin: 0;
+  padding-top: 5px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  color: var(--textColor);
+  font-size: var(--descriptionSize);
+  opacity: 0.88;
+}
+
+/* ----------------------------------------------------------- Widget */
+
+.widgets {
+  display: flex;
+  margin-top: 10px;
+  margin-bottom: 33px;
+}
+
+.widgetRow {
+  display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.widgetCell {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.secondTab {
+  display: flex;
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  box-sizing: border-box;
+  align-items: center;
+  border: var(--secondTabBorder);
+  border-radius: 25px;
+  background-color: var(--secondTabBackground);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.secondTab {
+  transition: 0.35s;
+}
+
+a.secondTab:hover {
+  filter: brightness(1.08);
+}
+
+.discordRow {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.discordMain {
+  display: flex;
+  min-width: 0;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: left;
+  gap: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.discordIcon {
+  display: flex;
+  height: 60px;
+  width: 60px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 15px;
+  background-color: var(--discordMissingIcon);
+  color: var(--textColor);
+}
+
+.discordAvatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.discordAvatar > span:first-child {
+  display: flex;
+  height: 60px;
+  width: 60px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: var(--discordAvatarBorder);
+  border-radius: 50%;
+  background-color: var(--discordMissingIcon);
+  color: var(--textColor);
+}
+
+.discordAvatar img,
+.discordIcon img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.discordStatusDot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  height: 16px;
+  width: 16px;
+  border: 3px solid rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+}
+
+.discordText {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.discordTitle {
+  display: flex;
+  margin: 0;
+  overflow: hidden;
+  align-items: center;
+  gap: 6px;
+  color: var(--textColor);
+  font-size: 18px;
+  font-weight: 450;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.discordMeta {
+  display: flex;
+  margin: 1px 0 0;
+  overflow: hidden;
+  gap: 10px;
+  color: var(--discordServerMembers);
+  font-size: 12.5px;
+  font-weight: 450;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.discordMeta > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot {
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+}
+
+.join {
+  display: flex;
+  width: fit-content;
+  margin-top: 3px;
+  padding: 1px 10px;
+  border-radius: 8px;
+  background-color: rgb(34, 145, 80);
+  color: rgb(250, 250, 250);
+  font-size: 12px;
+  font-weight: 450;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.join:hover {
+  background-color: rgb(40, 165, 92);
+}
+
+.platformLabel {
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--platformTextColor);
+  font-size: 11.3px;
+  font-weight: 300;
+  opacity: 0.4;
+}
+
+.platformLabel svg {
+  height: 14px;
+  width: 14px;
+}
+
+.embed {
+  width: 100%;
+  overflow: hidden;
+  padding: 10px;
+  box-sizing: border-box;
+  border: var(--secondTabBorder);
+  border-radius: 25px;
+  background-color: var(--secondTabBackground);
+}
+
+/* ------------------------------------------------------- Nội dung */
+
+/* Danh sách nội dung: các nút cách nhau 15px (userButtons của guns.lol). */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--contentGap);
+}
+
+.content > .buttonRow:first-child {
+  margin-top: 20px;
+}
+
+.socials {
+  display: flex;
+  width: 100%;
+  margin-top: 30px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 11px 9px;
+  margin-bottom: 13px;
+  padding: 0 15px;
+  box-sizing: border-box;
+}
+
+.social {
+  display: flex;
+  color: var(--iconColor);
+  filter: var(--socialGlow, none);
+}
+
+.social svg {
+  height: 35px;
+  width: 35px;
+  transition: var(--socialHoverDuration, 0.3s);
+}
+
+.social:hover svg {
+  transform: var(--socialHoverTransform, scale(1.1));
+}
+
+.social:focus-visible {
+  outline: 2px solid var(--textColor);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.buttonRow {
+  display: flex;
+  height: 55px;
+  /*
+   * Không dùng backdrop-filter ở đây: backdrop-filter lồng trong thẻ đã có
+   * backdrop-filter và đang xoay 3D (tilt) khiến Chrome/Safari vẽ vùng blur
+   * lệch khỏi thẻ (một hình chữ nhật mờ không nghiêng theo).
+   */
+}
+
+/*
+ * Không đặt overflow: hidden ở đây: hiệu ứng link (glow, aura vàng/cầu vồng/
+ * hologram/đen) vẽ viền và quầng sáng bằng ::before/::after tràn ra ngoài nút,
+ * cắt đi là mất hiệu ứng. Chữ dài đã được cắt ở .buttonTitle / .buttonUrl.
+ */
+.button {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 10px;
+  padding: 9px;
+  border: var(--buttonBorder);
+  border-radius: var(--buttonRadius);
+  background-color: var(--buttonBackground);
+  background-origin: border-box;
+  box-shadow: var(--buttonShadow, none);
+  color: var(--textColor);
+  text-align: var(--buttonAlign);
+  text-decoration: none;
+  transition: background-color 0.35s, border 0.35s, transform 0.35s;
+}
+
+.button:hover {
+  border: var(--buttonBorderHover);
+  background-color: var(--buttonBackgroundHover);
+}
+
+.button:active {
+  transform: translateY(4px);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--textColor);
+  outline-offset: 2px;
+}
+
+/* Icon nút: khung 60px sát mép trái (cách 4px), chữ vẫn căn giữa cả nút. */
+.buttonIconWrap {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  display: flex;
+  width: 60px;
+  height: calc(100% - 8px);
+  justify-content: center;
+  transform: translateY(-50%);
+}
+
+.buttonIcon {
+  width: auto;
+  max-width: 60px;
+  height: 100%;
+  flex: 1 1;
+  border-radius: calc(var(--buttonRadius) - 2px);
+  object-fit: cover;
+}
+
+.buttonText {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex: 1 1 0%;
+  flex-direction: column;
+  align-items: var(--buttonFlexAlign);
+  justify-content: center;
+  gap: 1px;
+  text-align: var(--buttonAlign);
+}
+
+/* Icon nằm ở đầu nhưng chữ vẫn căn giữa toàn nút. */
+.buttonText.withIconSpacer {
+  padding: 0 64px;
+}
+
+.buttonTitle {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 450;
+  line-height: 1.12;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.buttonUrl {
+  display: flex;
+  max-width: 100%;
+  overflow: hidden;
+  align-items: center;
+  justify-content: var(--buttonFlexAlign);
+  color: var(--buttonUrlColor);
+  font-size: 12px;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.buttonUrl svg {
+  height: 13px;
+  width: 13px;
+  margin-right: 3px;
+  flex-shrink: 0;
+}
+
+.empty {
+  margin: 0;
+  padding: 24px 0;
+  color: var(--joinStatus);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Lượt xem: góc dưới trái của thẻ. */
+.views {
+  position: absolute;
+  bottom: 13px;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  color: var(--textColor);
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.views svg {
+  height: 19px;
+  width: 19px;
+  margin-right: 5px;
+}
+
+.viewsSpacer {
+  height: 20px;
+}
+
+/*
+ * Huy hiệu "Tạo trang của bạn trên …": viên kính nhỏ cùng tông với thẻ, icon
+ * thương hiệu, tên site in đậm, viền có vệt sáng chạy vòng, mũi tên trượt khi hover.
+ */
+.footerLink {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 5px 12px 5px 5px;
+  border-radius: 999px;
+  background-color: var(--volumeBackgroundcolor);
+  background-image: var(--containerGradient);
+  color: var(--textColor);
+  font-size: 12.5px;
+  line-height: 1;
+  text-decoration: none;
+  opacity: 0.72;
+  -webkit-backdrop-filter: blur(var(--containerBlur));
+  backdrop-filter: blur(var(--containerBlur));
+  box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.6);
+  transition: opacity 0.25s, translate 0.25s, box-shadow 0.25s;
+}
+/* Viền 1px với vệt sáng chạy vòng (mask chỉ giữ phần viền). */
+.footerLink::before {
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--link-aura-angle, 0deg),
+    color-mix(in srgb, var(--textColor) 14%, transparent) 0deg,
+    color-mix(in srgb, var(--textColor) 14%, transparent) 250deg,
+    color-mix(in srgb, var(--textColor) 85%, transparent) 300deg,
+    color-mix(in srgb, var(--textColor) 14%, transparent) 350deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  content: "";
+  pointer-events: none;
+  animation: link-bio-aura-spin 5s linear infinite;
+}
+.footerLink:hover,
+.footerLink:focus-visible {
+  opacity: 1;
+  translate: 0 -2px;
+  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.7);
+}
+.footerLink:focus-visible {
+  outline: 2px solid var(--textColor);
+  outline-offset: 3px;
+}
+.footerIcon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--textColor) 12%, transparent);
+}
+.footerIcon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.footerIcon svg {
+  width: 13px;
+  height: 13px;
+}
+.footerText strong {
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+.footerArrow {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  opacity: 0.6;
+  transition: translate 0.25s, opacity 0.25s;
+}
+.footerLink:hover .footerArrow,
+.footerLink:focus-visible .footerArrow {
+  opacity: 1;
+  translate: 2px -2px;
+}
+
+/* ---------------------------------------------------------- Âm lượng */
+
+.volume {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 40;
+  display: flex;
+  /* Kích thước kiểu guns.lol: 32px nội dung + padding 12px (tổng 56px). Tailwind đặt border-box cho mọi phần tử nên phải trả lại content-box, nếu không icon bị cắt mất. */
+  box-sizing: content-box;
+  height: 32px;
+  width: 32px;
+  overflow: hidden;
+  align-items: center;
+  justify-content: left;
+  gap: 15px;
+  padding: 12px;
+  border: var(--volumeBorder);
+  border-radius: 15px;
+  background-color: var(--volumeBackgroundcolor);
+  background-image: var(--containerGradient);
+  background-origin: border-box;
+  -webkit-backdrop-filter: blur(var(--containerBlur));
+  backdrop-filter: blur(var(--containerBlur));
+  transition: 0.35s;
+}
+
+.volume:hover,
+.volume:focus-within {
+  width: 160px;
+}
+
+.volume button {
+  display: flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--textColor);
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.volume button:active {
+  transform: translateY(4px);
+}
+
+.volume button svg {
+  min-width: 30px;
+  height: 29px;
+  margin-left: 1px;
+}
+
+.volume input {
+  width: 100px;
+  accent-color: var(--textColor);
+}
+
+/* ------------------------------------------------- Click to enter */
+
+.enter {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  background-color: rgba(0, 0, 0, 0.776);
+  background-position: center;
+  background-size: cover;
+  color: rgb(250, 250, 250);
+  cursor: pointer;
+  font: inherit;
+  user-select: none;
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  transition: 0.75s;
+}
+
+.enterHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.enterText {
+  width: calc(100% - 40px);
+  max-width: 1200px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  font-size: 30px;
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.enterSub {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* ------------------------------------------------------- Responsive */
+
+@media (max-width: 720px) {
+  .widgets {
+    display: block;
+    width: 100%;
+  }
+
+  .widgetRow {
+    flex-direction: column;
+  }
+
+  .widgetCell {
+    display: block;
+  }
+
+  .widgetRow .secondTab {
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 430px) {
+  .container {
+    width: 100% !important;
+  }
+
+  .avatar {
+    width: min(var(--avatarSize), 84px);
+    height: min(var(--avatarSize), 84px);
+  }
+
+  .username {
+    font-size: min(var(--usernameSize), calc(var(--bio-vw, 1vw) * 8.4));
+  }
+}
+
+@media (scripting: none) {
+  [data-anim] .reveal {
+    margin-top: 0;
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    filter: none;
+  }
+}
+
+/*
+ * TẠM TẮT ĐỂ TEST: luôn chạy hiệu ứng kể cả khi máy bật "Reduce motion"
+ * (giống guns.lol). Bỏ comment khối dưới để tôn trọng lại cài đặt đó.
+ *
+ * @media (prefers-reduced-motion: reduce) {
+ *   .reveal {
+ *     margin-top: 0 !important;
+ *     opacity: 1 !important;
+ *     transform: none !important;
+ *   }
+ *
+ *   .tilt,
+ *   .reveal,
+ *   .enter,
+ *   .social svg,
+ *   .button,
+ *   .volume {
+ *     transition: none;
+ *   }
+ * }
+ */
+
+/* -------------------------------------------- QR "Xem trên điện thoại" */
+
+/*
+ * Cùng nền / viền / blur / bo góc / bóng với thẻ bio chính (biến từ Bio Design),
+ * chỉ thu nhỏ bo góc cho hợp khối nhỏ. Lớp nền tối mờ bên dưới giữ chữ đọc được
+ * khi thẻ chính trong suốt.
+ */
+.qrCard {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 30;
+  width: 160px;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  border: var(--containerBorder);
+  border-radius: min(var(--containerRadius), 18px);
+  background-color: var(--containerColor);
+  background-image: var(--containerGradient);
+  background-origin: border-box;
+  box-shadow: var(--containerShadow, none);
+  color: var(--textColor);
+  -webkit-backdrop-filter: blur(var(--containerBlur));
+  backdrop-filter: blur(var(--containerBlur));
+}
+
+.qrTitle {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.qrCode {
+  padding: 6px;
+  border-radius: max(4px, calc(min(var(--containerRadius), 18px) - 6px));
+  background: #fff;
+}
+
+/* ------------------------------------------------ Khung xem trước (trình chỉnh sửa) */
+
+/*
+ * Trình chỉnh sửa render đúng PublicBioView bên trong khung này:
+ * - contain: layout → mọi lớp position: fixed (nền, hiệu ứng, nút nhạc,
+ *   overlay "click to enter") bám theo khung thay vì cả cửa sổ;
+ * - container-type: size → đo bề rộng/cao khung cho cqw/cqh và @container;
+ * - đơn vị màn hình đổi sang cqw/cqh của khung;
+ * - .page cuộn bên trong khung;
+ * - các breakpoint @media được lặp lại bằng @container theo bề rộng khung.
+ */
+.previewFrame {
+  container: bio-preview / size;
+  /* layout → khung là "khối chứa" của các phần tử position: fixed bên trong. */
+  contain: layout paint;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  --bio-vw: 1cqw;
+  --bio-vh: 1cqh;
+  --bio-page-h: 100cqh;
+}
+.previewFrame .page {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@container bio-preview (max-width: 720px) {
+  .widgets {
+    display: block;
+    width: 100%;
+  }
+
+  .widgetRow {
+    flex-direction: column;
+  }
+
+  .widgetCell {
+    display: block;
+  }
+
+  .widgetRow .secondTab {
+    margin-top: 10px;
+  }
+}
+
+@container bio-preview (max-width: 430px) {
+  .container {
+    width: 100% !important;
+  }
+
+  .avatar {
+    width: min(var(--avatarSize), 84px);
+    height: min(var(--avatarSize), 84px);
+  }
+
+  .username {
+    font-size: min(var(--usernameSize), calc(var(--bio-vw, 1vw) * 8.4));
+  }
+}

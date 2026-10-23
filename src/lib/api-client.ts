@@ -11,6 +11,7 @@ import {
   type PaginatedApiResponse,
   type PaginationMeta,
 } from "@/lib/api-response";
+import type { BioDesign } from "@/contracts";
 
 const BROWSER_API_URL = "/api/backend";
 
@@ -19,6 +20,7 @@ export type LinkActionDto = {
   platform: string;
   action: string;
   url: string;
+  watchDurationSeconds?: number | null;
   label?: string;
   icon?: import("@/contracts").MonetizationActionIconKey;
   position?: number;
@@ -347,6 +349,22 @@ export type BioPageDto = {
   contentOrder: BioContentOrderItemDto[];
   hiddenLinks: string[];
   appearance: BioAppearanceDto;
+  design: BioDesign;
+  hasDesign: boolean;
+  designAssets: {
+    backgroundImageUrl?: string;
+    backgroundVideoUrl?: string;
+    backgroundFallbackUrl?: string;
+    backgroundMobileUrl?: string;
+    videoPosterUrl?: string;
+    cursorUrl?: string;
+    enterBackgroundUrl?: string;
+    musicUrl?: string;
+    musicCoverUrl?: string;
+    clickSoundUrl?: string;
+    hoverSoundUrl?: string;
+    enterSoundUrl?: string;
+  };
   createdAt: string;
   updatedAt: string;
 };
@@ -366,6 +384,7 @@ export type CreateBioPagePayload = {
   contentOrder: BioContentOrderItemDto[];
   hiddenLinks: string[];
   appearance: Omit<BioAppearanceDto, "avatarUrl">;
+  design?: BioDesign;
 };
 
 export type CreateLinkPayload = {

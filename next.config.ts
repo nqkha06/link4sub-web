@@ -6,8 +6,10 @@ import { fileURLToPath } from "node:url";
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: fileURLToPath(new URL(".", import.meta.url)),
+  // IP LAN để mở bản dev từ điện thoại / máy khác (IP Wi-Fi có thể đổi).
   allowedDevOrigins: [
     "192.168.1.97",
+    "192.168.1.28",
   ],
 
   images: {

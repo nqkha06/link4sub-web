@@ -16,6 +16,216 @@
     "inactive": "Inactive",
     "paused": "Paused"
   },
+  "BioStudio": {
+    "history": "Design history",
+    "undo": "Undo",
+    "redo": "Redo",
+    "resetSection": "Reset section",
+    "tabs": {
+      "profile": "Profile",
+      "background": "Background",
+      "appearance": "Appearance",
+      "effects": "Effects",
+      "audio": "Audio",
+      "templates": "Templates"
+    },
+    "profileDescription": "Profile layout and presentation without changing Content data.",
+    "backgroundDescription": "Page background, independent from the Profile Card.",
+    "appearanceDescription": "Color and style tokens applied to all existing Content.",
+    "effectsDescription": "Presentation-only effects that respect reduced-motion preferences.",
+    "audioDescription": "Audio is off by default and only starts after user interaction.",
+    "templateBy": "by {creator}",
+    "backgroundEffectPicker": {"title": "Background effect", "change": "Change effect", "cancel": "Cancel", "save": "Save", "items": {"none": {"label": "None", "description": "No effect, just the background."}, "rain": {"label": "Rain", "description": "Slanted rain streaks across the screen."}, "snowflakes": {"label": "Snowflakes", "description": "Swaying snowflakes in front of the card, guns.lol style."}, "aurora": {"label": "Aurora", "description": "Flowing aurora light bands (WebGL)."}, "plasma": {"label": "Plasma", "description": "Soft glowing blobs in constant motion (WebGL)."}, "dither": {"label": "Dither", "description": "Halftone dot waves that react to the cursor."}, "blurred": {"label": "Blurred", "description": "Blurs and slightly darkens the background."}, "night-time": {"label": "Night time", "description": "A dark blue night tint."}, "old-tv": {"label": "Old TV", "description": "Scanlines and noise like an old TV screen."}, "wave": {"label": "Wave", "description": "Two soft wave layers drifting along the bottom."}, "star-drop": {"label": "Star Drop", "description": "Tiny square stars falling at different speeds."}, "noise": {"label": "Noise", "description": "Animated film grain over the background."}, "dots": {"label": "Dots", "description": "A dot-grid overlay; the background shows through tiny dots."}, "chroma-waves": {"label": "Chroma Waves", "description": "Large glowing blobs drifting slowly with grainy edges."}, "luminous-flow": {"label": "Luminous Flow", "description": "Thin light strands weaving across the screen."}, "aurora-silk": {"label": "Aurora Silk", "description": "A flowing ribbon of silky light."}, "velvet-waves": {"label": "Velvet Waves", "description": "Dark velvet folds moving softly."}, "nebula-drift": {"label": "Nebula Drift", "description": "Thin cloud layers drifting slowly."}, "soft-horizon": {"label": "Soft Horizon", "description": "A glowing horizon line with soft strata."}, "liquid-flow": {"label": "Liquid Flow", "description": "High-contrast liquid shapes with rippled edges."}, "spectrum-warp": {"label": "Spectrum Warp", "description": "A bright curved band with grainy glow."}, "aurora-lines": {"label": "Aurora Lines", "description": "A sweeping light beam over faint contour lines."}, "chromatic-pulse": {"label": "Chromatic Pulse", "description": "An iridescent liquid with subtle color shifts."}, "glitter-warp": {"label": "Glitter Warp", "description": "Glitter particles flying out from the center."}, "light-droplets": {"label": "Light Droplets", "description": "Short light streaks gliding sideways."}, "lightspeed": {"label": "Lightspeed", "description": "Hyperspace star streaks bursting from the center."}, "liquid-lines": {"label": "Liquid Lines", "description": "Soft diagonal light streaks."}, "metallic-swirl": {"label": "Metallic Swirl", "description": "A slow metallic gradient swirl."}, "topography": {"label": "Topography", "description": "Thin contour lines like a topographic map."}, "gradient-waves": {"label": "Gradient Waves", "description": "A diagonal wave of light with grainy edges."}}},
+    "cardGradient": "Gradient background",
+    "cardGradientHint": "Use a gradient instead of a solid color (supports #RRGGBBAA alpha).",
+    "gradientFrom": "Start color",
+    "gradientTo": "End color",
+    "effectColor": "Effect color",
+    "glow": {"title": "Glow", "hint": "Glow around the name, social icons and badges.", "username": "Name glow", "social": "Social icon glow", "badges": "Badge glow", "color": "Glow color"},
+    "cursor": {"title": "Cursor", "custom": "Custom cursor", "noAsset": "No cursor image yet — apply a template with a cursor to use one."},
+    "musicPlayer": "Music button",
+    "musicPlayerVisible": "Show music button",
+    "musicPlayerHint": "Play/mute and volume control in the top-left corner.",
+    "templateAppliedHint": "Tabs with a dot are where settings were filled in — open them to keep editing.",
+    "templateChangedTab": "Changed by template",
+    "templateUse": "Use template",
+    "templateApplying": "Applying…",
+    "templateActive": "In use",
+    "templateApplied": "Applied template {name}",
+    "templateUndo": "Undo",
+    "templateAsset": "Using the file bundled with the template. Choose another file to replace it.",
+    "templateSteps": {"background": "Loading background video…", "colors": "Applying colors & card…", "effects": "Applying effects…", "media": "Applying music & cursor…"},
+    "templateFeatures": { "video": "Video", "music": "Music", "cursor": "Cursor" },
+    "profileLayout": "Profile Layout",
+    "layout": "Layout",
+    "horizontalAlign": "Horizontal alignment",
+    "maxWidth": "Maximum width",
+    "padding": "Padding",
+    "contentGap": "Content gap",
+    "profileCard": "Profile Card",
+    "profileCardHint": "Disabling the card removes its background, border and blur while keeping the content rendered.",
+    "cardEnabled": "Enable card background",
+    "backgroundColor": "Background color",
+    "opacity": "Opacity",
+    "backdropBlur": "Backdrop blur",
+    "radius": "Radius",
+    "borderEnabled": "Show border",
+    "avatarDisplay": "Avatar & Display",
+    "avatarSize": "Avatar size",
+    "shape": "Shape",
+    "showAvatar": "Show avatar",
+    "showDescription": "Show description",
+    "backgroundLibrary": "Background library",
+    "backgroundSource": "Background Source",
+    "backgroundType": "Background type",
+    "chooseImage": "Choose image from Media Manager",
+    "changeImage": "Change Media Manager image",
+    "chooseVideo": "Choose video from Media Manager",
+    "changeVideo": "Change Media Manager video",
+    "overlayFilters": "Overlay & Filters",
+    "overlayEnabled": "Enable overlay",
+    "overlayColor": "Overlay color",
+    "overlayOpacity": "Overlay opacity",
+    "themeColors": "Theme Colors",
+    "typography": "Typography",
+    "fontFamily": "Font family",
+    "usernameSize": "Username size",
+    "linksAppearance": "Links Appearance",
+    "variant": "Variant",
+    "linkBackground": "Link background",
+    "textColor": "Text color",
+    "backgroundEffects": "Background Effects",
+    "preset": "Preset",
+    "intensity": "Intensity",
+    "profileAnimation": "Profile Animation",
+    "animation": "Animation",
+    "enterScreen": "Enter Screen",
+    "enterEnabled": "Enable enter screen",
+    "title": "Title",
+    "buttonText": "Button text",
+    "backgroundMusic": "Background Music",
+    "musicEnabled": "Enable music",
+    "chooseMusic": "Choose audio from Media Manager",
+    "changeMusic": "Change Media Manager audio",
+    "trackTitle": "Track title",
+    "artist": "Artist",
+    "volume": "Volume",
+    "startMode": "Start mode",
+    "soundEffects": "Sound Effects",
+    "soundsEnabled": "Enable interaction sounds",
+    "soundsHint": "Hover sounds are always disabled on touch devices.",
+    "nameEffects": {
+      "title": "Name effect",
+      "change": "Change effect",
+      "cancel": "Cancel",
+      "save": "Save",
+      "previewName": "Your Name",
+      "items": {
+        "none": {
+          "label": "None",
+          "description": "A static name with no motion."
+        },
+        "rainbow": {
+          "label": "Rainbow",
+          "description": "A rainbow gradient flows through the name."
+        },
+        "typewriter": {
+          "label": "Typewriter",
+          "description": "The name is typed letter by letter, then erased, with a blinking caret."
+        },
+        "shine": {
+          "label": "Shine",
+          "description": "A streak of light sweeps across the name."
+        },
+        "glitch": {
+          "label": "Glitch",
+          "description": "The name splits into pink and blue layers like a screen glitch."
+        },
+        "shimmer": {
+          "label": "Shimmer",
+          "description": "Dimmed letters with a light band sliding across, like a loading state."
+        },
+        "neon": {
+          "label": "Neon",
+          "description": "Glowing letters like a neon sign that flickers now and then."
+        },
+        "wave": {
+          "label": "Wave",
+          "description": "Each letter bobs in turn like a wave."
+        },
+        "scramble": {
+          "label": "Scram 1",
+          "description": "Random characters decode into the name from left to right."
+        },
+        "scramble-2": {
+          "label": "Scram 2",
+          "description": "Every character scrambles, then settles in a random order."
+        },
+        "lightning": {
+          "label": "Lightning",
+          "description": "Lightning strikes over the name and the letters flash."
+        },
+        "glitch-2": {
+          "label": "Glitch 2",
+          "description": "Green and purple shadows jitter around the letters."
+        },
+        "stars": {
+          "label": "Stars",
+          "description": "Small stars twinkle around the name."
+        },
+        "distort": {
+          "label": "Distort",
+          "description": "Letters ripple and warp as if seen through water."
+        },
+        "fuzzy": {
+          "label": "Fuzzy",
+          "description": "Letters jitter in horizontal streaks like a weak TV signal."
+        },
+        "pulse": {
+          "label": "Pulse",
+          "description": "The name gently fades and brightens."
+        },
+        "sparkles-black": {
+          "label": "Black Sparkles",
+          "description": "Black sparkles twinkle behind the name."
+        },
+        "sparkles-blue": {
+          "label": "Blue Sparkles",
+          "description": "Blue sparkles twinkle behind the name."
+        },
+        "sparkles-green": {
+          "label": "Green Sparkles",
+          "description": "Green sparkles twinkle behind the name."
+        },
+        "sparkles-pink": {
+          "label": "Pink Sparkles",
+          "description": "Pink sparkles twinkle behind the name."
+        },
+        "sparkles-red": {
+          "label": "Red Sparkles",
+          "description": "Red sparkles twinkle behind the name."
+        },
+        "sparkles-white": {
+          "label": "White Sparkles",
+          "description": "White sparkles twinkle behind the name."
+        },
+        "sparkles-yellow": {
+          "label": "Yellow Sparkles",
+          "description": "Yellow sparkles twinkle behind the name."
+        }
+      },
+      "sparklesLabel": "Sparkles",
+      "noneTile": "None"
+    },
+    "animationTypes": {
+      "none": "None",
+      "zoom": "Zoom (guns.lol style)",
+      "fade": "Fade in",
+      "slide-up": "Slide up",
+      "unfold": "Unfold",
+      "bounce": "Bounce"
+    }
+  },
   "LandingControls": {
     "backToTop": "Back to top",
     "cookieTitle": "Privacy and cookies",
@@ -1246,6 +1456,12 @@
     "readyTitle": "Content is ready",
     "pleaseWait": "Please wait...",
     "done": "Done",
+    "watchVideoTitle": "Watch YouTube video",
+    "watchVideoHint": "Watch the video for at least {seconds} seconds to complete this action.",
+    "watchVideoRemaining": "{seconds} seconds remaining",
+    "watchVideoCompleted": "Video watch completed",
+    "openOnYouTube": "Open on YouTube",
+    "closeWatchVideo": "Close",
     "snippetRevealed": "Snippet revealed",
     "revealSnippet": "Reveal snippet",
     "unlockSnippet": "Complete requirements to reveal snippet",
@@ -1301,6 +1517,7 @@
       "follow-maker": "Follow maker",
       "install-app": "Install app",
       "visit-page": "Visit a page",
+      "custom": "Custom action",
       "like-video": "Like video"
     },
     "tabs": {
@@ -1391,6 +1608,17 @@
     "actions": "ACTIONS",
     "addAction": "Add action",
     "enterPlatformUrl": "Enter a {platform} URL",
+    "youtubeVideoUrlPlaceholder": "Paste a YouTube video URL",
+    "youtubeVideoUrlInvalid": "Enter a valid YouTube video URL.",
+    "watchAdvancedOptions": "Advanced options",
+    "watchDurationLabel": "Watch time",
+    "watchDurationHint": "How long viewers must play the video, from {min} to {max} seconds.",
+    "secondsUnit": "sec",
+    "customActionUrlPlaceholder": "Enter the destination URL",
+    "customButtonLabel": "Button label",
+    "customButtonLabelPlaceholder": "For example: Join the community",
+    "customButtonIcon": "Button icon",
+    "customButtonHint": "This label and icon will appear on the action button shown to viewers.",
     "invalidInput": "This input is invalid",
     "changeAction": "Change action",
     "collapseAll": "Collapse all",
@@ -1468,7 +1696,7 @@
     "snippetRequired": "Select a snippet",
     "actionRequired": "At least one action is required",
     "actionUrlRequired": "Enter a URL for this action",
-    "mostUsed": "Most used",
+    "recentlyUsed": "Recently used",
     "addUsedAction": "Add {action} for {target}",
     "expiryRequired": "Enter a valid expiry condition",
     "updated": "Link updated successfully",
@@ -6847,6 +7075,45 @@
       "cancel": "Cancel",
       "deleting": "Deleting...",
       "delete": "Delete"
+    },
+    "public": {
+      "joined": "Joined {time}",
+      "views": "Profile views",
+      "socials": "Social links",
+      "avatarAlt": "{name}'s avatar",
+      "empty": "Nothing here yet.",
+      "createYours": "Your vibe. Your <brand>{siteName}</brand>.",
+      "createYoursLabel": "Create your page on {siteName}",
+      "enter": "click to enter...",
+      "qrTitle": "Open on your phone",
+      "qrAlt": "QR code to open {name} on your phone",
+      "music": {
+        "play": "Play music",
+        "pause": "Pause music",
+        "volume": "Volume"
+      },
+      "badges": {
+        "label": "Badges",
+        "streamer": "Streamer",
+        "creator": "Creator",
+        "music": "Music",
+        "community": "Community"
+      },
+      "discord": {
+        "profile": "Discord",
+        "openProfile": "Open Discord profile",
+        "server": "Discord server",
+        "join": "Join",
+        "online": "{count} Online",
+        "members": "{count} Members",
+        "listening": "Listening to {song} — {artist}",
+        "status": {
+          "online": "Online",
+          "idle": "Idle",
+          "dnd": "Do not disturb",
+          "offline": "Offline"
+        }
+      }
     }
   },
   "Support": {

@@ -64,6 +64,98 @@
   --type-metric-size: clamp(1.75rem, 2.5vw, 2.125rem);
 }
 
+/* Bio Studio renderer: các effect chỉ trang trí, không chạm vào cây Content. */
+.bio-background-effect {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  opacity: var(--bio-effect-opacity, .5);
+}
+
+.bio-background-effect--dither,
+.bio-background-effect--old-tv {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0 2px,
+    color-mix(in srgb, var(--bio-effect-color, #fff) 22%, transparent) 3px
+  );
+  background-size: 100% 4px;
+}
+
+.bio-background-effect--old-tv {
+  animation: bio-tv-flicker var(--bio-effect-speed, 4s) steps(2, end) infinite;
+}
+
+.bio-background-effect--aurora,
+.bio-background-effect--plasma {
+  inset: -30%;
+  background:
+    radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--bio-effect-color, #a78bfa) 70%, transparent), transparent 36%),
+    radial-gradient(circle at 80% 65%, rgba(34, 211, 238, .45), transparent 42%);
+  filter: blur(52px);
+  animation: bio-aurora var(--bio-effect-speed, 4s) ease-in-out infinite alternate;
+}
+
+.bio-background-effect--snowflakes,
+.bio-background-effect--rain {
+  background-image: radial-gradient(circle, var(--bio-effect-color, #fff) 0 1px, transparent 1.5px);
+  background-size: 24px 24px;
+  animation: bio-weather var(--bio-effect-speed, 4s) linear infinite;
+}
+
+.bio-background-effect--rain {
+  background-image: repeating-linear-gradient(110deg, transparent 0 16px, color-mix(in srgb, var(--bio-effect-color, #fff) 55%, transparent) 17px 18px, transparent 19px 34px);
+  background-size: 48px 96px;
+}
+
+.bio-background-effect--blurred { backdrop-filter: blur(12px); }
+.bio-background-effect--night-time { background: linear-gradient(180deg, rgba(2, 6, 23, .08), rgba(2, 6, 23, .72)); }
+
+.bio-design-profile[data-profile-animation="fade"] { animation: bio-profile-fade .5s ease-out both; }
+.bio-design-profile[data-profile-animation="slide-up"] { animation: bio-profile-slide .55s ease-out both; }
+.bio-design-profile[data-profile-animation="zoom"] { animation: bio-profile-zoom .5s ease-out both; }
+.bio-design-profile[data-profile-animation="bounce"] { animation: bio-profile-bounce .7s ease-out both; }
+
+[data-username-effect="shimmer"] {
+  background: linear-gradient(90deg, currentColor 20%, var(--bio-accent) 50%, currentColor 80%);
+  background-size: 200% auto;
+  background-clip: text;
+  color: transparent !important;
+  animation: bio-shimmer 2.4s linear infinite;
+}
+
+[data-username-effect="pulse"] { animation: bio-username-pulse 1.8s ease-in-out infinite; }
+
+@keyframes bio-tv-flicker { 0%, 96% { opacity: var(--bio-effect-opacity, .5); } 97% { opacity: .15; } 100% { opacity: .65; } }
+@keyframes bio-aurora { from { transform: translate3d(-4%, -2%, 0) rotate(-3deg); } to { transform: translate3d(5%, 3%, 0) rotate(5deg); } }
+@keyframes bio-weather { to { background-position: 24px 96px; } }
+@keyframes bio-profile-fade { from { opacity: 0; } }
+@keyframes bio-profile-slide { from { opacity: 0; transform: translateY(24px); } }
+@keyframes bio-profile-zoom { from { opacity: 0; transform: scale(.96); } }
+@keyframes bio-profile-bounce { 0% { opacity: 0; transform: translateY(18px); } 65% { transform: translateY(-5px); } 100% { opacity: 1; transform: none; } }
+@keyframes bio-shimmer { to { background-position: -200% center; } }
+@keyframes bio-username-pulse { 50% { opacity: .68; text-shadow: 0 0 20px var(--bio-accent); } }
+
+@media (max-width: 639px) {
+  .bio-design-profile {
+    max-width: var(--bio-profile-mobile-max-width, 100%) !important;
+    padding-inline: var(--bio-profile-mobile-padding, 16px);
+  }
+  .bio-background-image[style*="--bio-mobile-background"] {
+    background-image: var(--bio-mobile-background) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bio-background-effect,
+  .bio-design-profile,
+  [data-username-effect] {
+    animation: none !important;
+  }
+}
+
 @media (min-width: 521px) and (max-width: 780px) {
   :root {
     --type-marketing-hero-size: clamp(2.75rem, 6vw, 3.25rem);
