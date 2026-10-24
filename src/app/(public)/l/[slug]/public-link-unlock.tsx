@@ -1243,12 +1243,20 @@ export function PublicLinkUnlock({
               </>
             ) : (
               <a
-                href={unlocked ? link.destinationUrl : undefined}
+                href={unlocked ? link.inputType === "file" && link.visitToken
+                  ? `${link.destinationUrl}${link.destinationUrl.includes("?") ? "&" : "?"}${new URLSearchParams({ visitToken: link.visitToken }).toString()}`
+                  : link.destinationUrl : undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-disabled={!unlocked}
                 data-testid="unlock-cta"
-                onClick={completeSuccessfulVisit}
+                onClick={(event) => {
+                  if (link.inputType !== "file") { completeSuccessfulVisit(); return; }
+                  const url = new URL(event.currentTarget.href);
+                  if (deviceIdRef.current) url.searchParams.set("deviceId", deviceIdRef.current);
+                  if (adBlockDetectedRef.current) url.searchParams.set("adBlockDetected", "1");
+                  event.currentTarget.href = url.toString();
+                }}
                 className={[
                   "flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors",
                   unlocked

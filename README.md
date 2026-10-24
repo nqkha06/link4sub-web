@@ -53,6 +53,11 @@ presigned multipart PUT khi API trả `transport: direct`; local/API cũ giữ l
 proxy. Cấu hình Worker, bucket private, CORS và `MEDIA_DELIVERY_*` nằm trong
 `stu-api/docs/operations.md`, không đặt secret hoặc S3 credentials ở frontend.
 
+API trả URL Worker `/m/{id}.{ext}` trực tiếp cho media Bio thông thường và
+avatar/media admin mới. Chỉ URL legacy còn qua `/media/*` redirect. Social Link
+file đi qua BFF để hoàn tất visit, rồi API kiểm receipt/trạng thái và redirect
+tới presigned R2 URL. Cả hai luồng không truyền bytes R2 qua Next.js/NestJS.
+
 ## Branding mặc định
 
 Logo và bộ favicon khởi tạo nằm trong `public/brand`. Cấu hình logo/favicon do
