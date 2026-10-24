@@ -218,3 +218,8 @@ export function withBuiltinDesignAssets(design: BioDesign, assets: BioDesignAsse
     }),
   };
 }
+
+/** Hidden mobile video must not be mounted with a live src/autoplay. */
+export function shouldLoadBackgroundVideo(design: BioDesign, mobile: boolean, hasDesign: boolean, mobileImageUrl?: string) {
+  return !hasDesign || !mobile || (design.background.video.mobileMode === "video" && !mobileImageUrl);
+}

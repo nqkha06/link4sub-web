@@ -48,6 +48,7 @@ import {
   getTiltTransform,
   parseDiscordTarget,
   resolveBioDesign,
+  shouldLoadBackgroundVideo,
   withOpacity,
   type BioProfileBadge,
   type DiscordInvite,
@@ -124,6 +125,18 @@ function usePrefersReducedMotion() {
       return () => query.removeEventListener("change", onChange);
     },
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false,
+  );
+}
+
+function useMobileBackgroundViewport() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const query = window.matchMedia("(max-width: 639px)");
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(max-width: 639px)").matches,
     () => false,
   );
 }
@@ -230,6 +243,8 @@ function BioBackground({
   const effect = design.effects.background;
   /* Video nền chỉ render ở client (xem useIsClient); lớp nền đen che khoảng trễ. */
   const isClient = useIsClient();
+  const mobileViewport = useMobileBackgroundViewport();
+  const loadVideo = shouldLoadBackgroundVideo(design, mobileViewport, hasDesign, assets.backgroundMobileUrl);
 
   return (
     <>
@@ -254,7 +269,7 @@ function BioBackground({
         />
       ) : null}
 
-      {media?.type === "video" && isClient ? (
+      {media?.type === "video" && isClient && loadVideo ? (
         <video
           ref={videoRef}
           onLoadedMetadata={hasDesign ? (event) => { event.currentTarget.playbackRate = bg.video.playbackRate; } : undefined}

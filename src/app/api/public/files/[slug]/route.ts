@@ -19,5 +19,7 @@ export async function GET(
     `${backendApiUrl}/files/link/${encodeURIComponent(slug)}/download`,
     request.headers.get("accept") || "application/octet-stream",
     request.signal,
+    undefined,
+    "manual",
   )
 }

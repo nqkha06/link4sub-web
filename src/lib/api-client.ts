@@ -11,9 +11,9 @@ import {
   type PaginatedApiResponse,
   type PaginationMeta,
 } from "@/lib/api-response";
-import type { BioDesign } from "@/contracts";
+import type { BioDesign, DirectUploadPart, MultipartUploadSession } from "@/contracts";
 import { getUploadMimeType } from "@/lib/upload-compatibility";
-import { UploadError, uploadPart, withUploadDeadline } from "@/lib/upload-request";
+import { canRetryDirectPart, UploadError, uploadPart, waitForUploadRetry, withUploadDeadline } from "@/lib/upload-request";
 
 const BROWSER_API_URL = "/api/backend";
 
@@ -852,14 +852,11 @@ export async function uploadFile(
       signal,
     });
 
-    return readApiData<{
-      uploadId: string;
-      partSize: number;
-      totalParts: number;
-    }>(initiateResponse);
+    return readApiData<MultipartUploadSession>(initiateResponse);
   }, options?.signal);
   const uploadId = upload.uploadId;
   let completionStarted = false;
+  let progressBytes = 0;
 
   try {
     for (let partNumber = 1; partNumber <= upload.totalParts; partNumber += 1) {
@@ -867,16 +864,31 @@ export async function uploadFile(
       const end = Math.min(start + upload.partSize, file.size);
       const chunk = file.slice(start, end);
 
-      await uploadPart(
-        requestApiUrl(`/member/files/multipart/${uploadId}/parts/${partNumber}`),
-        chunk,
-        options?.signal,
-        (loaded) => {
+      const progress = (loaded: number) => {
           const uploadedBytes = start + Math.min(loaded, chunk.size);
-          options?.onProgress?.(Math.min(99, Math.round((uploadedBytes / file.size) * 100)));
-        },
-        getApiErrorMessageFromText,
-      );
+          progressBytes = Math.max(progressBytes, uploadedBytes);
+          options?.onProgress?.(Math.min(99, Math.round((progressBytes / file.size) * 100)));
+      };
+      if (upload.transport === "direct") {
+        for (let attempt = 0; ; attempt += 1) {
+          options?.signal?.throwIfAborted();
+          const signed = await withUploadDeadline(async (signal) => readApiData<DirectUploadPart>(await fetch(
+            requestApiUrl(`/member/files/multipart/${uploadId}/parts/${partNumber}/url`),
+            { method: "POST", credentials: "include", signal },
+          )), options?.signal);
+          try {
+            await uploadPart(signed.url, chunk, options?.signal, progress, getApiErrorMessageFromText, 90_000, true);
+            break;
+          } catch (error) {
+            // Re-sign each retry. A PUT of the same multipart part replaces only
+            // that part; no duplicate file or extra quota reservation is created.
+            if (attempt >= 2 || options?.signal?.aborted || !canRetryDirectPart(error)) throw error;
+            await waitForUploadRetry(attempt, options?.signal);
+          }
+        }
+      } else {
+        await uploadPart(requestApiUrl(`/member/files/multipart/${uploadId}/parts/${partNumber}`), chunk, options?.signal, progress, getApiErrorMessageFromText);
+      }
     }
 
     options?.onFinalizing?.();

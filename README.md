@@ -45,6 +45,14 @@ Dùng `compose.dokploy.yml` (service **Docker Compose**) hoặc tạo Applicatio
 `Dockerfile`. Biến bắt buộc: `WEB_URL`, `API_URL` (địa chỉ API mà server Next.js
 gọi tới) và `INTERNAL_API_SECRET` (trùng với stu-api).
 
+## Phân phối media
+
+Media S3/R2 qua `/media/user/*` và `/media/site/*` chỉ chuyển tiếp redirect tới
+storage/CDN; không tự fetch theo redirect trong Next.js. Upload member dùng
+presigned multipart PUT khi API trả `transport: direct`; local/API cũ giữ luồng
+proxy. Cấu hình Worker, bucket private, CORS và `MEDIA_DELIVERY_*` nằm trong
+`stu-api/docs/operations.md`, không đặt secret hoặc S3 credentials ở frontend.
+
 ## Branding mặc định
 
 Logo và bộ favicon khởi tạo nằm trong `public/brand`. Cấu hình logo/favicon do

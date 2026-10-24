@@ -9,11 +9,22 @@ import {
   parseDiscordTarget,
   parseLanyardPresence,
   resolveBioDesign,
+  shouldLoadBackgroundVideo,
   withBuiltinDesignAssets,
   withOpacity,
 } from "./bio-public-model.ts";
 
 describe("public bio page model", () => {
+  it("does not request mobile video when off, static, or overridden by a mobile image", () => {
+    const design = structuredClone(DEFAULT_BIO_DESIGN);
+    for (const mode of ["off", "static-image", "video"] as const) {
+      design.background.video.mobileMode = mode;
+      assert.equal(shouldLoadBackgroundVideo(design, true, true), mode === "video");
+      assert.equal(shouldLoadBackgroundVideo(design, false, true), true);
+    }
+    assert.equal(shouldLoadBackgroundVideo(design, true, true, "/mobile.jpg"), false);
+    assert.equal(shouldLoadBackgroundVideo(design, true, false), true, "preserve legacy page behavior");
+  });
   it("falls back to the default design when the API does not send one", () => {
     const resolved = resolveBioDesign({} as never);
     assert.equal(resolved.design, DEFAULT_BIO_DESIGN);

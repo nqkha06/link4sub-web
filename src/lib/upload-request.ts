@@ -9,6 +9,26 @@ export class UploadError extends Error {
   }
 }
 
+export class UploadHttpError extends Error {
+  readonly status: number;
+  constructor(status: number, message: string) { super(message); this.status = status; this.name = "UploadHttpError"; }
+}
+
+export function canRetryDirectPart(error: unknown) {
+  return (error instanceof UploadError && ["timeout", "network"].includes(error.code)) ||
+    (error instanceof UploadHttpError && (error.status === 403 || error.status === 408 || error.status === 429 || error.status >= 500));
+}
+
+export async function waitForUploadRetry(attempt: number, signal?: AbortSignal, random = Math.random) {
+  signal?.throwIfAborted();
+  const delay = Math.round(500 * 2 ** Math.min(attempt, 3) * (0.5 + 0.5 * random()));
+  await new Promise<void>((resolve, reject) => {
+    const abort = () => { clearTimeout(timer); signal?.removeEventListener("abort", abort); reject(signal?.reason); };
+    const timer = setTimeout(() => { signal?.removeEventListener("abort", abort); resolve(); }, delay);
+    signal?.addEventListener("abort", abort, { once: true });
+  });
+}
+
 export function uploadErrorMessage(error: unknown, translate: (key: UploadErrorCode) => string, fallback: string) {
   return error instanceof UploadError ? translate(error.code) : error instanceof Error ? error.message : fallback;
 }
@@ -43,6 +63,7 @@ export function uploadPart(
   onProgress: (loaded: number) => void,
   apiError: (text: string) => string,
   idleMs = 90_000,
+  direct = false,
 ) {
   return new Promise<void>((resolve, reject) => {
     if (signal?.aborted) { reject(signal.reason); return; }
@@ -59,8 +80,8 @@ export function uploadPart(
       clearTimeout(timer);
       timer = setTimeout(() => { fail(new UploadError("timeout")); xhr.abort(); }, idleMs);
     };
-    xhr.open("POST", url);
-    xhr.withCredentials = true;
+    xhr.open(direct ? "PUT" : "POST", url);
+    xhr.withCredentials = !direct;
     xhr.upload.onprogress = (event) => {
       if (event.loaded > lastLoaded) { lastLoaded = event.loaded; armTimer(); }
       // FormData progress includes multipart headers; normalize it to chunk bytes.
@@ -71,14 +92,16 @@ export function uploadPart(
     xhr.onload = () => {
       cleanup();
       if (xhr.status >= 200 && xhr.status < 300) { onProgress(chunk.size); resolve(); }
-      else reject(new Error(apiError(xhr.responseText)));
+      else reject(new UploadHttpError(xhr.status, apiError(xhr.responseText)));
     };
     xhr.onerror = () => fail(new UploadError("network"));
     xhr.onabort = () => fail(new DOMException("Aborted", "AbortError"));
     signal?.addEventListener("abort", abort, { once: true });
-    const formData = new FormData();
-    formData.append("chunk", chunk, "part");
+    const formData = direct ? undefined : new FormData();
+    formData?.append("chunk", chunk, "part");
     armTimer();
-    try { xhr.send(formData); } catch (error) { fail(error); }
+    // No app cookies, Authorization, FormData or manually assigned Content-Length
+    // may cross to object storage. The browser supplies the signed byte length.
+    try { xhr.send(formData ?? chunk); } catch (error) { fail(error); }
   });
 }

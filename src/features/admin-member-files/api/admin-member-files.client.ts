@@ -1,6 +1,6 @@
 "use client";
 
-import { authenticatedApiFetch, authenticatedApiRequest } from "@/lib/api-client";
+import { authenticatedApiRequest } from "@/lib/api-client";
 import type { AdminMemberFile } from "../types";
 
 type BulkResult = { affected: number; releasedBytes?: number };
@@ -21,19 +21,13 @@ export function getAdminMemberFilePreviewUrl(file: Pick<AdminMemberFile, "previe
   return file.previewUrl;
 }
 
-/** Downloads the stored file through the authenticated API and saves it locally. */
+/** Authorize via JSON, then let the native download manager fetch media bytes. */
 export async function downloadAdminMemberFile(id: number, fileName: string) {
-  const response = await authenticatedApiFetch(`/admin/files/${id}/download`);
-  if (!response.ok) throw new Error(`Download failed (${response.status})`);
-  const url = URL.createObjectURL(await response.blob());
-  try {
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = fileName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+  const { url } = await authenticatedApiRequest<{ url: string | null }>(`/admin/files/${id}/download-url`);
+  const anchor = document.createElement("a");
+  anchor.href = url ?? `/api/backend/admin/files/${id}/download`;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
 }

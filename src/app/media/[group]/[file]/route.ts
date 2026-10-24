@@ -32,10 +32,23 @@ export async function GET(
       "Cache-Control": "no-store",
     });
   }
-  return proxyBackendBinary(
+  const response = await proxyBackendBinary(
     `${backendApiUrl}/media/${group}/${file}`,
     request.headers.get("accept") || "*/*",
     request.signal,
     request.headers.get("range"),
+    "manual",
   );
+  // Public-ID media are bearer capabilities, not cookie-authorized resources.
+  // Allow a CDN redirect to re-enter this authorizer for an expired video seek.
+  response.headers.set("Access-Control-Allow-Origin", "*");
+  response.headers.set("Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges, ETag, Content-Disposition");
+  return response;
+}
+
+export function OPTIONS() {
+  return new Response(null, { status: 204, headers: {
+    "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+    "Access-Control-Allow-Headers": "Range, If-Range, If-None-Match", "Access-Control-Max-Age": "600",
+  } });
 }

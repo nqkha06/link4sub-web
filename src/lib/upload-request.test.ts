@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { UploadError, uploadPart, withUploadDeadline } from "./upload-request.ts";
+import { canRetryDirectPart, UploadError, UploadHttpError, uploadPart, waitForUploadRetry, withUploadDeadline } from "./upload-request.ts";
 
 test("a hung upload request times out, including when waiting for its response body", async (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
@@ -36,9 +36,11 @@ class FakeXhr {
   status = 200;
   responseText = "";
   aborted = false;
+  method = "";
+  body: unknown;
   constructor() { FakeXhr.current = this; }
-  open() {}
-  send() {}
+  open(method: string) { this.method = method; }
+  send(body: unknown) { this.body = body; }
   abort() { this.aborted = true; this.onabort?.(); }
 }
 
@@ -58,6 +60,46 @@ test("part upload tolerates a slow progressing connection but stops on inactivit
   t.mock.timers.tick(10_000);
   await rejected;
   assert.equal(FakeXhr.current.aborted, true);
+});
+
+test("direct parts PUT raw bytes without app credentials and keep upload progress", async (t) => {
+  const original = globalThis.XMLHttpRequest;
+  globalThis.XMLHttpRequest = FakeXhr as unknown as typeof XMLHttpRequest;
+  t.after(() => { globalThis.XMLHttpRequest = original; });
+  const blob = new Blob(["test"]);
+  const progress: number[] = [];
+  const result = uploadPart("https://storage.example.test/part", blob, undefined, (loaded) => progress.push(loaded), () => "failed", 90_000, true);
+  assert.equal(FakeXhr.current.method, "PUT");
+  assert.equal(FakeXhr.current.withCredentials, false);
+  assert.equal(FakeXhr.current.body, blob);
+  FakeXhr.current.upload.onprogress?.({ loaded: 2, total: 4, lengthComputable: true });
+  FakeXhr.current.onload?.();
+  await result;
+  assert.deepEqual(progress, [2, 4]);
+});
+
+test("direct retries are bounded by caller and distinguish expired URLs from invalid requests or cancellation", () => {
+  for (const error of [new UploadError("network"), new UploadError("timeout"), new UploadHttpError(403, "expired"), new UploadHttpError(503, "unavailable")]) {
+    assert.equal(canRetryDirectPart(error), true);
+  }
+  for (const error of [new UploadHttpError(400, "invalid"), new UploadHttpError(413, "too large"), new DOMException("Aborted", "AbortError")]) {
+    assert.equal(canRetryDirectPart(error), false);
+  }
+});
+
+test("retry backoff is jittered, deterministic with injected randomness and cancellable", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  let done = false;
+  const result = waitForUploadRetry(1, undefined, () => 0).then(() => { done = true; });
+  t.mock.timers.tick(499);
+  await Promise.resolve();
+  assert.equal(done, false);
+  t.mock.timers.tick(1);
+  await result;
+  const controller = new AbortController();
+  const pending = waitForUploadRetry(2, controller.signal, () => 1);
+  controller.abort();
+  await assert.rejects(pending, { name: "AbortError" });
 });
 
 test("part upload waits for server acknowledgement and preserves HTTP errors", async (t) => {
