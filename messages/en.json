@@ -2,24 +2,46 @@
   "BioContentDelete": {
     "title": "Delete content block?",
     "description": "This content block will be removed from the page. You cannot undo this action.",
-    "cancel": "Cancel", "confirm": "Delete block"
+    "cancel": "Cancel",
+    "confirm": "Delete block"
   },
   "BioLinkEffects": {
-    "advanced": "Advanced", "icon": "Icon", "field": "Effect",
-    "hint": "Make your link stand out.", "title": "Choose an effect",
+    "advanced": "Advanced",
+    "icon": "Icon",
+    "field": "Effect",
+    "hint": "Make your link stand out.",
+    "title": "Choose an effect",
     "description": "Select an effect and preview it before applying.",
-    "preview": "Preview", "previewLink": "Your link", "cancel": "Cancel", "apply": "Apply",
+    "preview": "Preview",
+    "previewLink": "Your link",
+    "cancel": "Cancel",
+    "apply": "Apply",
     "items": {
-      "none": "None", "pulse": "Pulse", "shake": "Shake", "bounce": "Bounce", "glow": "Glow",
-      "aura-gold": "Gold aura", "aura-rainbow": "Rainbow aura", "aura-holo": "Hologram", "aura-mono": "Black aura"
+      "none": "None",
+      "pulse": "Pulse",
+      "shake": "Shake",
+      "bounce": "Bounce",
+      "glow": "Glow",
+      "aura-gold": "Gold aura",
+      "aura-rainbow": "Rainbow aura",
+      "aura-holo": "Hologram",
+      "aura-mono": "Black aura"
     }
   },
   "BioDownload": {
-    "blockTitle": "Download card", "blockDescription": "Share a file for visitors to download",
-    "file": "File", "chooseFile": "Choose or upload a file", "changeFile": "Change file", "removeFile": "Remove file",
-    "noFile": "No file selected", "unavailable": "This file is currently unavailable",
-    "title": "Title", "description": "Description (optional)", "buttonText": "Download button text",
-    "download": "Download", "publicHint": "This file will be shared publicly when you publish the page containing this card."
+    "blockTitle": "Download card",
+    "blockDescription": "Share a file for visitors to download",
+    "file": "File",
+    "chooseFile": "Choose or upload a file",
+    "changeFile": "Change file",
+    "removeFile": "Remove file",
+    "noFile": "No file selected",
+    "unavailable": "This file is currently unavailable",
+    "title": "Title",
+    "description": "Description (optional)",
+    "buttonText": "Download button text",
+    "download": "Download",
+    "publicHint": "This file will be shared publicly when you publish the page containing this card."
   },
   "BioValidation": {
     "fileRequired": "Choose a file before publishing.",
@@ -28,11 +50,17 @@
     "url": "Enter a valid URL starting with http:// or https://.",
     "tooLong": "This field exceeds {limit} characters.",
     "contentRequired": "Add at least one content block before publishing.",
-    "name": "Page name", "title": "Short description", "customSlug": "Public slug",
-    "issueCount": "{count} items need attention", "review": "Review errors",
+    "name": "Page name",
+    "title": "Short description",
+    "customSlug": "Public slug",
+    "issueCount": "{count} items need attention",
+    "review": "Review errors",
     "draftHint": "You can save an incomplete draft. Entered URLs must still be valid.",
-    "unsaved": "Unsaved changes", "saving": "Saving…", "save": "Save changes",
-    "saveDraft": "Switch to draft and save", "reset": "Reset"
+    "unsaved": "Unsaved changes",
+    "saving": "Saving…",
+    "save": "Save changes",
+    "saveDraft": "Switch to draft and save",
+    "reset": "Reset"
   },
   "Uploads": {
     "timeout": "The upload stopped responding. Check your connection and try again. If it was finalizing, check Media Manager before uploading again.",
@@ -60,10 +88,6 @@
     "paused": "Paused"
   },
   "BioStudio": {
-    "history": "Design history",
-    "undo": "Undo",
-    "redo": "Redo",
-    "resetSection": "Reset section",
     "tabs": {
       "profile": "Profile",
       "background": "Background",
@@ -72,11 +96,6 @@
       "audio": "Audio",
       "templates": "Templates"
     },
-    "profileDescription": "Profile layout and presentation without changing Content data.",
-    "backgroundDescription": "Page background, independent from the Profile Card.",
-    "appearanceDescription": "Color and style tokens applied to all existing Content.",
-    "effectsDescription": "Presentation-only effects that respect reduced-motion preferences.",
-    "audioDescription": "Audio is off by default and only starts after user interaction.",
     "templateBy": "by {creator}",
     "removeBackgroundMedia": "Remove background",
     "templatePagination": "Template pages",

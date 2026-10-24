@@ -688,22 +688,24 @@ function LinkInBioGeneratorForm({
             open={expandedSections.appearance}
             onOpenChange={(open) => setSectionOpen("appearance", open)}
           >
-            <div id="bio-design-issues" tabIndex={-1} />
-            <BioDesignStudio
-              previewName={profileDetails.name}
-              onTemplateApplied={() => setPreviewKey((key) => key + 1)}
-              value={bioDesign}
-              onChange={setBioDesign}
-              onPickBackgroundAsset={setDesignAssetPicker}
-              onPickMusicAsset={() => setDesignAssetPicker("music")}
-              onPickCursorAsset={() => setDesignAssetPicker("cursor")}
-              musicTrackUrls={musicTrackUrls}
-              onUploadMusic={uploadMusic}
-              onMusicTrackUploaded={(assetId, url) => setMusicTrackUrls((current) => ({ ...current, [assetId]: url }))}
-              cursorPreviewUrl={previewBioPage.designAssets.cursorUrl}
-              backgroundPreviewUrls={{ image: previewBioPage.designAssets.backgroundImageUrl, video: previewBioPage.designAssets.backgroundVideoUrl }}
-              cursorProcessing={cursorProcessing}
-            />
+            {/* Mốc cuộn/focus khi API báo lỗi phần Design; bọc ngoài để không tạo khoảng trống. */}
+            <div id="bio-design-issues" tabIndex={-1} className="outline-none">
+              <BioDesignStudio
+                previewName={profileDetails.name}
+                onTemplateApplied={() => setPreviewKey((key) => key + 1)}
+                value={bioDesign}
+                onChange={setBioDesign}
+                onPickBackgroundAsset={setDesignAssetPicker}
+                onPickMusicAsset={() => setDesignAssetPicker("music")}
+                onPickCursorAsset={() => setDesignAssetPicker("cursor")}
+                musicTrackUrls={musicTrackUrls}
+                onUploadMusic={uploadMusic}
+                onMusicTrackUploaded={(assetId, url) => setMusicTrackUrls((current) => ({ ...current, [assetId]: url }))}
+                cursorPreviewUrl={previewBioPage.designAssets.cursorUrl}
+                backgroundPreviewUrls={{ image: previewBioPage.designAssets.backgroundImageUrl, video: previewBioPage.designAssets.backgroundVideoUrl }}
+                cursorProcessing={cursorProcessing}
+              />
+            </div>
           </EditorSection>
 
           <EditorSection title="Xuất bản" icon={Shield} open={expandedSections.admin} onOpenChange={(open) => setSectionOpen("admin", open)}>

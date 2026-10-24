@@ -174,7 +174,7 @@ export function BioWidgetEmbed({
   }
 
   if (widget.type === "youtube-video" && youtubeUrl) {
-    return <div className="aspect-video overflow-hidden rounded-xl bg-black"><iframe src={youtubeUrl} title={label} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="size-full" /></div>;
+    return <div className="aspect-video overflow-hidden rounded-xl bg-black"><iframe src={youtubeUrl} title={label} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen loading="lazy" className="size-full" /></div>;
   }
 
   if (widget.type === "spotify-track" && spotifyUrl) {

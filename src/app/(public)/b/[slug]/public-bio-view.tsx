@@ -904,7 +904,7 @@ export function PublicBioView({
           </div>
           </div>
 
-          <Link href="/member/create" className={styles.footerLink} title={t("createYoursLabel", { siteName: brand.siteName })}>
+          <Link href="/member/create" prefetch={false} className={styles.footerLink} title={t("createYoursLabel", { siteName: brand.siteName })}>
             <span className={styles.footerIcon} aria-hidden>
               {brandIconUrl ? <img src={brandIconUrl} alt="" /> : <Sparkles />}
             </span>
@@ -923,8 +923,9 @@ export function PublicBioView({
                 src={musicUrl}
                 onLoadedMetadata={(event) => { event.currentTarget.volume = volume / 100; }}
                 loop={design.audio.music.loop}
-                // Tải sẵn nhạc trong lúc người xem còn ở màn "click to enter" → bấm là phát ngay.
-                preload="auto"
+                // Music starts from Enter/Play, not during document loading.
+                // Keep the element mounted so play() stays in the user gesture.
+                preload="none"
                 onPlay={() => setMusicPlaying(true)}
                 onPause={() => setMusicPlaying(false)}
               />

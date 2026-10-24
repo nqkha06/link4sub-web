@@ -2,24 +2,46 @@
   "BioContentDelete": {
     "title": "Xóa khối nội dung?",
     "description": "Khối nội dung này sẽ bị xóa khỏi trang. Bạn không thể hoàn tác thao tác này.",
-    "cancel": "Hủy", "confirm": "Xóa khối"
+    "cancel": "Hủy",
+    "confirm": "Xóa khối"
   },
   "BioLinkEffects": {
-    "advanced": "Nâng cao", "icon": "Icon", "field": "Hiệu ứng",
-    "hint": "Làm nổi bật liên kết.", "title": "Chọn hiệu ứng",
+    "advanced": "Nâng cao",
+    "icon": "Icon",
+    "field": "Hiệu ứng",
+    "hint": "Làm nổi bật liên kết.",
+    "title": "Chọn hiệu ứng",
     "description": "Xem thử hiệu ứng và bấm Áp dụng khi đã ưng ý.",
-    "preview": "Xem trước", "previewLink": "Liên kết của bạn", "cancel": "Hủy", "apply": "Áp dụng",
+    "preview": "Xem trước",
+    "previewLink": "Liên kết của bạn",
+    "cancel": "Hủy",
+    "apply": "Áp dụng",
     "items": {
-      "none": "Không có", "pulse": "Nhịp đập", "shake": "Lắc nhẹ", "bounce": "Nảy", "glow": "Phát sáng",
-      "aura-gold": "Aura vàng", "aura-rainbow": "Aura cầu vồng", "aura-holo": "Hologram", "aura-mono": "Aura đen"
+      "none": "Không có",
+      "pulse": "Nhịp đập",
+      "shake": "Lắc nhẹ",
+      "bounce": "Nảy",
+      "glow": "Phát sáng",
+      "aura-gold": "Aura vàng",
+      "aura-rainbow": "Aura cầu vồng",
+      "aura-holo": "Hologram",
+      "aura-mono": "Aura đen"
     }
   },
   "BioDownload": {
-    "blockTitle": "Thẻ tải xuống", "blockDescription": "Chia sẻ file để người xem tải về",
-    "file": "File", "chooseFile": "Chọn hoặc upload file", "changeFile": "Đổi file", "removeFile": "Gỡ file",
-    "noFile": "Chưa chọn file", "unavailable": "File hiện không khả dụng",
-    "title": "Tiêu đề", "description": "Mô tả (không bắt buộc)", "buttonText": "Chữ trên nút tải",
-    "download": "Tải xuống", "publicHint": "File sẽ được chia sẻ công khai khi bạn xuất bản trang có thẻ này."
+    "blockTitle": "Thẻ tải xuống",
+    "blockDescription": "Chia sẻ file để người xem tải về",
+    "file": "File",
+    "chooseFile": "Chọn hoặc upload file",
+    "changeFile": "Đổi file",
+    "removeFile": "Gỡ file",
+    "noFile": "Chưa chọn file",
+    "unavailable": "File hiện không khả dụng",
+    "title": "Tiêu đề",
+    "description": "Mô tả (không bắt buộc)",
+    "buttonText": "Chữ trên nút tải",
+    "download": "Tải xuống",
+    "publicHint": "File sẽ được chia sẻ công khai khi bạn xuất bản trang có thẻ này."
   },
   "BioValidation": {
     "fileRequired": "Chọn file trước khi xuất bản.",
@@ -28,11 +50,17 @@
     "url": "Nhập URL hợp lệ bắt đầu bằng http:// hoặc https://.",
     "tooLong": "Nội dung vượt giới hạn {limit} ký tự.",
     "contentRequired": "Thêm ít nhất một khối nội dung trước khi xuất bản.",
-    "name": "Tên trang", "title": "Mô tả ngắn", "customSlug": "Slug công khai",
-    "issueCount": "Có {count} mục cần kiểm tra", "review": "Xem lỗi",
+    "name": "Tên trang",
+    "title": "Mô tả ngắn",
+    "customSlug": "Slug công khai",
+    "issueCount": "Có {count} mục cần kiểm tra",
+    "review": "Xem lỗi",
     "draftHint": "Có thể lưu nháp khi chưa điền xong. URL đã nhập vẫn cần đúng định dạng.",
-    "unsaved": "Có thay đổi chưa lưu", "saving": "Đang lưu…", "save": "Lưu thay đổi",
-    "saveDraft": "Chuyển về bản nháp và lưu", "reset": "Đặt lại"
+    "unsaved": "Có thay đổi chưa lưu",
+    "saving": "Đang lưu…",
+    "save": "Lưu thay đổi",
+    "saveDraft": "Chuyển về bản nháp và lưu",
+    "reset": "Đặt lại"
   },
   "Uploads": {
     "timeout": "Upload không phản hồi quá lâu. Kiểm tra kết nối và thử lại. Nếu đang hoàn tất, hãy kiểm tra Media Manager trước khi upload lại.",
@@ -60,10 +88,6 @@
     "paused": "Tạm dừng"
   },
   "BioStudio": {
-    "history": "Lịch sử Design",
-    "undo": "Hoàn tác",
-    "redo": "Làm lại",
-    "resetSection": "Đặt lại mục",
     "tabs": {
       "profile": "Profile",
       "background": "Background",
@@ -72,11 +96,6 @@
       "audio": "Audio",
       "templates": "Templates"
     },
-    "profileDescription": "Bố cục và hình thức hồ sơ; không thay đổi dữ liệu Content.",
-    "backgroundDescription": "Background trang độc lập với Profile Card.",
-    "appearanceDescription": "Token màu và style được áp dụng cho toàn bộ Content hiện có.",
-    "effectsDescription": "Hiệu ứng chỉ thay đổi cách trình bày; tự giảm chuyển động theo cài đặt thiết bị.",
-    "audioDescription": "Âm thanh mặc định tắt và chỉ phát sau tương tác của người dùng.",
     "templateBy": "bởi {creator}",
     "removeBackgroundMedia": "Gỡ nền",
     "templatePagination": "Phân trang mẫu",

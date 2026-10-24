@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Blend, Check, ChevronLeft, ChevronRight, Clapperboard, History, ImageIcon, Loader2, MousePointer2, PaintBucket, Pencil, Plus, Redo2, RotateCcw, Undo2, X } from "lucide-react"
+import { Blend, Check, ChevronLeft, ChevronRight, Clapperboard, ImageIcon, Loader2, MousePointer2, PaintBucket, Pencil, Plus, X } from "lucide-react"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 
@@ -12,7 +12,6 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  DEFAULT_BIO_DESIGN,
   bioCursorTrailTypes,
   isBioBuiltinAssetId,
   type BioCursorTrailType,
@@ -176,29 +175,7 @@ export function BioDesignStudio({
   cursorProcessing?: boolean
 }) {
   const t = useTranslations("BioStudio")
-  const historyRef = useRef<BioDesign[]>([value])
-  const [historyIndex, setHistoryIndex] = useState(0)
-  const [historyLength, setHistoryLength] = useState(1)
-
-  const commit = (next: BioDesign) => {
-    const history = [...historyRef.current.slice(0, historyIndex + 1), next].slice(-50)
-    historyRef.current = history
-    setHistoryIndex(history.length - 1)
-    setHistoryLength(history.length)
-    onChange(next)
-  }
-  const undo = () => {
-    if (historyIndex <= 0) return
-    const nextIndex = historyIndex - 1
-    setHistoryIndex(nextIndex)
-    onChange(historyRef.current[nextIndex])
-  }
-  const redo = () => {
-    if (historyIndex >= historyRef.current.length - 1) return
-    const nextIndex = historyIndex + 1
-    setHistoryIndex(nextIndex)
-    onChange(historyRef.current[nextIndex])
-  }
+  const commit = (next: BioDesign) => onChange(next)
   /* ------------------------------------------------------------ Template */
   const [activeTab, setActiveTab] = useState<string>("profile")
   /** Phân trang tab Templates: chỉ render (và tải ảnh) TEMPLATES_PER_PAGE mẫu mỗi lần. */
@@ -248,27 +225,8 @@ export function BioDesignStudio({
     })
   }
 
-  const resetSection = (section: DesignSection) => commit({ ...value, [section]: DEFAULT_BIO_DESIGN[section] })
-
-  const sectionHeader = (section: DesignSection, label: string) => (
-    <div className="flex items-center justify-between gap-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <Button type="button" variant="ghost" size="sm" onClick={() => resetSection(section)} className="h-8 gap-1.5 px-2 text-xs text-muted-foreground">
-        <RotateCcw className="size-3.5" /> {t("resetSection")}
-      </Button>
-    </div>
-  )
-
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background px-3 py-2">
-        <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><History className="size-4" /> {t("history")}</span>
-        <div className="flex items-center gap-1">
-          <Button type="button" variant="ghost" size="icon" className="size-8" onClick={undo} disabled={historyIndex <= 0} aria-label={t("undo")}><Undo2 className="size-4" /></Button>
-          <Button type="button" variant="ghost" size="icon" className="size-8" onClick={redo} disabled={historyIndex >= historyLength - 1} aria-label={t("redo")}><Redo2 className="size-4" /></Button>
-        </div>
-      </div>
-
       <Tabs value={activeTab} onValueChange={(tab) => { setActiveTab(tab); setChangedTabs((current) => current.filter((item) => item !== tab)) }} className="gap-4">
         <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-xl bg-muted/60 p-1">
           {(["profile", "background", "appearance", "effects", "audio", "templates"] as const).map((id) => (
@@ -280,7 +238,6 @@ export function BioDesignStudio({
         </TabsList>
 
         <TabsContent value="profile" className="space-y-4">
-          {sectionHeader("profile", t("profileDescription"))}
           <Panel title={t("profileLayout")}>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t("layout")}>
@@ -311,7 +268,6 @@ export function BioDesignStudio({
         </TabsContent>
 
         <TabsContent value="background" className="space-y-4">
-          {sectionHeader("background", t("backgroundDescription"))}
           <Panel title={t("backgroundSource")}>
             <Field label={t("backgroundType")}>
               <Tabs value={value.background.type} onValueChange={(type) => commit({ ...value, background: { ...value.background, type: type as BioDesign["background"]["type"] } })}>
@@ -363,14 +319,12 @@ export function BioDesignStudio({
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-4">
-          {sectionHeader("appearance", t("appearanceDescription"))}
           <Panel title={t("themeColors")}><div className="grid gap-4 sm:grid-cols-2">{(["primary", "secondary", "accent", "text", "textMuted", "icon", "link", "surface", "border", "success"] as const).map((key) => <ColorField key={key} label={key} value={value.appearance.colors[key]} onChange={(color) => commit({ ...value, appearance: { ...value.appearance, colors: { ...value.appearance.colors, [key]: color } } })} />)}</div></Panel>
           <Panel title={t("typography")}><div className="grid gap-4 sm:grid-cols-2"><Field label={t("fontFamily")}><FontFamilyPicker value={value.appearance.font.family} onChange={(family) => commit({ ...value, appearance: { ...value.appearance, font: { ...value.appearance.font, family, usernameFamily: family } } })} /></Field><RangeField label={t("usernameSize")} value={value.appearance.font.usernameSize} min={16} max={72} unit="px" onChange={(usernameSize) => commit({ ...value, appearance: { ...value.appearance, font: { ...value.appearance.font, usernameSize } } })} /></div></Panel>
           <Panel title={t("linksAppearance")}><div className="grid gap-4 sm:grid-cols-2"><Field label={t("variant")}><Select value={value.appearance.links.variant} onValueChange={(variant) => commit({ ...value, appearance: { ...value.appearance, links: { ...value.appearance.links, variant: variant as BioDesign["appearance"]["links"]["variant"] } } })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["card", "button", "outline", "minimal", "glass"].map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></Field><RangeField label={t("radius")} value={value.appearance.links.radius} min={0} max={40} unit="px" onChange={(radius) => commit({ ...value, appearance: { ...value.appearance, links: { ...value.appearance.links, radius } } })} /></div><div className="grid gap-4 sm:grid-cols-2"><ColorField label={t("linkBackground")} value={value.appearance.links.backgroundColor} onChange={(backgroundColor) => commit({ ...value, appearance: { ...value.appearance, links: { ...value.appearance.links, backgroundColor } } })} /><ColorField label={t("textColor")} value={value.appearance.links.textColor} onChange={(textColor) => commit({ ...value, appearance: { ...value.appearance, links: { ...value.appearance.links, textColor } } })} /></div></Panel>
         </TabsContent>
 
         <TabsContent value="effects" className="space-y-4">
-          {sectionHeader("effects", t("effectsDescription"))}
           <Panel title={t("backgroundEffects")}><BackgroundEffectPicker value={value.effects.background} onChange={(type) => commit({ ...value, effects: { ...value.effects, background: { ...value.effects.background, type } } })} />{value.effects.background.type !== "none" ? <div className="space-y-4 border-l-2 border-border pl-4"><ColorField label={t("effectColor")} value={value.effects.background.color} onChange={(color) => commit({ ...value, effects: { ...value.effects, background: { ...value.effects.background, color } } })} /><RangeField label={t("opacity")} value={value.effects.background.opacity} min={0} max={100} unit="%" onChange={(opacity) => commit({ ...value, effects: { ...value.effects, background: { ...value.effects.background, opacity } } })} /><RangeField label={t("intensity")} value={value.effects.background.intensity} min={0} max={100} unit="%" onChange={(intensity) => commit({ ...value, effects: { ...value.effects, background: { ...value.effects.background, intensity } } })} /></div> : null}</Panel>
           <Panel title={t("nameEffects.title")}>
             <UsernameEffectPicker
@@ -483,7 +437,6 @@ export function BioDesignStudio({
         </TabsContent>
 
         <TabsContent value="audio" className="space-y-4">
-          {sectionHeader("audio", t("audioDescription"))}
           <Panel title={t("backgroundMusic")}><ToggleField label={t("musicEnabled")} checked={value.audio.music.enabled} onChange={(enabled) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, enabled } } })} />{value.audio.music.enabled ? <div className="space-y-4 border-l-2 border-border pl-4"><AudioManagerField music={value.audio.music} playerVisible={value.audio.player.visible} trackUrls={musicTrackUrls ?? {}} onUpload={onUploadMusic} onBrowseLibrary={onPickMusicAsset} onTrackUploaded={onMusicTrackUploaded} onChange={(music) => commit({ ...value, audio: { ...value.audio, music } })} onPlayerVisibleChange={(visible) => commit({ ...value, audio: { ...value.audio, player: { ...value.audio.player, visible } } })} /><RangeField label={t("volume")} value={value.audio.music.volume} min={0} max={100} unit="%" onChange={(volume) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, volume } } })} /><Field label={t("startMode")}><Select value={value.audio.music.startMode} onValueChange={(startMode) => commit({ ...value, audio: { ...value.audio, music: { ...value.audio.music, startMode: startMode as "manual" | "on-enter" } } })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="manual">Manual</SelectItem><SelectItem value="on-enter">On Enter</SelectItem></SelectContent></Select></Field></div> : null}</Panel>
         </TabsContent>
 
